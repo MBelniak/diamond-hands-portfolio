@@ -319,7 +319,7 @@ async function fetchStockClosePriceRange(
               });
             pricesMap.set(format(date, "yyyy-MM-dd"), stockPrice);
           } else {
-            pricesMap.set(format(date, "yyyy-MM-dd"), close[i]);
+            pricesMap.set(format(date, "yyyy-MM-dd"), symbol === "AV.UK" ? close[i] / 100 : close[i]); // Adjust for AV.UK price scale
           }
         }
       }
