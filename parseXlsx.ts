@@ -175,7 +175,7 @@ function getCashAndStocksTimeline(filePath: string): {
     } else if (event.type === STOCK_CLOSE && event.stockSymbol) {
       if (stocks.has(event.stockSymbol)) {
         stocks.set(event.stockSymbol, stocks.get(event.stockSymbol)! - event.stocksVolumeChange);
-        if (stocks.get(event.stockSymbol)! <= 0) {
+        if (stocks.get(event.stockSymbol)! <= 1e-6) {
           stocks.delete(event.stockSymbol); // Remove if there are no more stocks
         }
       }
@@ -190,15 +190,16 @@ function getCashAndStocksTimeline(filePath: string): {
 }
 
 /**
- * Helper function to fetch stock close price from Yahoo Finance (or other API)
- * @param {string} symbol - stock symbol, e.g. SMCI
- * @param {string} dateStr - date in format YYYY-MM-DD
- * @returns {Promise<number|null>} - close price or null if no data
+ * Fetches closing prices for a given stock symbol in the specified date range.
+ * @param {string} symbol - Stock symbol, e.g. "SMCI"
+ * @param {Date} startDate - Start date of the range (inclusive)
+ * @param {Date} endDate - End date of the range (inclusive)
+ * @returns {Promise<number[] | null>} - Array of closing prices (in order for each day), or null if no data
  */
-async function fetchStockClosePrice(symbol: string, date: Date): Promise<number | null> {
+async function fetchStockClosePriceRange(symbol: string, startDate: Date, endDate: Date): Promise<number[] | null> {
   // Yahoo Finance API (unofficial endpoint)
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${Math.floor(startOfDay(date).getTime() / 1000)}&period2=${Math.floor(startOfDay(date).getTime() / 1000) + 60 * 60 * 24}&interval=1d`;
-  console.log("Fetching stock close price for: ", symbol, " on date: ", date.toISOString(), " from URL: ", url);
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${Math.floor(startOfDay(startDate).getTime() / 1000)}&period2=${Math.floor(startOfDay(endDate).getTime() / 1000)}&interval=1d`;
+  console.log("Fetching stock close prices for: ", symbol, " from URL: ", url);
   try {
     const res = await fetch(url, {
       headers: {
@@ -207,7 +208,7 @@ async function fetchStockClosePrice(symbol: string, date: Date): Promise<number 
       },
     });
     const data = await res.json();
-    const close = data.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.[0];
+    const close = data.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
     return close || null;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
@@ -225,30 +226,43 @@ function symbolToYahooSuffix(symbol: string): string {
   return symbol.split(".").at(-1) ?? "";
 }
 
-async function getStocksValue(stocks: Record<string, number>, date: Date): Promise<number> {
+// --- CACHE PRICES UTILS ---
+type PriceCache = Record<string, Record<string, number | null>>; // symbol -> date(YYYY-MM-DD) -> price
+
+async function fetchPricesForSymbols(symbols: string[], startDate: Date): Promise<PriceCache> {
+  const cache: PriceCache = {};
+  for (const symbol of symbols) {
+    cache[symbol] = {};
+    const prices: number[] | null = await fetchStockClosePriceRange(
+      symbol.split(".")[0] + symbolToYahooSuffix(symbol),
+      startDate,
+      new Date(),
+    );
+
+    if (prices) {
+      getDateRange(startDate, new Date()).forEach((date, index) => {
+        const key = date.toISOString().slice(0, 10);
+        cache[symbol][key] = prices[index] ?? null;
+      });
+    }
+  }
+
+  return cache;
+}
+
+async function getStocksValueCached(
+  stocks: Record<string, number>,
+  date: Date,
+  priceCache: PriceCache,
+): Promise<number> {
   let stocksValue = 0;
-
-  const pricesResponses = await Promise.allSettled(
-    Object.keys(stocks).map((symbol) => fetchStockClosePrice(symbol.split(".")[0] + symbolToYahooSuffix(symbol), date)),
-  );
-
-  const closePrices = pricesResponses.reduce(
-    (acc, res, idx) => {
-      if (res.status === "fulfilled" && res.value !== null) {
-        acc[Object.keys(stocks)[idx]] = res.value;
-      }
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
-
+  const dateKey = date.toISOString().slice(0, 10);
   for (const symbol in stocks) {
-    const closePrice = closePrices[symbol] || null;
+    const closePrice = priceCache[symbol]?.[dateKey] ?? null;
     if (closePrice !== null) {
       stocksValue += closePrice * stocks[symbol];
     }
   }
-
   return stocksValue;
 }
 
@@ -280,9 +294,11 @@ async function getPortfolioValueTimeline(filePath: string): Promise<
   if (!timeline.length) return [];
 
   // Date range
-  const firstDate = timeline[0].date;
-  const lastDate = timeline[timeline.length - 1].date;
-  const allDates = getDateRange(firstDate, lastDate);
+  const startDate = timeline[0].date;
+  const allDates = getDateRange(startDate, new Date());
+
+  const allSymbols = Array.from(new Set(timeline.flatMap((t) => Object.keys(t.stocks))));
+  const priceCache = await fetchPricesForSymbols(allSymbols, startDate);
 
   // For each date, find the portfolio state (cash, stocks) and fetch the close price
   const result: PortfolioVaule[] = [];
@@ -300,10 +316,7 @@ async function getPortfolioValueTimeline(filePath: string): Promise<
         date: day,
         cash: previousState.cash,
         stocks: previousState.stocks,
-        portfolioValue:
-          previousState.cash +
-          ((await getStocksValue(previousState.stocks, day)) ||
-            (Object.keys(previousState.stocks).length ? previousState.portfolioValue - previousState.cash : 0)), // Take stocks value from previous day if present in case the yahoo API returns 0 due to weekend.
+        portfolioValue: previousState.cash + (await getStocksValueCached(previousState.stocks, day, priceCache)),
       });
     } else {
       const finalState = dayEvents.at(-1)!;
@@ -312,12 +325,7 @@ async function getPortfolioValueTimeline(filePath: string): Promise<
         date: day,
         cash: finalState.cash,
         stocks: finalState.stocks,
-        portfolioValue:
-          finalState.cash +
-          ((await getStocksValue(finalState.stocks, day)) ||
-            (Object.keys(finalState.stocks).length && result.at(-1)?.portfolioValue
-              ? (result.at(-1)!.portfolioValue ?? 0 - result.at(-1)!.cash)
-              : 0)),
+        portfolioValue: finalState.cash + (await getStocksValueCached(finalState.stocks, day, priceCache)),
       });
     }
   }
