@@ -6,6 +6,7 @@ import fs from "fs-extra";
 import { addDays } from "date-fns/addDays";
 import { format } from "date-fns/format";
 import { isBefore } from "date-fns/isBefore";
+import "dotenv/config";
 
 const CLOSED_POSITION_HISTORY = "CLOSED POSITION HISTORY";
 const CASH_OPERATION_HISTORY = "CASH OPERATION HISTORY";
@@ -14,21 +15,7 @@ const STOCK_OPEN = "stockOpen" as const;
 const STOCK_CLOSE = "stockClose" as const;
 const CASH = "cash" as const;
 const SP500 = "^GSPC";
-
-const SPLITS: Record<string, { date: Date; factor: number }[]> = {
-  "NVDA.US": [
-    {
-      date: new Date("2024-06-10"),
-      factor: 10, // NVIDIA split on 2024-06-10
-    },
-  ],
-  "SMCI.US": [
-    {
-      date: new Date("2024-10-01"),
-      factor: 10, // Supermicro split on 2024-10-01
-    },
-  ],
-};
+const ALPHA_VANTAGE_KEY = process.env.ALPHA_VANTAGE_KEY || "demo"; // Use demo key if not set
 
 type PortfolioEvent = {
   date: Date;
@@ -264,6 +251,40 @@ function getCashAndStocksTimeline(filePath: string): {
   return createEventTimeline(allEvents);
 }
 
+async function fetchHistoricalStockData(symbol: string, startDate: Date, endDate: Date) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${getStockAPISymbol(symbol)}?period1=${Math.floor(startOfDay(startDate).getTime() / 1000)}&period2=${Math.floor(startOfDay(endDate).getTime() / 1000)}&interval=1d`;
+  console.log("Fetching stock close prices for: ", symbol, " from URL: ", url);
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      },
+    });
+    return await res.json();
+  } catch (e) {
+    console.warn("Failed to fetch stock close prices for symbol:", symbol, "Error:", e);
+    return null;
+  }
+}
+
+async function fetchSplits(symbol: string) {
+  const url = `https://www.alphavantage.co/query?function=SPLITS&symbol=${getStockAPISymbol(symbol)}&apikey=${ALPHA_VANTAGE_KEY}`;
+  console.log("Fetching split events for: ", symbol, " from URL: ", url);
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      },
+    });
+    return (await res.json()).data;
+  } catch (e) {
+    console.warn("Failed to fetch split events for symbol:", symbol, "Error:", e);
+    return null;
+  }
+}
+
 /**
  * Fetches closing prices for a given stock symbol in the specified date range.
  * @param {string} symbol - Stock symbol, e.g. "SMCI"
@@ -276,30 +297,25 @@ async function fetchStockClosePriceRange(
   startDate: Date,
   endDate: Date,
 ): Promise<Map<string, number> | null> {
-  // Yahoo Finance API (unofficial endpoint)
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${getYahooSymbol(symbol)}?period1=${Math.floor(startOfDay(startDate).getTime() / 1000)}&period2=${Math.floor(startOfDay(endDate).getTime() / 1000)}&interval=1d`;
-  console.log("Fetching stock close prices for: ", symbol, " from URL: ", url);
-  try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
-      },
-    });
-    const data = await res.json();
+  const data = await fetchHistoricalStockData(symbol, startDate, endDate);
+  if (data) {
     const timestamp = data.chart?.result?.[0]?.timestamp;
     const close = data.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
     if (timestamp && close) {
+      const splits = (await fetchSplits(symbol)) as { effective_date: string; split_factor: string }[];
+
       const pricesMap = new Map<string, number>();
       for (let i = 0; i < timestamp.length; i++) {
         const date = new Date(timestamp[i] * 1000);
         if (date >= startDate && date <= endDate) {
-          if (symbol in SPLITS && SPLITS[symbol].some((split) => isBefore(date, split.date))) {
+          if (splits && splits.length && splits.some((split) => isBefore(date, new Date(split.effective_date)))) {
             let stockPrice = close[i];
-            SPLITS[symbol]
-              .filter((split) => isBefore(date, split.date))
+            splits
+              .filter((split) => isBefore(date, new Date(split.effective_date)))
               .forEach((split) => {
-                stockPrice *= split.factor;
+                if (split.split_factor) {
+                  stockPrice *= parseFloat(split.split_factor);
+                }
               });
             pricesMap.set(format(date, "yyyy-MM-dd"), stockPrice);
           } else {
@@ -310,10 +326,8 @@ async function fetchStockClosePriceRange(
       return pricesMap;
     }
     return null;
-  } catch (e) {
-    console.warn("Failed to fetch stock close prices for symbol:", symbol, "Error:", e);
-    return null;
   }
+  return null;
 }
 
 function symbolToYahooSuffix(symbol: string): string {
@@ -332,7 +346,7 @@ function symbolToYahooSuffix(symbol: string): string {
 // --- CACHE PRICES UTILS ---
 type StockPricesRecord = Record<string, Record<string, number | null>>; // symbol -> date(YYYY-MM-DD) -> price
 
-function getYahooSymbol(symbol: string) {
+function getStockAPISymbol(symbol: string) {
   if (symbol === "OIL") {
     return "CL=F"; // WTI Crude Oil Futures
   }
