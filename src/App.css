@@ -4,12 +4,13 @@
 @custom-variant dark (&:is(.dark *));
 
 #root {
-  max-width: 1280px;
   width: 100%;
-  margin: 0 auto;
-  padding: 2rem;
+  margin: 0;
   text-align: center;
+  overflow: hidden;
 }
+
+
 
 .logo {
   height: 6em;
