@@ -6,7 +6,7 @@ import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 const currency = "$";
 const chartKeys = {
   portfolioValue: "Portfolio value",
-  profitOrLoss: "Taken profit/loss",
+  profitOrLoss: "Realized profit/loss",
   cash: "Cash",
   sp500Value: "S&P 500",
 };

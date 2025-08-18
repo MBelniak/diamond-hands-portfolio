@@ -7,6 +7,7 @@ import { addDays } from "date-fns/addDays";
 import { format } from "date-fns/format";
 import { isBefore } from "date-fns/isBefore";
 import "dotenv/config";
+import type { PortfolioValue, Stock } from "./types";
 
 const CLOSED_POSITION_HISTORY = "CLOSED POSITION HISTORY";
 const CASH_OPERATION_HISTORY = "CASH OPERATION HISTORY";
@@ -40,14 +41,13 @@ type PortfolioEvent = {
     ))
 );
 
-type PortfolioValue = {
+type TimelineCheckpoint = {
   date: Date;
   cash: number;
-  stocks: Record<string, number>;
-  portfolioValue: number;
+  balance: number;
+  stocks: Record<string, Stock>;
   profitOrLoss: number;
-  sp500Volume: number;
-  sp500Value: number;
+  cashWithdrawalOrDeposit: number | null;
 };
 
 // Helper function to get column indexes by headers
@@ -186,25 +186,33 @@ function getClosedStocksCloseEvents(workbook: any): PortfolioEvent[] {
     });
 }
 
-function createEventTimeline(allEvents: PortfolioEvent[]) {
+function createEventTimeline(allEvents: PortfolioEvent[]): TimelineCheckpoint[] {
   // Store values over time
   let cash = 0;
+  let balance = 0;
   let accProfitOrLoss = 0;
-  const stocks = new Map<string, number>();
+  const stocks = new Map<string, Stock>();
   const timeline = [];
   for (const event of allEvents) {
     if (event.type === CASH) {
       cash += event.cashChange;
+      if (event.cashWithdrawalOrDeposit) {
+        balance += event.cashWithdrawalOrDeposit; // Update balance on withdrawal or deposit
+      }
     } else if (event.type === STOCK_OPEN && event.stockSymbol) {
       if (!stocks.has(event.stockSymbol)) {
-        stocks.set(event.stockSymbol, 0);
+        stocks.set(event.stockSymbol, { volume: 0 });
       }
-      stocks.set(event.stockSymbol, stocks.get(event.stockSymbol)! + event.stocksVolumeChange);
+      stocks.set(event.stockSymbol, { volume: stocks.get(event.stockSymbol)!.volume + event.stocksVolumeChange });
     } else if (event.type === STOCK_CLOSE && event.stockSymbol) {
       if (stocks.has(event.stockSymbol)) {
-        stocks.set(event.stockSymbol, stocks.get(event.stockSymbol)! - event.stocksVolumeChange);
-        if (stocks.get(event.stockSymbol)! <= 1e-6) {
-          stocks.delete(event.stockSymbol); // Remove if there are no more stocks
+        const stockRecord = stocks.get(event.stockSymbol)!;
+        stocks.set(event.stockSymbol, {
+          volume: stockRecord.volume - event.stocksVolumeChange,
+          takenProfitOrLoss: (stockRecord.takenProfitOrLoss ?? 0) + event.profitOrLoss,
+        });
+        if (stocks.get(event.stockSymbol)!.volume <= 1e-6) {
+          stocks.get(event.stockSymbol)!.volume = 0;
         }
       }
       accProfitOrLoss += event.profitOrLoss || 0; // Add profit or loss from closed position
@@ -212,6 +220,7 @@ function createEventTimeline(allEvents: PortfolioEvent[]) {
     timeline.push({
       date: event.date,
       cash,
+      balance,
       stocks: Object.fromEntries(stocks), // Create a copy of the stocks map
       profitOrLoss: accProfitOrLoss,
       cashWithdrawalOrDeposit:
@@ -225,13 +234,7 @@ function createEventTimeline(allEvents: PortfolioEvent[]) {
  * Parses the sheet and tracks the value of cash and stocks over time.
  * Returns an array of objects { date, cash, stocks } sorted ascending by date.
  */
-function getCashAndStocksTimeline(filePath: string): {
-  date: Date;
-  cash: number;
-  stocks: Record<string, number>;
-  profitOrLoss: number;
-  cashWithdrawalOrDeposit: number | null;
-}[] {
+function getCashAndStocksTimeline(filePath: string): TimelineCheckpoint[] {
   const workbook = XLSX.readFile(filePath);
 
   // Collect all cash operations
@@ -387,7 +390,9 @@ async function populateStockPricesForSymbol(
   }
 }
 
-async function getPricesForSymbols(symbols: string[], startDate: Date): Promise<StockPricesRecord> {
+async function populatePricesForStocks(timeline: TimelineCheckpoint[], startDate: Date): Promise<StockPricesRecord> {
+  const symbols = Array.from(new Set(timeline.flatMap((t) => Object.keys(t.stocks))));
+
   const endDate = new Date();
   const stockPricesRecord: StockPricesRecord = {};
   if (!symbols.includes(SP500)) {
@@ -398,26 +403,28 @@ async function getPricesForSymbols(symbols: string[], startDate: Date): Promise<
 
     if (fs.existsSync(getCacheFilePath(symbol, startDate, endDate))) {
       stockPricesRecord[symbol] = fs.readJsonSync(getCacheFilePath(symbol, startDate, endDate));
-      continue;
+    } else {
+      await populateStockPricesForSymbol(symbol, startDate, endDate, stockPricesRecord);
     }
 
-    await populateStockPricesForSymbol(symbol, startDate, endDate, stockPricesRecord);
+    timeline.forEach((item) => {
+      if (Object.keys(item.stocks).some((key) => key === symbol)) {
+        const dateKey = format(item.date, "yyyy-MM-dd");
+        item.stocks[symbol].price = stockPricesRecord[symbol][dateKey] ?? undefined;
+      }
+    });
   }
 
   return stockPricesRecord;
 }
 
-async function getStocksValueCached(
-  stocks: Record<string, number>,
-  date: Date,
-  priceCache: StockPricesRecord,
-): Promise<number> {
+function getStocksValueCached(stocks: Record<string, Stock>, date: Date, priceCache: StockPricesRecord): number {
   let stocksValue = 0;
   const dateKey = date.toISOString().slice(0, 10);
   for (const symbol in stocks) {
     const closePrice = priceCache[symbol]?.[dateKey] ?? null;
     if (closePrice !== null) {
-      stocksValue += closePrice * stocks[symbol];
+      stocksValue += closePrice * stocks[symbol].volume;
     }
   }
   return stocksValue;
@@ -439,27 +446,20 @@ function getDateRange(start: Date, end: Date): Date[] {
 /**
  * Main function: for each day fetches the close price and calculates the portfolio value
  */
-async function getPortfolioValueTimeline(filePath: string): Promise<
-  {
-    date: Date;
-    cash: number;
-    stocks: Record<string, number>;
-    portfolioValue: number;
-  }[]
-> {
+async function getPortfolioValueTimeline(filePath: string): Promise<PortfolioValue[]> {
   const timeline = getCashAndStocksTimeline(filePath);
   if (!timeline.length) return [];
 
   // Date range
   const startDate = timeline[0].date;
-  const allDates = getDateRange(startDate, new Date());
+  const allDates = getDateRange(startDate, addDays(new Date(), -1));
 
-  const allSymbols = Array.from(new Set(timeline.flatMap((t) => Object.keys(t.stocks))));
-  const prices = await getPricesForSymbols(allSymbols, startDate);
+  const prices = await populatePricesForStocks(timeline, startDate);
 
   // For each date, find the portfolio state (cash, stocks) and fetch the close price
   const result: PortfolioValue[] = [];
   for (const day of allDates) {
+    const dateKey = format(day, "yyyy-MM-dd");
     // Find events for this day
     const dayEvents = timeline.filter((t) => isSameDay(t.date, day));
 
@@ -470,17 +470,21 @@ async function getPortfolioValueTimeline(filePath: string): Promise<
       }
 
       result.push({
-        date: day,
+        date: day.toISOString(),
         cash: previousState.cash,
+        balance: previousState.balance,
         stocks: previousState.stocks,
-        portfolioValue: previousState.cash + (await getStocksValueCached(previousState.stocks, day, prices)),
+        portfolioValue: previousState.cash + getStocksValueCached(previousState.stocks, day, prices),
         profitOrLoss: previousState.profitOrLoss,
-        sp500Volume: previousState.sp500Volume || 0,
-        sp500Value: await getStocksValueCached({ [SP500]: previousState.sp500Volume || 0 }, day, prices),
+        sp500Stock: {
+          volume: previousState.sp500Stock.volume || 0,
+          price: prices[SP500]?.[dateKey] ?? undefined,
+        },
+        sp500Value: getStocksValueCached({ [SP500]: { volume: previousState.sp500Stock.volume || 0 } }, day, prices),
       });
     } else {
       const finalState = dayEvents.at(-1)!;
-      let sp500Volume = result.at(-1)?.sp500Volume || 0;
+      let sp500Volume = result.at(-1)?.sp500Stock.volume || 0;
       if (dayEvents.some((e) => e.cashWithdrawalOrDeposit)) {
         const sp500Price = prices[SP500]?.[format(day, "yyyy-MM-dd")] || null;
         if (sp500Price === null) {
@@ -494,13 +498,14 @@ async function getPortfolioValueTimeline(filePath: string): Promise<
       }
 
       result.push({
-        date: day,
+        date: day.toISOString(),
         cash: finalState.cash,
+        balance: finalState.balance,
         stocks: finalState.stocks,
-        portfolioValue: finalState.cash + (await getStocksValueCached(finalState.stocks, day, prices)),
+        portfolioValue: finalState.cash + getStocksValueCached(finalState.stocks, day, prices),
         profitOrLoss: finalState.profitOrLoss,
-        sp500Volume,
-        sp500Value: await getStocksValueCached({ [SP500]: sp500Volume }, day, prices),
+        sp500Stock: { volume: sp500Volume, price: prices[SP500]?.[dateKey] ?? undefined },
+        sp500Value: getStocksValueCached({ [SP500]: { volume: sp500Volume } }, day, prices),
       });
     }
   }
