@@ -17,13 +17,11 @@ export function PerformanceChart() {
   const minWindowSize = 7;
   const [range, setRange] = useState<[number, number]>([0, data.length - 1]);
 
-  // Zapewnij, że zakres jest poprawny
   const windowStart = Math.max(0, Math.min(range[0], data.length - minWindowSize));
   const windowEnd = Math.max(windowStart + minWindowSize - 1, Math.min(range[1], data.length - 1));
   const windowedData = data.slice(windowStart, windowEnd + 1);
 
   const handleRangeChange = (values: [number, number]) => {
-    // Wymuś minimalny rozmiar okna
     let [start, end] = values;
     if (end - start < minWindowSize - 1) {
       if (start === range[0]) {
@@ -32,7 +30,7 @@ export function PerformanceChart() {
         start = end - minWindowSize + 1;
       }
     }
-    // Ogranicz do zakresu danych
+
     start = Math.max(0, Math.min(start, data.length - minWindowSize));
     end = Math.max(start + minWindowSize - 1, Math.min(end, data.length - 1));
     setRange([start, end]);

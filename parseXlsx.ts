@@ -1,14 +1,19 @@
 // @ts-expect-error no typings for this file
 import XLSX from "xlsx/xlsx.js";
-import { startOfDay } from "date-fns";
-import { isSameDay } from "date-fns";
+import { isSameDay, startOfDay } from "date-fns";
 import fs from "fs-extra";
 import { addDays } from "date-fns/addDays";
 import { format } from "date-fns/format";
 import { isBefore } from "date-fns/isBefore";
 import "dotenv/config";
-import type { TimelineCheckpoint, PortfolioEvent, PortfolioValue, Split, Stock, AssetsHistoricalData } from "./types";
+import type { AssetsHistoricalData, PortfolioEvent, PortfolioValue, Split, Stock, TimelineCheckpoint } from "./types";
 import { merge } from "lodash-es";
+
+if (!process.env.EXCHANGE_RATES_API_KEY) {
+  throw new Error(
+    "Please set the EXCHANGE_RATES_API_KEY environment variable in the .env file. See https://currencylayer.com/documentation",
+  );
+}
 
 const STOCK_OPEN_POSITION = "stockOpenPosition" as const;
 const STOCK_OPEN_EVENT = "stockOpenEvent" as const;
@@ -20,6 +25,7 @@ const OPEN_POSITION = "OPEN POSITION";
 
 const SP500 = "^GSPC";
 const ALPHA_VANTAGE_KEY = process.env.ALPHA_VANTAGE_KEY || "demo"; // Use demo key if not set
+const currencylayerApiKey = process.env.EXCHANGE_RATES_API_KEY;
 
 // Helper function to get column indexes by headers
 function getHeaderKeys<T extends readonly string[]>(
@@ -48,7 +54,7 @@ function parseXLSXDate(dateStr: string | number): Date {
   );
 }
 
-function getCacheFilePath(symbol: string, startDate: Date, endDate: Date): string {
+function getStockPricesCacheFilePath(symbol: string, startDate: Date, endDate: Date): string {
   return `./dist/priceCache-${symbol}-${format(startDate, "yyyy-MM-dd")}-${format(endDate, "yyyy-MM-dd")}.json`;
 }
 
@@ -270,44 +276,74 @@ async function fetchSplits(symbol: string): Promise<Split[] | null> {
 }
 
 /**
+ * Converts a price in a given currency to USD using provided rates.
+ * @param price - cena w oryginalnej walucie
+ * @param currency - kod waluty (np. "EUR", "GBP", "USD", "GBp")
+ * @param rates - obiekt kursów walutowych { EUR: 1.08, GBP: 1.25, ... } (kursy względem USD)
+ */
+function convertToUSD(price: number, currency: string, rates: Record<string, number>): number {
+  if (!currency || currency === "USD") {
+    return price;
+  }
+  if (currency === "GBp") {
+    // GBp = pensy brytyjskie, 100 GBp = 1 GBP, więc najpierw na GBP, potem na USD
+    const gbpPrice = price / 100;
+    return rates["USDGBP"] ? gbpPrice * (1 / rates["USDGBP"]) : gbpPrice;
+  }
+  if (rates["USD" + currency]) {
+    return price * (1 / rates["USD" + currency]);
+  }
+  return price;
+}
+
+function populatePriceMapForDate(
+  date: Date,
+  closePrice: number,
+  splits: Split[],
+  prices: { currency: string; price: Record<string, number> },
+) {
+  const dateKey = format(date, "yyyy-MM-dd");
+  let stockPrice = closePrice;
+
+  if (splits && splits.length && splits.some((split) => isBefore(date, new Date(split.effective_date)))) {
+    splits
+      .filter((split) => isBefore(date, new Date(split.effective_date)))
+      .forEach((split) => {
+        if (split.split_factor) {
+          stockPrice *= parseFloat(split.split_factor);
+        }
+      });
+  }
+
+  prices.price[dateKey] = stockPrice;
+}
+
+/**
  * Fetches closing prices for a given stock symbol in the specified date range.
- * @param {string} symbol - Stock symbol, e.g. "SMCI"
- * @param {Date} startDate - Start date of the range (inclusive)
- * @param {Date} endDate - End date of the range (inclusive)
- * @returns {Promise<number[] | null>} - Array of closing prices (in order for each day), or null if no data
+ * Now supports conversion to USD using daily exchange rates.
  */
 async function fetchStockClosePriceRange(
   symbol: string,
   startDate: Date,
   endDate: Date,
-): Promise<Map<string, number> | null> {
+): Promise<{ currency: string; price: Record<string, number> } | null> {
   const data = await fetchHistoricalStockData(symbol, startDate, endDate);
   if (data) {
     const timestamp = data.chart?.result?.[0]?.timestamp;
+    const currency = data.chart?.result?.[0]?.meta?.currency;
     const close = data.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
+
     if (timestamp && close) {
       const splits = (await fetchSplits(symbol)) as Split[];
+      const pricesRecord = { currency, price: {} };
 
-      const pricesMap = new Map<string, number>();
       for (let i = 0; i < timestamp.length; i++) {
         const date = new Date(timestamp[i] * 1000);
         if (date >= startDate && date <= endDate) {
-          if (splits && splits.length && splits.some((split) => isBefore(date, new Date(split.effective_date)))) {
-            let stockPrice = close[i];
-            splits
-              .filter((split) => isBefore(date, new Date(split.effective_date)))
-              .forEach((split) => {
-                if (split.split_factor) {
-                  stockPrice *= parseFloat(split.split_factor);
-                }
-              });
-            pricesMap.set(format(date, "yyyy-MM-dd"), stockPrice);
-          } else {
-            pricesMap.set(format(date, "yyyy-MM-dd"), symbol === "AV.UK" ? close[i] / 100 : close[i]); // Adjust for AV.UK price scale
-          }
+          populatePriceMapForDate(date, close[i], splits, pricesRecord);
         }
       }
-      return pricesMap;
+      return pricesRecord;
     }
     return null;
   }
@@ -328,7 +364,7 @@ function symbolToYahooSuffix(symbol: string): string {
 }
 
 // --- CACHE PRICES UTILS ---
-type StockPricesRecord = Record<string, Record<string, number | null>>; // symbol -> date(YYYY-MM-DD) -> price
+type StockPricesRecord = Record<string, { currency: string; price: Record<string, number> }>; // symbol -> date(YYYY-MM-DD) -> {price, currency}
 
 function getStockAPISymbol(symbol: string) {
   if (symbol === "OIL") {
@@ -343,32 +379,77 @@ function getStockAPISymbol(symbol: string) {
   return symbol.split(".")[0] + symbolToYahooSuffix(symbol);
 }
 
+// Fetches stock prices and fills in empty dates by carrying forward the most recent price
 async function populateStockPricesForSymbol(
   symbol: string,
   startDate: Date,
   endDate: Date,
-  stockPricesRecord: StockPricesRecord,
-) {
-  const prices = await fetchStockClosePriceRange(symbol, startDate, endDate);
+): Promise<{ currency: string; price: Record<string, number> }> {
+  const currencyAndPrices = await fetchStockClosePriceRange(symbol, startDate, endDate);
 
-  if (prices) {
+  if (currencyAndPrices) {
     getDateRange(startDate, endDate).forEach((date) => {
       const dateKey = format(date, "yyyy-MM-dd");
-      if (!prices.has(dateKey)) {
+      if (!(dateKey in currencyAndPrices.price)) {
         let recentDate = addDays(date, -1);
         while (recentDate >= startDate) {
-          if (prices.has(format(recentDate, "yyyy-MM-dd"))) {
-            stockPricesRecord[symbol][dateKey] = prices.get(format(recentDate, "yyyy-MM-dd")) ?? null;
+          if (format(recentDate, "yyyy-MM-dd") in currencyAndPrices.price) {
+            currencyAndPrices.price[dateKey] = currencyAndPrices.price[format(recentDate, "yyyy-MM-dd")];
             break;
           }
           recentDate = addDays(recentDate, -1);
         }
-      } else {
-        stockPricesRecord[symbol][dateKey] = prices.get(dateKey) ?? null;
       }
     });
-    fs.writeJsonSync(getCacheFilePath(symbol, startDate, endDate), stockPricesRecord[symbol]);
+    fs.writeJsonSync(getStockPricesCacheFilePath(symbol, startDate, endDate), currencyAndPrices);
+    return currencyAndPrices;
   }
+
+  return { currency: "USD", price: {} };
+}
+
+async function fetchExchangeRates(
+  currencies: Set<string>,
+  startDate: Date,
+): Promise<Record<string, Record<string, number>>> {
+  const cacheFile = `./dist/exchangeRatesCache-${format(new Date(), "yyyy-MM-dd")}.json`;
+  if (fs.existsSync(cacheFile)) {
+    return fs.readJsonSync(cacheFile);
+  }
+
+  if (currencies.has("GBp")) {
+    currencies.delete("GBp");
+    currencies.add("GBP");
+  }
+
+  let exchangeRates = {};
+  let endDate = addDays(startDate, 365);
+  while (isBefore(endDate, addDays(new Date(), 365))) {
+    const searchParams = new URLSearchParams();
+    searchParams.set("start_date", format(addDays(endDate, -365), "yyyy-MM-dd"));
+    searchParams.set("end_date", format(isBefore(endDate, new Date()) ? endDate : new Date(), "yyyy-MM-dd"));
+    searchParams.set("access_key", currencylayerApiKey);
+    searchParams.set(
+      "currencies",
+      Array.from(currencies)
+        .filter((c) => c !== "USD")
+        .join(","),
+    );
+
+    console.log("Fetching from " + `https://api.currencylayer.com/timeframe?${searchParams.toString()}`);
+    const response = await fetch(`https://api.currencylayer.com/timeframe?${searchParams.toString()}`);
+
+    if (response.ok) {
+      const data = (await response.json()).quotes as Record<string, Record<string, number>>;
+      exchangeRates = { ...exchangeRates, ...data };
+      endDate = addDays(endDate, 365);
+    } else {
+      throw new Error("Failed to fetch exchange rates:" + (await response.text()));
+    }
+  }
+
+  fs.writeJsonSync(cacheFile, exchangeRates);
+  return exchangeRates;
 }
 
 async function populatePricesForStocks(timeline: TimelineCheckpoint[], startDate: Date): Promise<StockPricesRecord> {
@@ -379,19 +460,18 @@ async function populatePricesForStocks(timeline: TimelineCheckpoint[], startDate
   if (!symbols.includes(SP500)) {
     symbols.push(SP500);
   }
-  for (const symbol of symbols) {
-    stockPricesRecord[symbol] = {};
 
-    if (fs.existsSync(getCacheFilePath(symbol, startDate, endDate))) {
-      stockPricesRecord[symbol] = fs.readJsonSync(getCacheFilePath(symbol, startDate, endDate));
+  for (const symbol of symbols) {
+    if (fs.existsSync(getStockPricesCacheFilePath(symbol, startDate, endDate))) {
+      stockPricesRecord[symbol] = fs.readJsonSync(getStockPricesCacheFilePath(symbol, startDate, endDate));
     } else {
-      await populateStockPricesForSymbol(symbol, startDate, endDate, stockPricesRecord);
+      stockPricesRecord[symbol] = await populateStockPricesForSymbol(symbol, startDate, endDate);
     }
 
     timeline.forEach((item) => {
       if (Object.keys(item.stocks).some((key) => key === symbol)) {
         const dateKey = format(item.date, "yyyy-MM-dd");
-        item.stocks[symbol].price = stockPricesRecord[symbol][dateKey] ?? undefined;
+        item.stocks[symbol].price = stockPricesRecord[symbol]?.price[dateKey] ?? undefined;
       }
     });
   }
@@ -399,13 +479,19 @@ async function populatePricesForStocks(timeline: TimelineCheckpoint[], startDate
   return stockPricesRecord;
 }
 
-function getStocksValueCached(stocks: Record<string, Stock>, date: Date, priceCache: StockPricesRecord): number {
+function getStocksValueCached(
+  stocks: Record<string, Stock>,
+  date: Date,
+  priceCache: StockPricesRecord,
+  exchangeRates: Record<string, Record<string, number>>,
+): number {
   let stocksValue = 0;
   const dateKey = date.toISOString().slice(0, 10);
   for (const symbol in stocks) {
-    const closePrice = priceCache[symbol]?.[dateKey] ?? null;
+    const closePrice = priceCache[symbol]?.price[dateKey] ?? null;
     if (closePrice !== null) {
-      stocksValue += closePrice * stocks[symbol].volume;
+      stocksValue +=
+        convertToUSD(closePrice, priceCache[symbol].currency, exchangeRates[dateKey]) * stocks[symbol].volume;
     }
   }
   return stocksValue;
@@ -430,6 +516,7 @@ function getDateRange(start: Date, end: Date): Date[] {
 async function getPortfolioValueData(
   timeline: TimelineCheckpoint[],
   prices: StockPricesRecord,
+  exchangeRates: Record<string, Record<string, number>>,
 ): Promise<PortfolioValue[]> {
   // Date range
   const startDate = timeline[0].date;
@@ -453,19 +540,28 @@ async function getPortfolioValueData(
         cash: previousState.cash,
         balance: previousState.balance,
         stocks: previousState.stocks,
-        portfolioValue: previousState.cash + getStocksValueCached(previousState.stocks, day, prices),
+        portfolioValue: previousState.cash + getStocksValueCached(previousState.stocks, day, prices, exchangeRates),
         profitOrLoss: previousState.profitOrLoss,
         sp500Stock: {
           volume: previousState.sp500Stock.volume || 0,
-          price: prices[SP500]?.[dateKey] ?? undefined,
+          price: convertToUSD(
+            prices[SP500]?.price[dateKey] ?? 0,
+            prices[SP500]?.currency,
+            exchangeRates[dateKey] || {},
+          ),
         },
-        sp500Value: getStocksValueCached({ [SP500]: { volume: previousState.sp500Stock.volume || 0 } }, day, prices),
+        sp500Value: getStocksValueCached(
+          { [SP500]: { volume: previousState.sp500Stock.volume || 0 } },
+          day,
+          prices,
+          exchangeRates,
+        ),
       });
     } else {
       const finalState = dayEvents.at(-1)!;
       let sp500Volume = result.at(-1)?.sp500Stock.volume || 0;
       if (dayEvents.some((e) => e.cashWithdrawalOrDeposit)) {
-        const sp500Price = prices[SP500]?.[format(day, "yyyy-MM-dd")] || null;
+        const sp500Price = prices[SP500]?.price[format(day, "yyyy-MM-dd")] || null;
         if (sp500Price === null) {
           console.warn("No SP500 price for date:", format(day, "yyyy-MM-dd"));
           continue;
@@ -481,10 +577,10 @@ async function getPortfolioValueData(
         cash: finalState.cash,
         balance: finalState.balance,
         stocks: finalState.stocks,
-        portfolioValue: finalState.cash + getStocksValueCached(finalState.stocks, day, prices),
+        portfolioValue: finalState.cash + getStocksValueCached(finalState.stocks, day, prices, exchangeRates),
         profitOrLoss: finalState.profitOrLoss,
-        sp500Stock: { volume: sp500Volume, price: prices[SP500]?.[dateKey] ?? undefined },
-        sp500Value: getStocksValueCached({ [SP500]: { volume: sp500Volume } }, day, prices),
+        sp500Stock: { volume: sp500Volume, price: prices[SP500]?.price[dateKey] ?? undefined },
+        sp500Value: getStocksValueCached({ [SP500]: { volume: sp500Volume } }, day, prices, exchangeRates),
       });
     }
   }
@@ -497,11 +593,13 @@ function getAssetsAnalysis(
   stockClosedPositionsOpenEvents: PortfolioEvent[],
   stockCloseEvents: PortfolioEvent[],
   prices: StockPricesRecord,
+  exchangeRates: Record<string, Record<string, number>>,
 ): AssetsHistoricalData {
   return stockOpenPositions
     .concat(stockClosedPositionsOpenEvents)
     .concat(stockCloseEvents)
     .reduce((acc, stockEvent) => {
+      const dateKey = format(stockEvent.date, "yyyy-MM-dd");
       if (stockEvent.type === STOCK_OPEN_POSITION) {
         const stockSymbol = stockEvent.stockSymbol;
         if (!stockSymbol) return acc;
@@ -513,11 +611,20 @@ function getAssetsAnalysis(
               {
                 volume: stockEvent.stocksVolumeChange,
                 stockValueOnBuy:
-                  stockEvent.stocksVolumeChange * (prices[stockSymbol]?.[format(stockEvent.date, "yyyy-MM-dd")] || 0),
+                  stockEvent.stocksVolumeChange *
+                  convertToUSD(
+                    prices[stockSymbol]?.price[dateKey] || 0,
+                    prices[stockSymbol]?.currency,
+                    exchangeRates[dateKey] || {},
+                  ),
                 profitOrLoss: stockEvent.profitOrLoss || 0,
               },
             ],
-            currentStockPrice: prices[stockSymbol]?.[format(new Date(), "yyyy-MM-dd")] || 0,
+            currentStockPrice: convertToUSD(
+              prices[stockSymbol]?.price[format(new Date(), "yyyy-MM-dd")] || 0,
+              prices[stockSymbol]?.currency,
+              exchangeRates[format(new Date(), "yyyy-MM-dd")] || {},
+            ),
           },
         });
       } else if (stockEvent.type === STOCK_OPEN_EVENT) {
@@ -531,10 +638,19 @@ function getAssetsAnalysis(
               {
                 volume: stockEvent.stocksVolumeChange,
                 stockValueOnBuy:
-                  stockEvent.stocksVolumeChange * (prices[stockSymbol]?.[format(stockEvent.date, "yyyy-MM-dd")] || 0),
+                  stockEvent.stocksVolumeChange *
+                  convertToUSD(
+                    prices[stockSymbol]?.price[dateKey] || 0,
+                    prices[stockSymbol]?.currency,
+                    exchangeRates[dateKey] || {},
+                  ),
               },
             ],
-            currentStockPrice: prices[stockSymbol]?.[format(new Date(), "yyyy-MM-dd")] || 0,
+            currentStockPrice: convertToUSD(
+              prices[stockSymbol]?.price[format(new Date(), "yyyy-MM-dd")] || 0,
+              prices[stockSymbol]?.currency,
+              exchangeRates[format(new Date(), "yyyy-MM-dd")] || {},
+            ),
           },
         });
       } else if (stockEvent.type === STOCK_CLOSE_EVENT) {
@@ -548,11 +664,20 @@ function getAssetsAnalysis(
               {
                 volume: stockEvent.stocksVolumeChange,
                 stockValueOnSell:
-                  stockEvent.stocksVolumeChange * (prices[stockSymbol]?.[format(stockEvent.date, "yyyy-MM-dd")] || 0),
+                  stockEvent.stocksVolumeChange *
+                  convertToUSD(
+                    prices[stockSymbol]?.price[dateKey] || 0,
+                    prices[stockSymbol]?.currency,
+                    exchangeRates[dateKey] || {},
+                  ),
                 profitOrLoss: stockEvent.profitOrLoss || 0,
               },
             ],
-            currentStockPrice: prices[stockSymbol]?.[format(new Date(), "yyyy-MM-dd")] || 0,
+            currentStockPrice: convertToUSD(
+              prices[stockSymbol]?.price[format(new Date(), "yyyy-MM-dd")] || 0,
+              prices[stockSymbol]?.currency,
+              exchangeRates[format(new Date(), "yyyy-MM-dd")] || {},
+            ),
           },
         });
       }
@@ -577,12 +702,25 @@ function getAssetsAnalysis(
   const startDate = timeline[0].date;
 
   const prices = await populatePricesForStocks(timeline, startDate);
-  const portfolioTimeline = await getPortfolioValueData(timeline, prices);
+  const currencies = new Set(
+    Object.values(prices)
+      .map(({ currency }) => currency)
+      .filter(Boolean),
+  );
+  const exchangeRates = await fetchExchangeRates(currencies, startDate);
+
+  const portfolioTimeline = await getPortfolioValueData(timeline, prices, exchangeRates);
   fs.writeJsonSync("./dist/portfolioTimeline.json", portfolioTimeline, {
     spaces: 2,
   });
 
-  const assetsAnalysis = getAssetsAnalysis(openPositions, closedStocksOpenEvents, closedStocksCloseEvents, prices);
+  const assetsAnalysis = getAssetsAnalysis(
+    openPositions,
+    closedStocksOpenEvents,
+    closedStocksCloseEvents,
+    prices,
+    exchangeRates,
+  );
   fs.writeJsonSync("./dist/assetsAnalysis.json", assetsAnalysis, {
     spaces: 2,
   });
