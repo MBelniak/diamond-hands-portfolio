@@ -1,8 +1,8 @@
-import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar.tsx";
-import { Outlet } from "react-router";
-import { SidebarMenuContent } from "@/components/SidebarMenuContent.tsx";
+import React, { PropsWithChildren } from "react";
+import { SidebarContent, Sidebar, SidebarProvider } from "./ui/sidebar";
+import { SidebarMenuContent } from "./SidebarMenuContent";
 
-export const SidebarMenuWrapper = () => {
+export const SidebarMenuWrapper: React.FC<PropsWithChildren> = ({ children }) => {
   return (
     <SidebarProvider>
       <Sidebar>
@@ -10,9 +10,7 @@ export const SidebarMenuWrapper = () => {
           <SidebarMenuContent />
         </SidebarContent>
       </Sidebar>
-      <main className={"w-full"}>
-        <Outlet />
-      </main>
+      <main className={"w-full"}>{children}</main>
     </SidebarProvider>
   );
 };

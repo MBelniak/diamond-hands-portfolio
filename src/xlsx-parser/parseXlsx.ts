@@ -1,13 +1,23 @@
 // @ts-expect-error no typings for this file
 import XLSX from "xlsx/xlsx.js";
 import { isSameDay, startOfDay } from "date-fns";
-import fs from "fs-extra";
 import { addDays } from "date-fns/addDays";
 import { format } from "date-fns/format";
 import { isBefore } from "date-fns/isBefore";
-import "dotenv/config";
-import type { AssetsHistoricalData, PortfolioEvent, PortfolioValue, Split, Stock, TimelineCheckpoint } from "./types";
+import type {
+  AssetsHistoricalData,
+  PortfolioAnalysis,
+  PortfolioEvent,
+  PortfolioValue,
+  Split,
+  Stock,
+  TimelineCheckpoint,
+} from "./types";
 import { merge } from "lodash-es";
+import { createClient } from "redis";
+import { getExchangeRatesRedisKey, getStockPricesRedisKey } from "./redis";
+
+const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 
 if (!process.env.EXCHANGE_RATES_API_KEY) {
   throw new Error(
@@ -52,10 +62,6 @@ function parseXLSXDate(dateStr: string | number): Date {
     dateObjectParsed.M || 0,
     dateObjectParsed.S || 0,
   );
-}
-
-function getStockPricesCacheFilePath(symbol: string, startDate: Date, endDate: Date): string {
-  return `./dist/priceCache-${symbol}-${format(startDate, "yyyy-MM-dd")}-${format(endDate, "yyyy-MM-dd")}.json`;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -216,14 +222,13 @@ function createEventTimeline(allEvents: PortfolioEvent[]): TimelineCheckpoint[] 
  * Parses the sheet and tracks the value of cash and stocks over time.
  * Returns an array of objects { date, cash, stocks } sorted ascending by date.
  */
-function getCashAndStocksEvents(filePath: string): {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getCashAndStocksEvents(workbook: any): {
   cashEvents: PortfolioEvent[];
   openPositions: PortfolioEvent[];
   closedStocksOpenEvents: PortfolioEvent[];
   closedStocksCloseEvents: PortfolioEvent[];
 } {
-  const workbook = XLSX.readFile(filePath);
-
   // Collect all cash operations
   const cashEvents = getCashEvents(workbook);
   // Collect all stock open positions
@@ -401,7 +406,7 @@ async function populateStockPricesForSymbol(
         }
       }
     });
-    fs.writeJsonSync(getStockPricesCacheFilePath(symbol, startDate, endDate), currencyAndPrices);
+    await redis.set(getStockPricesRedisKey(symbol, startDate, endDate), JSON.stringify(currencyAndPrices));
     return currencyAndPrices;
   }
 
@@ -412,9 +417,9 @@ async function fetchExchangeRates(
   currencies: Set<string>,
   startDate: Date,
 ): Promise<Record<string, Record<string, number>>> {
-  const cacheFile = `./dist/exchangeRatesCache-${format(new Date(), "yyyy-MM-dd")}.json`;
-  if (fs.existsSync(cacheFile)) {
-    return fs.readJsonSync(cacheFile);
+  const today = new Date();
+  if (await redis.exists(getExchangeRatesRedisKey(today))) {
+    return JSON.parse((await redis.get(getExchangeRatesRedisKey(today))) as string);
   }
 
   if (currencies.has("GBp")) {
@@ -448,7 +453,7 @@ async function fetchExchangeRates(
     }
   }
 
-  fs.writeJsonSync(cacheFile, exchangeRates);
+  await redis.set(getExchangeRatesRedisKey(today), JSON.stringify(exchangeRates));
   return exchangeRates;
 }
 
@@ -462,8 +467,10 @@ async function populatePricesForStocks(timeline: TimelineCheckpoint[], startDate
   }
 
   for (const symbol of symbols) {
-    if (fs.existsSync(getStockPricesCacheFilePath(symbol, startDate, endDate))) {
-      stockPricesRecord[symbol] = fs.readJsonSync(getStockPricesCacheFilePath(symbol, startDate, endDate));
+    if (await redis.exists(getStockPricesRedisKey(symbol, startDate, endDate))) {
+      stockPricesRecord[symbol] = JSON.parse(
+        (await redis.get(getStockPricesRedisKey(symbol, startDate, endDate))) as string,
+      );
     } else {
       stockPricesRecord[symbol] = await populateStockPricesForSymbol(symbol, startDate, endDate);
     }
@@ -686,10 +693,10 @@ function getAssetsAnalysis(
     }, {} as AssetsHistoricalData);
 }
 
-(async () => {
-  fs.mkdirp("./dist");
+async function main(xlsxArrayBuffer: ArrayBuffer): Promise<PortfolioAnalysis> {
+  const workbook = XLSX.read(xlsxArrayBuffer);
   const { cashEvents, openPositions, closedStocksOpenEvents, closedStocksCloseEvents } =
-    getCashAndStocksEvents("./Test spreadsheet.xlsx");
+    getCashAndStocksEvents(workbook);
 
   // Merge and sort all events by date
   const allEvents = [...cashEvents, ...openPositions, ...closedStocksOpenEvents, ...closedStocksCloseEvents].toSorted(
@@ -697,7 +704,8 @@ function getAssetsAnalysis(
   );
 
   const timeline = createEventTimeline(allEvents);
-  if (!timeline.length) return;
+
+  if (!timeline.length) return { assetsAnalysis: {}, portfolioTimeline: [] };
 
   const startDate = timeline[0].date;
 
@@ -710,9 +718,10 @@ function getAssetsAnalysis(
   const exchangeRates = await fetchExchangeRates(currencies, startDate);
 
   const portfolioTimeline = await getPortfolioValueData(timeline, prices, exchangeRates);
-  fs.writeJsonSync("./dist/portfolioTimeline.json", portfolioTimeline, {
-    spaces: 2,
-  });
+
+  // fs.writeJsonSync("./dist/portfolioTimeline.json", portfolioTimeline, {
+  //   spaces: 2,
+  // });
 
   const assetsAnalysis = getAssetsAnalysis(
     openPositions,
@@ -721,7 +730,11 @@ function getAssetsAnalysis(
     prices,
     exchangeRates,
   );
-  fs.writeJsonSync("./dist/assetsAnalysis.json", assetsAnalysis, {
-    spaces: 2,
-  });
-})();
+
+  return { assetsAnalysis, portfolioTimeline };
+  // fs.writeJsonSync("./dist/assetsAnalysis.json", assetsAnalysis, {
+  //   spaces: 2,
+  // });
+}
+
+export default main;

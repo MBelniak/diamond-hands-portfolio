@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Link } from "react-router";
+import Link from "next/link";
 
 const items = [
   {
@@ -32,7 +32,7 @@ export const SidebarMenuContent = () => {
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
-                <Link to={item.url}>
+                <Link href={item.url}>
                   <item.icon />
                   <span>{item.title}</span>
                 </Link>

@@ -1,11 +1,21 @@
-import portfolioTimeline from "../../../dist/portfolioTimeline.json";
+"use client";
 import React, { type PropsWithChildren } from "react";
+import { useStore } from "@/lib/store";
+import { redirect } from "next/navigation";
 
 const KeyFigureValue: React.FC<PropsWithChildren> = ({ children }) => {
   return <p className={"text-2xl"}>{children}</p>;
 };
 
 export const PerformanceKeyFigures = () => {
+  const { portfolioAnalysis } = useStore();
+
+  if (!portfolioAnalysis) {
+    redirect("/");
+  }
+
+  const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
+
   return (
     <div className={"w-full flex-col flex flex-wrap lg:flex-row lg:justify-around"}>
       <div className={"p-8 flex flex-col items-start"}>

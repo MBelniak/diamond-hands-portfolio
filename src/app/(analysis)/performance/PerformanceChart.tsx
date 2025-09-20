@@ -1,7 +1,9 @@
+"use client";
 import { useState } from "react";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import portfolioTimeline from "../../../dist/portfolioTimeline.json";
 import { DualRangeSlider } from "@/components/ui/dual-range-slider";
+import { useStore } from "@/lib/store";
+import { redirect } from "next/navigation";
 
 const currency = "$";
 const chartKeys = {
@@ -12,6 +14,14 @@ const chartKeys = {
 };
 
 export function PerformanceChart() {
+  const { portfolioAnalysis } = useStore();
+
+  if (!portfolioAnalysis) {
+    redirect("/");
+  }
+
+  const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
+
   const data = portfolioTimeline.map((item) => ({ ...item, date: item.date.slice(0, 10) }));
 
   const minWindowSize = 7;

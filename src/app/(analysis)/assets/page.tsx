@@ -1,15 +1,20 @@
-import assetsAnalysis from "../../../dist/assetsAnalysis.json";
+"use client";
 import { useMemo } from "react";
-import type { AssetsHistoricalData } from "../../../types";
+import { useStore } from "@/lib/store";
+import { redirect } from "next/navigation";
 
-export const Assets = () => {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
-  const assetsHistoricalData = assetsAnalysis as AssetsHistoricalData[];
+export default function Assets() {
+  const { portfolioAnalysis } = useStore();
+
+  if (!portfolioAnalysis) {
+    redirect("/");
+  }
+
+  const assetsAnalysis = portfolioAnalysis.assetsAnalysis;
 
   const stocks = useMemo(() => {
-    return Array.from(new Set(Object.keys(assetsHistoricalData)));
-  }, [assetsHistoricalData]);
+    return Array.from(new Set(Object.keys(assetsAnalysis)));
+  }, [assetsAnalysis]);
 
   function getProfitLossBgColor(value: number): string {
     if (maxProfitLoss === minProfitLoss) return "";
@@ -21,9 +26,7 @@ export const Assets = () => {
 
   const stockProfitArray = stocks
     .map((stock) => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      const assetEvents = assetsHistoricalData[stock];
+      const assetEvents = assetsAnalysis[stock];
       let profitOrLoss = 0;
 
       if (assetEvents?.closeEvents) {
@@ -43,9 +46,7 @@ export const Assets = () => {
     .toSorted((left, right) => right.profitOrLoss - left.profitOrLoss);
 
   const stockPotentialProfitArray = stocks.map((stock) => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    const assetEvents = assetsHistoricalData[stock];
+    const assetEvents = assetsAnalysis[stock];
 
     const potentialValue = assetEvents?.openEvents?.reduce(
       (acc: number, val: { volume: number; stockValueOnBuy: number }) => {
@@ -105,4 +106,4 @@ export const Assets = () => {
       </table>
     </div>
   );
-};
+}

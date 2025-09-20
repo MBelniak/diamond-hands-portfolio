@@ -64,3 +64,8 @@ export type AssetsHistoricalData = {
     currentStockPrice: number;
   };
 };
+
+export type PortfolioAnalysis = {
+  assetsAnalysis: AssetsHistoricalData;
+  portfolioTimeline: PortfolioValue[];
+};
