@@ -2,22 +2,39 @@
 import XLSX from "xlsx/xlsx.js";
 import { isSameDay, startOfDay } from "date-fns";
 import { addDays } from "date-fns/addDays";
-import { format } from "date-fns/format";
 import { isBefore } from "date-fns/isBefore";
-import type {
-  AssetsHistoricalData,
-  PortfolioAnalysis,
-  PortfolioEvent,
-  PortfolioValue,
-  Split,
-  Stock,
-  TimelineCheckpoint,
+import {
+  type AssetsHistoricalData,
+  type PortfolioAnalysis,
+  type PortfolioEvent,
+  type PortfolioValue,
+  type Split,
+  type Stock,
+  StockPricesRecord,
+  type TimelineCheckpoint,
 } from "./types";
 import { merge } from "lodash-es";
-import { createClient } from "redis";
+import { createClient, SetOptions } from "redis";
 import { getExchangeRatesRedisKey, getStockPricesRedisKey } from "./redis";
+import {
+  CASH,
+  CASH_OPERATION_HISTORY,
+  CLOSED_POSITION_HISTORY,
+  OPEN_POSITION,
+  SP500,
+  STOCK_CLOSE_EVENT,
+  STOCK_OPEN_EVENT,
+  STOCK_OPEN_POSITION,
+} from "@/xlsx-parser/consts";
+import { formatDate, getDateRange, getStockAPISymbol } from "@/xlsx-parser/utils";
 
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
+const REDIS_EXPIRE_IN_DAY: SetOptions = {
+  expiration: {
+    type: "EX",
+    value: 60 * 60 * 24, // 1 day in seconds
+  },
+};
 
 if (!process.env.EXCHANGE_RATES_API_KEY) {
   throw new Error(
@@ -25,15 +42,6 @@ if (!process.env.EXCHANGE_RATES_API_KEY) {
   );
 }
 
-const STOCK_OPEN_POSITION = "stockOpenPosition" as const;
-const STOCK_OPEN_EVENT = "stockOpenEvent" as const;
-const STOCK_CLOSE_EVENT = "stockCloseEvent" as const;
-const CASH = "cash" as const;
-const CLOSED_POSITION_HISTORY = "CLOSED POSITION HISTORY";
-const CASH_OPERATION_HISTORY = "CASH OPERATION HISTORY";
-const OPEN_POSITION = "OPEN POSITION";
-
-const SP500 = "^GSPC";
 const ALPHA_VANTAGE_KEY = process.env.ALPHA_VANTAGE_KEY || "demo"; // Use demo key if not set
 const currencylayerApiKey = process.env.EXCHANGE_RATES_API_KEY;
 
@@ -307,7 +315,7 @@ function populatePriceMapForDate(
   splits: Split[],
   prices: { currency: string; price: Record<string, number> },
 ) {
-  const dateKey = format(date, "yyyy-MM-dd");
+  const dateKey = formatDate(date);
   let stockPrice = closePrice;
 
   if (splits && splits.length && splits.some((split) => isBefore(date, new Date(split.effective_date)))) {
@@ -355,35 +363,6 @@ async function fetchStockClosePriceRange(
   return null;
 }
 
-function symbolToYahooSuffix(symbol: string): string {
-  if (symbol.endsWith(".UK")) {
-    return ".L";
-  }
-  if (symbol.endsWith(".NL")) {
-    return ".AS";
-  }
-  if (symbol.endsWith(".US")) {
-    return "";
-  }
-  return symbol.includes(".") ? "." + symbol.split(".").at(-1)! : "";
-}
-
-// --- CACHE PRICES UTILS ---
-type StockPricesRecord = Record<string, { currency: string; price: Record<string, number> }>; // symbol -> date(YYYY-MM-DD) -> {price, currency}
-
-function getStockAPISymbol(symbol: string) {
-  if (symbol === "OIL") {
-    return "CL=F"; // WTI Crude Oil Futures
-  }
-  if (symbol === "GOLD") {
-    return "GC=F"; // Gold Futures
-  }
-  if (symbol === "US100") {
-    return "^NDX"; // us 100 index
-  }
-  return symbol.split(".")[0] + symbolToYahooSuffix(symbol);
-}
-
 // Fetches stock prices and fills in empty dates by carrying forward the most recent price
 async function populateStockPricesForSymbol(
   symbol: string,
@@ -394,19 +373,23 @@ async function populateStockPricesForSymbol(
 
   if (currencyAndPrices) {
     getDateRange(startDate, endDate).forEach((date) => {
-      const dateKey = format(date, "yyyy-MM-dd");
+      const dateKey = formatDate(date);
       if (!(dateKey in currencyAndPrices.price)) {
         let recentDate = addDays(date, -1);
         while (recentDate >= startDate) {
-          if (format(recentDate, "yyyy-MM-dd") in currencyAndPrices.price) {
-            currencyAndPrices.price[dateKey] = currencyAndPrices.price[format(recentDate, "yyyy-MM-dd")];
+          if (formatDate(recentDate) in currencyAndPrices.price) {
+            currencyAndPrices.price[dateKey] = currencyAndPrices.price[formatDate(recentDate)];
             break;
           }
           recentDate = addDays(recentDate, -1);
         }
       }
     });
-    await redis.set(getStockPricesRedisKey(symbol, startDate, endDate), JSON.stringify(currencyAndPrices));
+    await redis.set(
+      getStockPricesRedisKey(symbol, startDate, endDate),
+      JSON.stringify(currencyAndPrices),
+      REDIS_EXPIRE_IN_DAY,
+    );
     return currencyAndPrices;
   }
 
@@ -431,8 +414,8 @@ async function fetchExchangeRates(
   let endDate = addDays(startDate, 365);
   while (isBefore(endDate, addDays(new Date(), 365))) {
     const searchParams = new URLSearchParams();
-    searchParams.set("start_date", format(addDays(endDate, -365), "yyyy-MM-dd"));
-    searchParams.set("end_date", format(isBefore(endDate, new Date()) ? endDate : new Date(), "yyyy-MM-dd"));
+    searchParams.set("start_date", formatDate(addDays(endDate, -365)));
+    searchParams.set("end_date", formatDate(isBefore(endDate, new Date()) ? endDate : new Date()));
     searchParams.set("access_key", currencylayerApiKey);
     searchParams.set(
       "currencies",
@@ -453,7 +436,7 @@ async function fetchExchangeRates(
     }
   }
 
-  await redis.set(getExchangeRatesRedisKey(today), JSON.stringify(exchangeRates));
+  await redis.set(getExchangeRatesRedisKey(today), JSON.stringify(exchangeRates), REDIS_EXPIRE_IN_DAY);
   return exchangeRates;
 }
 
@@ -477,7 +460,7 @@ async function populatePricesForStocks(timeline: TimelineCheckpoint[], startDate
 
     timeline.forEach((item) => {
       if (Object.keys(item.stocks).some((key) => key === symbol)) {
-        const dateKey = format(item.date, "yyyy-MM-dd");
+        const dateKey = formatDate(item.date);
         item.stocks[symbol].price = stockPricesRecord[symbol]?.price[dateKey] ?? undefined;
       }
     });
@@ -505,19 +488,6 @@ function getStocksValueCached(
 }
 
 /**
- * Function generates an array of dates from the start date to the end date (inclusive)
- */
-function getDateRange(start: Date, end: Date): Date[] {
-  const arr = [];
-  const dt = new Date(start);
-  while (dt <= end) {
-    arr.push(new Date(dt));
-    dt.setDate(dt.getDate() + 1);
-  }
-  return arr;
-}
-
-/**
  * Main function: for each day fetches the close price and calculates the portfolio value
  */
 async function getPortfolioValueData(
@@ -532,7 +502,7 @@ async function getPortfolioValueData(
   // For each date, find the portfolio state (cash, stocks) and fetch the close price
   const result: PortfolioValue[] = [];
   for (const day of allDates) {
-    const dateKey = format(day, "yyyy-MM-dd");
+    const dateKey = formatDate(day);
     // Find events for this day
     const dayEvents = timeline.filter((t) => isSameDay(t.date, day));
 
@@ -568,9 +538,9 @@ async function getPortfolioValueData(
       const finalState = dayEvents.at(-1)!;
       let sp500Volume = result.at(-1)?.sp500Stock.volume || 0;
       if (dayEvents.some((e) => e.cashWithdrawalOrDeposit)) {
-        const sp500Price = prices[SP500]?.price[format(day, "yyyy-MM-dd")] || null;
+        const sp500Price = prices[SP500]?.price[formatDate(day)] || null;
         if (sp500Price === null) {
-          console.warn("No SP500 price for date:", format(day, "yyyy-MM-dd"));
+          console.warn("No SP500 price for date:", formatDate(day));
           continue;
         }
         const withdrawalOrDepositBalance = dayEvents
@@ -606,11 +576,17 @@ function getAssetsAnalysis(
     .concat(stockClosedPositionsOpenEvents)
     .concat(stockCloseEvents)
     .reduce((acc, stockEvent) => {
-      const dateKey = format(stockEvent.date, "yyyy-MM-dd");
-      if (stockEvent.type === STOCK_OPEN_POSITION) {
-        const stockSymbol = stockEvent.stockSymbol;
-        if (!stockSymbol) return acc;
+      const dateKey = formatDate(stockEvent.date);
+      const stockSymbol = "stockSymbol" in stockEvent ? stockEvent["stockSymbol"] : null;
+      if (!stockSymbol) return acc;
 
+      const currentStockPrice = convertToUSD(
+        prices[stockSymbol]?.price[formatDate(new Date())] || 0,
+        prices[stockSymbol]?.currency,
+        exchangeRates[formatDate(new Date())] || {},
+      );
+
+      if (stockEvent.type === STOCK_OPEN_POSITION) {
         return merge(acc, {
           [stockSymbol]: {
             openPositions: [
@@ -627,11 +603,7 @@ function getAssetsAnalysis(
                 profitOrLoss: stockEvent.profitOrLoss || 0,
               },
             ],
-            currentStockPrice: convertToUSD(
-              prices[stockSymbol]?.price[format(new Date(), "yyyy-MM-dd")] || 0,
-              prices[stockSymbol]?.currency,
-              exchangeRates[format(new Date(), "yyyy-MM-dd")] || {},
-            ),
+            currentStockPrice,
           },
         });
       } else if (stockEvent.type === STOCK_OPEN_EVENT) {
@@ -653,11 +625,7 @@ function getAssetsAnalysis(
                   ),
               },
             ],
-            currentStockPrice: convertToUSD(
-              prices[stockSymbol]?.price[format(new Date(), "yyyy-MM-dd")] || 0,
-              prices[stockSymbol]?.currency,
-              exchangeRates[format(new Date(), "yyyy-MM-dd")] || {},
-            ),
+            currentStockPrice,
           },
         });
       } else if (stockEvent.type === STOCK_CLOSE_EVENT) {
@@ -680,11 +648,7 @@ function getAssetsAnalysis(
                 profitOrLoss: stockEvent.profitOrLoss || 0,
               },
             ],
-            currentStockPrice: convertToUSD(
-              prices[stockSymbol]?.price[format(new Date(), "yyyy-MM-dd")] || 0,
-              prices[stockSymbol]?.currency,
-              exchangeRates[format(new Date(), "yyyy-MM-dd")] || {},
-            ),
+            currentStockPrice,
           },
         });
       }
@@ -693,7 +657,7 @@ function getAssetsAnalysis(
     }, {} as AssetsHistoricalData);
 }
 
-async function main(xlsxArrayBuffer: ArrayBuffer): Promise<PortfolioAnalysis> {
+async function getAnalysisFromXlsxBuffer(xlsxArrayBuffer: ArrayBuffer): Promise<PortfolioAnalysis> {
   const workbook = XLSX.read(xlsxArrayBuffer);
   const { cashEvents, openPositions, closedStocksOpenEvents, closedStocksCloseEvents } =
     getCashAndStocksEvents(workbook);
@@ -715,13 +679,10 @@ async function main(xlsxArrayBuffer: ArrayBuffer): Promise<PortfolioAnalysis> {
       .map(({ currency }) => currency)
       .filter(Boolean),
   );
+
   const exchangeRates = await fetchExchangeRates(currencies, startDate);
 
   const portfolioTimeline = await getPortfolioValueData(timeline, prices, exchangeRates);
-
-  // fs.writeJsonSync("./dist/portfolioTimeline.json", portfolioTimeline, {
-  //   spaces: 2,
-  // });
 
   const assetsAnalysis = getAssetsAnalysis(
     openPositions,
@@ -732,9 +693,6 @@ async function main(xlsxArrayBuffer: ArrayBuffer): Promise<PortfolioAnalysis> {
   );
 
   return { assetsAnalysis, portfolioTimeline };
-  // fs.writeJsonSync("./dist/assetsAnalysis.json", assetsAnalysis, {
-  //   spaces: 2,
-  // });
 }
 
-export default main;
+export default getAnalysisFromXlsxBuffer;

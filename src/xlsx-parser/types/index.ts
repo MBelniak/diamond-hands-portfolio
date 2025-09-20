@@ -1,3 +1,5 @@
+import { CASH, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT, STOCK_OPEN_POSITION } from "../consts";
+
 export type Stock = {
   volume: number;
   stockVolumeSold?: number;
@@ -18,11 +20,6 @@ export type PortfolioValue = {
 };
 
 export type Split = { effective_date: string; split_factor: string };
-
-const STOCK_OPEN_POSITION = "stockOpenPosition" as const;
-const STOCK_OPEN_EVENT = "stockOpenEvent" as const;
-const STOCK_CLOSE_EVENT = "stockCloseEvent" as const;
-const CASH = "cash" as const;
 
 export type PortfolioEvent = {
   date: Date;
@@ -64,6 +61,8 @@ export type AssetsHistoricalData = {
     currentStockPrice: number;
   };
 };
+
+export type StockPricesRecord = Record<string, { currency: string; price: Record<string, number> }>; // symbol -> date(YYYY-MM-DD) -> {price, currency}
 
 export type PortfolioAnalysis = {
   assetsAnalysis: AssetsHistoricalData;
