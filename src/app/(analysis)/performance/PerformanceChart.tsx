@@ -47,24 +47,33 @@ export function PerformanceChart() {
   };
 
   return (
-    <>
-      <h2>Portfolio value over time ({currency})</h2>
+    <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl w-full p-6">
+      <h2 className="text-2xl font-bold text-white mb-6 text-center drop-shadow-lg">
+        Portfolio value over time ({currency})
+      </h2>
       <div style={{ width: "100%", padding: "0 24px", boxSizing: "border-box", height: 350 }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={windowedData}>
-            <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} />
+            <XAxis dataKey="date" tick={{ fontSize: 12, fill: "#fff" }} />
+            <YAxis tick={{ fontSize: 12, fill: "#fff" }} />
             <Tooltip
               formatter={(value: number) => value.toFixed(2)}
               labelFormatter={(label) => `Date: ${label}`}
               itemSorter={({ dataKey }) => {
                 return { portfolioValue: -1, profitOrLoss: 1, cash: 2 }[dataKey as string] || 3;
               }}
+              contentStyle={{
+                background: "rgba(30, 50, 150, 1)",
+                borderRadius: "0.75rem",
+                color: "#fff",
+                border: "1px solid #a5b4fc",
+              }}
+              labelStyle={{ color: "#fff" }}
             />
             <Line
               type="monotone"
               dataKey="portfolioValue"
-              stroke="#8884d8"
+              stroke="#a5b4fc"
               strokeWidth={2}
               dot={false}
               name={chartKeys.portfolioValue}
@@ -72,16 +81,16 @@ export function PerformanceChart() {
             <Line
               type="monotone"
               dataKey="profitOrLoss"
-              stroke="#0c4a6e"
+              stroke="#38bdf8"
               strokeWidth={2}
               dot={false}
               name={chartKeys.profitOrLoss}
             />
-            <Line type="monotone" dataKey="cash" stroke="#8884d855" strokeWidth={2} dot={false} name={chartKeys.cash} />
+            <Line type="monotone" dataKey="cash" stroke="#8884d8aa" strokeWidth={2} dot={false} name={chartKeys.cash} />
             <Line
               type="monotone"
               dataKey="sp500Value"
-              stroke="#00bc4555"
+              stroke="#34d399"
               strokeWidth={2}
               dot={false}
               name={chartKeys.sp500Value}
@@ -89,10 +98,8 @@ export function PerformanceChart() {
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <div
-        style={{ width: "100%", padding: "0 24px", marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}
-      >
-        <label>
+      <div className={"w-full mt-4 flex flex-col gap-8 px-8"}>
+        <label className="text-white font-semibold">
           Date range: {data[windowStart].date} - {data[windowEnd].date}
         </label>
         <DualRangeSlider
@@ -105,6 +112,6 @@ export function PerformanceChart() {
           style={{ width: "100%" }}
         />
       </div>
-    </>
+    </div>
   );
 }

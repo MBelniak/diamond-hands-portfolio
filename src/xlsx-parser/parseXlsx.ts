@@ -72,110 +72,102 @@ function parseXLSXDate(dateStr: string | number): Date {
   );
 }
 
+// Helper to extract header index and keys from sheet data
+function extractHeaderAndKeys<T extends readonly string[]>(
+  data: Record<string, string>[],
+  headerNames: T,
+): { headerIdx: number; headerKeys: Record<T[number], string> } {
+  const headerIdx = data.findIndex((row) => Object.values(row).some((val) => headerNames.includes(val as T[number])));
+  const headerRow = data[headerIdx];
+  const headerKeys = getHeaderKeys(headerRow, headerNames);
+  return { headerIdx, headerKeys };
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getCashEvents(workbook: any): PortfolioEvent[] {
-  // Parse cash operation history
   const cashSheet = workbook.Sheets[CASH_OPERATION_HISTORY];
   const cashData: Record<string, string>[] = XLSX.utils.sheet_to_json(cashSheet);
 
-  // CASH: find headers
-  const cashHeaderIdx = cashData.findIndex((row) => Object.values(row).includes("Time"));
-  const cashHeaders = cashData[cashHeaderIdx];
-  const cashKeys = getHeaderKeys(cashHeaders, ["Time", "Amount", "Type"] as const);
+  const { headerIdx, headerKeys } = extractHeaderAndKeys(cashData, ["Time", "Amount", "Type"] as const);
 
   return cashData
-    .slice(cashHeaderIdx + 1)
-    .filter((row) => row[cashKeys["Time"]])
+    .slice(headerIdx + 1)
+    .filter((row) => row[headerKeys["Time"]])
     .map((row) => ({
-      date: parseXLSXDate(row[cashKeys["Time"]]),
-      cashChange: parseFloat(row[cashKeys["Amount"]]) || 0,
+      date: parseXLSXDate(row[headerKeys["Time"]]),
+      cashChange: parseFloat(row[headerKeys["Amount"]]) || 0,
       type: CASH,
-      cashWithdrawalOrDeposit: ["deposit", "withdrawal", "transfer"].includes(row[cashKeys["Type"]])
-        ? parseFloat(row[cashKeys["Amount"]]) || 0
+      cashWithdrawalOrDeposit: ["deposit", "withdrawal", "transfer"].includes(row[headerKeys["Type"]])
+        ? parseFloat(row[headerKeys["Amount"]]) || 0
         : null,
     }));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getStockOpenPositions(workbook: any): PortfolioEvent[] {
-  // Parse open positions history (stocks)
   const openSheet = workbook.Sheets[Object.keys(workbook.Sheets).find((key) => key.startsWith(OPEN_POSITION))!];
   const openData: Record<string, string>[] = XLSX.utils.sheet_to_json(openSheet);
 
-  // STOCKS: find headers
-  const openStocksHeaderIdx = openData.findIndex((row) => Object.values(row).includes("Open time"));
-  const openStocksHeaders = openData[openStocksHeaderIdx];
-  const openStocksKeys = getHeaderKeys(openStocksHeaders, ["Open time", "Volume", "Symbol", "Gross P/L"]);
+  const { headerIdx, headerKeys } = extractHeaderAndKeys(openData, ["Open time", "Volume", "Symbol", "Gross P/L"]);
 
   return openData
-    .slice(openStocksHeaderIdx + 1)
-    .filter((row) => row[openStocksKeys["Open time"]])
-    .map((row) => {
-      const volume = parseFloat(row[openStocksKeys["Volume"]]) || 0;
-      return {
-        date: parseXLSXDate(row[openStocksKeys["Open time"]]),
-        stocksVolumeChange: volume,
-        type: STOCK_OPEN_POSITION,
-        stockSymbol: row[openStocksKeys["Symbol"]] || null,
-        profitOrLoss: parseFloat(row[openStocksKeys["Gross P/L"]]) || 0,
-      };
-    });
+    .slice(headerIdx + 1)
+    .filter((row) => row[headerKeys["Open time"]])
+    .map((row) => ({
+      date: parseXLSXDate(row[headerKeys["Open time"]]),
+      stocksVolumeChange: parseFloat(row[headerKeys["Volume"]]) || 0,
+      type: STOCK_OPEN_POSITION,
+      stockSymbol: row[headerKeys["Symbol"]] || null,
+      profitOrLoss: parseFloat(row[headerKeys["Gross P/L"]]) || 0,
+    }));
 }
 
+// Consolidated closed operations extraction
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getClosedOperationsData(workbook: any) {
-  // Parse closed positions history (stocks)
+function getClosedOperations(workbook: any) {
   const closedSheet = workbook.Sheets[CLOSED_POSITION_HISTORY];
   const closedData: Record<string, string>[] = XLSX.utils.sheet_to_json(closedSheet);
 
-  const closedStocksHeaderIdx = closedData.findIndex((row) => Object.values(row).includes("Close time"));
-  const closedStocksHeaders = closedData[closedStocksHeaderIdx];
-  const closedStocksKeys = getHeaderKeys(closedStocksHeaders, [
+  const { headerIdx, headerKeys } = extractHeaderAndKeys(closedData, [
     "Close time",
     "Open time",
     "Volume",
     "Symbol",
     "Gross P/L",
-  ]);
+  ] as const);
 
-  return { closedData, closedStocksHeaderIdx, closedStocksKeys };
+  return { closedData, headerIdx, headerKeys };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getClosedStocksOpenEvents(workbook: any): PortfolioEvent[] {
-  const { closedData, closedStocksHeaderIdx, closedStocksKeys } = getClosedOperationsData(workbook);
+  const { closedData, headerIdx, headerKeys } = getClosedOperations(workbook);
 
   return closedData
-    .slice(closedStocksHeaderIdx + 1)
-    .filter((row) => row[closedStocksKeys["Open time"]])
-    .map((row) => {
-      const volume = parseFloat(row[closedStocksKeys["Volume"]]) || 0;
-      return {
-        date: parseXLSXDate(row[closedStocksKeys["Open time"]]),
-        stocksVolumeChange: volume,
-        type: STOCK_OPEN_EVENT,
-        stockSymbol: row[closedStocksKeys["Symbol"]] || null,
-      };
-    });
+    .slice(headerIdx + 1)
+    .filter((row) => row[headerKeys["Open time"]])
+    .map((row) => ({
+      date: parseXLSXDate(row[headerKeys["Open time"]]),
+      stocksVolumeChange: parseFloat(row[headerKeys["Volume"]]) || 0,
+      type: STOCK_OPEN_EVENT,
+      stockSymbol: row[headerKeys["Symbol"]] || null,
+    }));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getClosedStocksCloseEvents(workbook: any): PortfolioEvent[] {
-  const { closedData, closedStocksHeaderIdx, closedStocksKeys } = getClosedOperationsData(workbook);
+  const { closedData, headerIdx, headerKeys } = getClosedOperations(workbook);
 
   return closedData
-    .slice(closedStocksHeaderIdx + 1)
-    .filter((row) => row[closedStocksKeys["Close time"]])
-    .map((row) => {
-      const volume = parseFloat(row[closedStocksKeys["Volume"]]) || 0;
-      return {
-        date: parseXLSXDate(row[closedStocksKeys["Close time"]]),
-        stocksVolumeChange: volume,
-        type: STOCK_CLOSE_EVENT,
-        stockSymbol: row[closedStocksKeys["Symbol"]] || null,
-        profitOrLoss: parseFloat(row[closedStocksKeys["Gross P/L"]] || "0"),
-      };
-    });
+    .slice(headerIdx + 1)
+    .filter((row) => row[headerKeys["Close time"]])
+    .map((row) => ({
+      date: parseXLSXDate(row[headerKeys["Close time"]]),
+      stocksVolumeChange: parseFloat(row[headerKeys["Volume"]]) || 0,
+      type: STOCK_CLOSE_EVENT,
+      stockSymbol: row[headerKeys["Symbol"]] || null,
+      profitOrLoss: parseFloat(row[headerKeys["Gross P/L"]] || "0"),
+    }));
 }
 
 function createEventTimeline(allEvents: PortfolioEvent[]): TimelineCheckpoint[] {
@@ -294,8 +286,8 @@ async function fetchSplits(symbol: string): Promise<Split[] | null> {
  * @param currency - kod waluty (np. "EUR", "GBP", "USD", "GBp")
  * @param rates - obiekt kursów walutowych { EUR: 1.08, GBP: 1.25, ... } (kursy względem USD)
  */
-function convertToUSD(price: number, currency: string, rates: Record<string, number>): number {
-  if (!currency || currency === "USD") {
+function convertToUSD(price: number | undefined, currency: string, rates: Record<string, number>): number | undefined {
+  if (!currency || currency === "USD" || price === undefined) {
     return price;
   }
   if (currency === "GBp") {
@@ -481,7 +473,7 @@ function getStocksValueCached(
     const closePrice = priceCache[symbol]?.price[dateKey] ?? null;
     if (closePrice !== null) {
       stocksValue +=
-        convertToUSD(closePrice, priceCache[symbol].currency, exchangeRates[dateKey]) * stocks[symbol].volume;
+        convertToUSD(closePrice, priceCache[symbol].currency, exchangeRates[dateKey])! * stocks[symbol].volume;
     }
   }
   return stocksValue;
@@ -516,16 +508,24 @@ async function getPortfolioValueData(
         date: day.toISOString(),
         cash: previousState.cash,
         balance: previousState.balance,
-        stocks: previousState.stocks,
+        stocks: Object.fromEntries(
+          Object.entries(previousState.stocks).map(([symbol, stock]) => [
+            symbol,
+            {
+              ...stock,
+              price: convertToUSD(
+                prices[symbol]?.price[dateKey],
+                prices[symbol]?.currency,
+                exchangeRates[dateKey] || {},
+              ),
+            },
+          ]),
+        ),
         portfolioValue: previousState.cash + getStocksValueCached(previousState.stocks, day, prices, exchangeRates),
         profitOrLoss: previousState.profitOrLoss,
         sp500Stock: {
           volume: previousState.sp500Stock.volume || 0,
-          price: convertToUSD(
-            prices[SP500]?.price[dateKey] ?? 0,
-            prices[SP500]?.currency,
-            exchangeRates[dateKey] || {},
-          ),
+          price: convertToUSD(prices[SP500]?.price[dateKey], prices[SP500]?.currency, exchangeRates[dateKey] || {}),
         },
         sp500Value: getStocksValueCached(
           { [SP500]: { volume: previousState.sp500Stock.volume || 0 } },
@@ -553,7 +553,19 @@ async function getPortfolioValueData(
         date: day.toISOString(),
         cash: finalState.cash,
         balance: finalState.balance,
-        stocks: finalState.stocks,
+        stocks: Object.fromEntries(
+          Object.entries(finalState.stocks).map(([symbol, stock]) => [
+            symbol,
+            {
+              ...stock,
+              price: convertToUSD(
+                prices[symbol]?.price[dateKey],
+                prices[symbol]?.currency,
+                exchangeRates[dateKey] || {},
+              ),
+            },
+          ]),
+        ),
         portfolioValue: finalState.cash + getStocksValueCached(finalState.stocks, day, prices, exchangeRates),
         profitOrLoss: finalState.profitOrLoss,
         sp500Stock: { volume: sp500Volume, price: prices[SP500]?.price[dateKey] ?? undefined },
@@ -581,10 +593,25 @@ function getAssetsAnalysis(
       if (!stockSymbol) return acc;
 
       const currentStockPrice = convertToUSD(
-        prices[stockSymbol]?.price[formatDate(new Date())] || 0,
+        prices[stockSymbol]?.price[formatDate(new Date())],
         prices[stockSymbol]?.currency,
         exchangeRates[formatDate(new Date())] || {},
       );
+
+      const eventStockPrice = convertToUSD(
+        prices[stockSymbol]?.price[dateKey],
+        prices[stockSymbol]?.currency,
+        exchangeRates[dateKey] || {},
+      );
+
+      if (!acc[stockSymbol]) {
+        acc[stockSymbol] = {
+          openPositions: [],
+          closeEvents: [],
+          openEvents: [],
+          currentStockPrice,
+        };
+      }
 
       if (stockEvent.type === STOCK_OPEN_POSITION) {
         return merge(acc, {
@@ -592,15 +619,10 @@ function getAssetsAnalysis(
             openPositions: [
               ...(acc[stockSymbol]?.openPositions || []),
               {
+                date: formatDate(stockEvent.date),
                 volume: stockEvent.stocksVolumeChange,
-                stockValueOnBuy:
-                  stockEvent.stocksVolumeChange *
-                  convertToUSD(
-                    prices[stockSymbol]?.price[dateKey] || 0,
-                    prices[stockSymbol]?.currency,
-                    exchangeRates[dateKey] || {},
-                  ),
-                profitOrLoss: stockEvent.profitOrLoss || 0,
+                stockValueOnBuy: eventStockPrice ? stockEvent.stocksVolumeChange * eventStockPrice : undefined,
+                profitOrLoss: stockEvent.profitOrLoss,
               },
             ],
             currentStockPrice,
@@ -615,14 +637,9 @@ function getAssetsAnalysis(
             openEvents: [
               ...(acc[stockSymbol]?.openEvents || []),
               {
+                date: formatDate(stockEvent.date),
                 volume: stockEvent.stocksVolumeChange,
-                stockValueOnBuy:
-                  stockEvent.stocksVolumeChange *
-                  convertToUSD(
-                    prices[stockSymbol]?.price[dateKey] || 0,
-                    prices[stockSymbol]?.currency,
-                    exchangeRates[dateKey] || {},
-                  ),
+                stockValueOnBuy: eventStockPrice ? stockEvent.stocksVolumeChange * eventStockPrice : undefined,
               },
             ],
             currentStockPrice,
@@ -637,15 +654,10 @@ function getAssetsAnalysis(
             closeEvents: [
               ...(acc[stockSymbol]?.closeEvents || []),
               {
+                date: formatDate(stockEvent.date),
                 volume: stockEvent.stocksVolumeChange,
-                stockValueOnSell:
-                  stockEvent.stocksVolumeChange *
-                  convertToUSD(
-                    prices[stockSymbol]?.price[dateKey] || 0,
-                    prices[stockSymbol]?.currency,
-                    exchangeRates[dateKey] || {},
-                  ),
-                profitOrLoss: stockEvent.profitOrLoss || 0,
+                stockValueOnSell: eventStockPrice ? stockEvent.stocksVolumeChange * eventStockPrice : undefined,
+                profitOrLoss: stockEvent.profitOrLoss,
               },
             ],
             currentStockPrice,

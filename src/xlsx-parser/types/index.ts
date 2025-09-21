@@ -55,10 +55,10 @@ export type TimelineCheckpoint = {
 
 export type AssetsHistoricalData = {
   [stockSymbol: string]: {
-    openPositions: { volume: number; stockValueOnBuy: number; profitOrLoss: number }[];
-    openEvents: { volume: number; stockValueOnBuy: number }[];
-    closeEvents: { volume: number; stockValueOnSell: number; profitOrLoss: number }[];
-    currentStockPrice: number;
+    openPositions: { volume: number; stockValueOnBuy: number; profitOrLoss: number; date: string }[];
+    openEvents: { volume: number; stockValueOnBuy: number; date: string }[];
+    closeEvents: { volume: number; stockValueOnSell: number; profitOrLoss: number; date: string }[];
+    currentStockPrice: number | undefined;
   };
 };
 
