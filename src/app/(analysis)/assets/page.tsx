@@ -69,7 +69,9 @@ export default function Assets() {
 
     const potentialValue = assetEvents?.openEvents?.reduce(
       (acc: number, val: { volume: number; stockValueOnBuy: number }) => {
-        return acc + (val.volume * assetEvents?.currentStockPrice - val.stockValueOnBuy);
+        return (
+          acc + (assetEvents?.currentStockPrice ? val.volume * assetEvents.currentStockPrice - val.stockValueOnBuy : 0)
+        );
       },
       0,
     );
