@@ -5,7 +5,9 @@ cash and profit over time, with comparison to S&P 500 index.
 
 Just a playground of what's possible with public API of yahoo.
 
-![Screenshot](screenshot.png)
+![Performance](performance.png)
+![Assets](assets.png)
+![Asset](asset.png)
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
