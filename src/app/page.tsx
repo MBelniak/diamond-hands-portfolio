@@ -3,6 +3,7 @@ import React, { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useStore } from "../lib/store";
 import { redirect } from "next/navigation";
+import { DiamondLoader } from "@/components/ui/DiamondLoader";
 
 export default function Home() {
   const [uploading, setUploading] = useState(false);
@@ -53,16 +54,23 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       <h1 className="text-2xl font-bold mb-6">Upload XLSX file</h1>
-      <div
-        {...getRootProps()}
-        className={`w-96 h-48 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${isDragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-white"}`}
-      >
-        <input {...getInputProps()} />
-        <span className="text-gray-500">
-          {isDragActive ? "Drop XLSX file here..." : "Drag XLSX file here or click to select"}
-        </span>
-      </div>
-      {uploading && <p className="mt-4 text-center text-sm text-blue-500">Uploading file...</p>}
+      {!uploading && (
+        <div
+          {...getRootProps()}
+          className={`w-96 h-48 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${isDragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-white"}`}
+        >
+          <input {...getInputProps()} />
+          <span className="text-gray-500">
+            {isDragActive ? "Drop XLSX file here..." : "Drag XLSX file here or click to select"}
+          </span>
+        </div>
+      )}
+      {uploading && (
+        <>
+          <DiamondLoader />
+          <p className="mt-4 text-center text-sm text-blue-500">Uploading file...</p>
+        </>
+      )}
       {message && <p className="mt-4 text-center text-sm text-red-500">{message}</p>}
     </div>
   );
