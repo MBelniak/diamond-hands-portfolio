@@ -11,6 +11,7 @@ import {
   type Split,
   type Stock,
   StockPricesRecord,
+  StocksHistoricalPrices,
   type TimelineCheckpoint,
 } from "./types";
 import { merge } from "lodash-es";
@@ -301,14 +302,11 @@ function convertToUSD(price: number | undefined, currency: string, rates: Record
   return price;
 }
 
-function populatePriceMapForDate(
-  date: Date,
-  closePrice: number,
-  splits: Split[],
-  prices: { currency: string; price: Record<string, number> },
-) {
+function populatePriceMapForDate(date: Date, closePrice: number, splits: Split[], prices: StockPricesRecord) {
   const dateKey = formatDate(date);
   let stockPrice = closePrice;
+  // yahoo API already returns converted values
+  prices.splitAdjustedPrice[dateKey] = stockPrice;
 
   if (splits && splits.length && splits.some((split) => isBefore(date, new Date(split.effective_date)))) {
     splits
@@ -331,7 +329,7 @@ async function fetchStockClosePriceRange(
   symbol: string,
   startDate: Date,
   endDate: Date,
-): Promise<{ currency: string; price: Record<string, number> } | null> {
+): Promise<StockPricesRecord | null> {
   const data = await fetchHistoricalStockData(symbol, startDate, endDate);
   if (data) {
     const timestamp = data.chart?.result?.[0]?.timestamp;
@@ -340,7 +338,7 @@ async function fetchStockClosePriceRange(
 
     if (timestamp && close) {
       const splits = (await fetchSplits(symbol)) as Split[];
-      const pricesRecord = { currency, price: {} };
+      const pricesRecord = { currency, price: {}, splitAdjustedPrice: {} };
 
       for (let i = 0; i < timestamp.length; i++) {
         const date = new Date(timestamp[i] * 1000);
@@ -360,7 +358,7 @@ async function populateStockPricesForSymbol(
   symbol: string,
   startDate: Date,
   endDate: Date,
-): Promise<{ currency: string; price: Record<string, number> }> {
+): Promise<StockPricesRecord> {
   const currencyAndPrices = await fetchStockClosePriceRange(symbol, startDate, endDate);
 
   if (currencyAndPrices) {
@@ -371,6 +369,8 @@ async function populateStockPricesForSymbol(
         while (recentDate >= startDate) {
           if (formatDate(recentDate) in currencyAndPrices.price) {
             currencyAndPrices.price[dateKey] = currencyAndPrices.price[formatDate(recentDate)];
+            currencyAndPrices.splitAdjustedPrice[dateKey] =
+              currencyAndPrices.splitAdjustedPrice[formatDate(recentDate)];
             break;
           }
           recentDate = addDays(recentDate, -1);
@@ -385,7 +385,7 @@ async function populateStockPricesForSymbol(
     return currencyAndPrices;
   }
 
-  return { currency: "USD", price: {} };
+  return { currency: "USD", price: {}, splitAdjustedPrice: {} };
 }
 
 async function fetchExchangeRates(
@@ -432,11 +432,14 @@ async function fetchExchangeRates(
   return exchangeRates;
 }
 
-async function populatePricesForStocks(timeline: TimelineCheckpoint[], startDate: Date): Promise<StockPricesRecord> {
+async function populatePricesForStocks(
+  timeline: TimelineCheckpoint[],
+  startDate: Date,
+): Promise<StocksHistoricalPrices> {
   const symbols = Array.from(new Set(timeline.flatMap((t) => Object.keys(t.stocks))));
 
   const endDate = new Date();
-  const stockPricesRecord: StockPricesRecord = {};
+  const stockPricesRecord: StocksHistoricalPrices = {};
   if (!symbols.includes(SP500)) {
     symbols.push(SP500);
   }
@@ -464,7 +467,7 @@ async function populatePricesForStocks(timeline: TimelineCheckpoint[], startDate
 function getStocksValueCached(
   stocks: Record<string, Stock>,
   date: Date,
-  priceCache: StockPricesRecord,
+  priceCache: StocksHistoricalPrices,
   exchangeRates: Record<string, Record<string, number>>,
 ): number {
   let stocksValue = 0;
@@ -484,7 +487,7 @@ function getStocksValueCached(
  */
 async function getPortfolioValueData(
   timeline: TimelineCheckpoint[],
-  prices: StockPricesRecord,
+  prices: StocksHistoricalPrices,
   exchangeRates: Record<string, Record<string, number>>,
 ): Promise<PortfolioValue[]> {
   // Date range
@@ -513,6 +516,11 @@ async function getPortfolioValueData(
             symbol,
             {
               ...stock,
+              splitAdjustedPrice: convertToUSD(
+                prices[symbol]?.splitAdjustedPrice[dateKey],
+                prices[symbol]?.currency,
+                exchangeRates[dateKey] || {},
+              ),
               price: convertToUSD(
                 prices[symbol]?.price[dateKey],
                 prices[symbol]?.currency,
@@ -558,6 +566,11 @@ async function getPortfolioValueData(
             symbol,
             {
               ...stock,
+              splitAdjustedPrice: convertToUSD(
+                prices[symbol]?.splitAdjustedPrice[dateKey],
+                prices[symbol]?.currency,
+                exchangeRates[dateKey] || {},
+              ),
               price: convertToUSD(
                 prices[symbol]?.price[dateKey],
                 prices[symbol]?.currency,
@@ -581,7 +594,7 @@ function getAssetsAnalysis(
   stockOpenPositions: PortfolioEvent[],
   stockClosedPositionsOpenEvents: PortfolioEvent[],
   stockCloseEvents: PortfolioEvent[],
-  prices: StockPricesRecord,
+  prices: StocksHistoricalPrices,
   exchangeRates: Record<string, Record<string, number>>,
 ): AssetsHistoricalData {
   return stockOpenPositions

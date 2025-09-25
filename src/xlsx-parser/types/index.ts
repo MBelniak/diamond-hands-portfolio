@@ -5,6 +5,7 @@ export type Stock = {
   stockVolumeSold?: number;
   takenProfitOrLoss?: number;
   price?: number;
+  splitAdjustedPrice?: number;
 };
 
 export type PortfolioValue = {
@@ -62,7 +63,13 @@ export type AssetsHistoricalData = {
   };
 };
 
-export type StockPricesRecord = Record<string, { currency: string; price: Record<string, number> }>; // symbol -> date(YYYY-MM-DD) -> {price, currency}
+export type StockPricesRecord = {
+  currency: string;
+  price: Record<string, number>;
+  splitAdjustedPrice: Record<string, number>;
+};
+
+export type StocksHistoricalPrices = Record<string, StockPricesRecord>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>}
 
 export type PortfolioAnalysis = {
   assetsAnalysis: AssetsHistoricalData;

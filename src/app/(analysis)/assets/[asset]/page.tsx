@@ -31,7 +31,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
     .filter((data) => data.stocks[asset] != null)
     .map((data) => {
       const date = data.date.slice(0, 10);
-      const price = data.stocks[asset].price;
+      const price = data.stocks[asset].splitAdjustedPrice;
       const openEvent = assetData.openEvents.find((e) => e.date === date);
       let openMarker;
 
