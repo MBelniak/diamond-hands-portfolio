@@ -303,20 +303,18 @@ function convertToUSD(price: number | undefined, currency: string, rates: Record
 }
 
 function populatePriceMapForDate(date: Date, closePrice: number, splits: Split[], prices: StockPricesRecord) {
+  const isSplitApplicable = (split: Split): boolean => isBefore(date, new Date(split.effective_date));
+
   const dateKey = formatDate(date);
   let stockPrice = closePrice;
   // yahoo API already returns converted values
   prices.splitAdjustedPrice[dateKey] = stockPrice;
 
-  if (splits && splits.length && splits.some((split) => isBefore(date, new Date(split.effective_date)))) {
-    splits
-      .filter((split) => isBefore(date, new Date(split.effective_date)))
-      .forEach((split) => {
-        if (split.split_factor) {
-          stockPrice *= parseFloat(split.split_factor);
-        }
-      });
-  }
+  splits?.filter(isSplitApplicable).forEach((split) => {
+    if (split.split_factor) {
+      stockPrice *= parseFloat(split.split_factor);
+    }
+  });
 
   prices.price[dateKey] = stockPrice;
 }
@@ -612,7 +610,7 @@ function getAssetsAnalysis(
       );
 
       const eventStockPrice = convertToUSD(
-        prices[stockSymbol]?.price[dateKey],
+        prices[stockSymbol]?.splitAdjustedPrice[dateKey],
         prices[stockSymbol]?.currency,
         exchangeRates[dateKey] || {},
       );
