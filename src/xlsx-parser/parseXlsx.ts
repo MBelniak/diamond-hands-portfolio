@@ -43,7 +43,6 @@ if (!process.env.EXCHANGE_RATES_API_KEY) {
   );
 }
 
-const ALPHA_VANTAGE_KEY = process.env.ALPHA_VANTAGE_KEY || "demo"; // Use demo key if not set
 const currencylayerApiKey = process.env.EXCHANGE_RATES_API_KEY;
 
 // Helper function to get column indexes by headers
@@ -247,8 +246,33 @@ function getCashAndStocksEvents(workbook: any): {
   };
 }
 
-async function fetchHistoricalStockData(symbol: string, startDate: Date, endDate: Date) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${getStockAPISymbol(symbol)}?period1=${Math.floor(startOfDay(startDate).getTime() / 1000)}&period2=${Math.floor(startOfDay(endDate).getTime() / 1000)}&interval=1d`;
+async function fetchHistoricalStockData(
+  symbol: string,
+  startDate: Date,
+  endDate: Date,
+): Promise<{
+  chart?: {
+    result?: {
+      timestamp?: number[];
+      meta?: { currency: string };
+      indicators?: {
+        quote?: {
+          close: number[];
+        }[];
+      };
+      events?: {
+        splits?: Record<string, { date: number; numerator: number; denominator: number }>;
+      };
+    }[];
+  };
+} | null> {
+  const searchParams = new URLSearchParams();
+  searchParams.set("period1", Math.floor(startOfDay(startDate).getTime() / 1000).toString());
+  searchParams.set("period2", Math.floor(startOfDay(endDate).getTime() / 1000).toString());
+  searchParams.set("interval", "1d");
+  searchParams.set("events", "splits");
+
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${getStockAPISymbol(symbol)}?${searchParams.toString()}`;
   console.log("Fetching stock close prices for: ", symbol, " from URL: ", url);
   try {
     const res = await fetch(url, {
@@ -264,21 +288,11 @@ async function fetchHistoricalStockData(symbol: string, startDate: Date, endDate
   }
 }
 
-async function fetchSplits(symbol: string): Promise<Split[] | null> {
-  const url = `https://www.alphavantage.co/query?function=SPLITS&symbol=${getStockAPISymbol(symbol)}&apikey=${ALPHA_VANTAGE_KEY}`;
-  console.log("Fetching split events for: ", symbol, " from URL: ", url);
-  try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
-      },
-    });
-    return (await res.json()).data;
-  } catch (e) {
-    console.warn("Failed to fetch split events for symbol:", symbol, "Error:", e);
-    return null;
-  }
+function parseSplits(splits: Record<string, { date: number; numerator: number; denominator: number }>): Split[] {
+  return Object.values(splits).map((split) => ({
+    effective_date: new Date(split.date * 1000).toISOString().slice(0, 10),
+    split_factor: (split.numerator / split.denominator).toString(),
+  }));
 }
 
 /**
@@ -331,17 +345,17 @@ async function fetchStockClosePriceRange(
   const data = await fetchHistoricalStockData(symbol, startDate, endDate);
   if (data) {
     const timestamp = data.chart?.result?.[0]?.timestamp;
-    const currency = data.chart?.result?.[0]?.meta?.currency;
+    const currency = data.chart?.result?.[0]?.meta?.currency ?? "USD";
     const close = data.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
+    const splits = data.chart?.result?.[0]?.events?.splits;
 
     if (timestamp && close) {
-      const splits = (await fetchSplits(symbol)) as Split[];
       const pricesRecord = { currency, price: {}, splitAdjustedPrice: {} };
 
       for (let i = 0; i < timestamp.length; i++) {
         const date = new Date(timestamp[i] * 1000);
         if (date >= startDate && date <= endDate) {
-          populatePriceMapForDate(date, close[i], splits, pricesRecord);
+          populatePriceMapForDate(date, close[i], splits ? parseSplits(splits) : [], pricesRecord);
         }
       }
       return pricesRecord;
