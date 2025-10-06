@@ -22,7 +22,12 @@ export function PerformanceChart() {
 
   const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
 
-  const data = portfolioTimeline.map((item) => ({ ...item, date: item.date.slice(0, 10) }));
+  const data = portfolioTimeline
+    .map((item) => ({ ...item, date: item.date.slice(0, 10) }))
+    .slice(
+      portfolioTimeline.findIndex((record) => Object.entries(record.stocks).length || record.cash),
+      -1,
+    );
 
   const minWindowSize = 7;
   const [range, setRange] = useState<[number, number]>([0, data.length - 1]);
@@ -53,6 +58,8 @@ export function PerformanceChart() {
       </h2>
       <div style={{ width: "100%", padding: "0 24px", boxSizing: "border-box", height: 350 }}>
         <ResponsiveContainer width="100%" height="100%">
+          {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+          {/*@ts-ignore*/}
           <LineChart data={windowedData}>
             <XAxis dataKey="date" tick={{ fontSize: 12, fill: "#fff" }} />
             <YAxis tick={{ fontSize: 12, fill: "#fff" }} />
@@ -71,6 +78,7 @@ export function PerformanceChart() {
               labelStyle={{ color: "#fff" }}
             />
             <Line
+              isAnimationActive={false}
               type="monotone"
               dataKey="portfolioValue"
               stroke="#a5b4fc"
@@ -79,6 +87,7 @@ export function PerformanceChart() {
               name={chartKeys.portfolioValue}
             />
             <Line
+              isAnimationActive={false}
               type="monotone"
               dataKey="profitOrLoss"
               stroke="#38bdf8"
@@ -86,8 +95,17 @@ export function PerformanceChart() {
               dot={false}
               name={chartKeys.profitOrLoss}
             />
-            <Line type="monotone" dataKey="cash" stroke="#8884d8aa" strokeWidth={2} dot={false} name={chartKeys.cash} />
             <Line
+              isAnimationActive={false}
+              type="monotone"
+              dataKey="cash"
+              stroke="#8884d8aa"
+              strokeWidth={2}
+              dot={false}
+              name={chartKeys.cash}
+            />
+            <Line
+              isAnimationActive={false}
               type="monotone"
               dataKey="sp500Value"
               stroke="#34d399"

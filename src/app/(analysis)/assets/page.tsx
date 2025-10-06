@@ -102,18 +102,14 @@ export default function Assets() {
 
                 return (
                   <tr key={stockProfit.stock} className="hover:bg-indigo-900/30 transition-colors duration-150">
-                    <td className="px-4 py-3 border-b border-indigo-700">{stockProfit.stock}</td>
-                    <td
-                      className={`px-4 py-3 border-b border-indigo-700 rounded-md ${getProfitLossTextClass(profitOrLoss)}`}
-                    >
+                    <td className="px-4 py-3 border-b border-indigo-700 rounded-l-md">{stockProfit.stock}</td>
+                    <td className={`px-4 py-3 border-b border-indigo-700 ${getProfitLossTextClass(profitOrLoss)}`}>
                       {profitOrLoss?.toFixed(2) ?? 0}
                     </td>
-                    <td
-                      className={`px-4 py-3 border-b border-indigo-700 rounded-md ${getProfitLossTextClass(potentialValue)}`}
-                    >
+                    <td className={`px-4 py-3 border-b border-indigo-700 ${getProfitLossTextClass(potentialValue)}`}>
                       {potentialValue?.toFixed(2) ?? 0}
                     </td>
-                    <td className={`px-4 py-3 border-b border-indigo-700 rounded-md`}>
+                    <td className={`px-4 py-3 border-b border-indigo-700 rounded-r-md`}>
                       <Button onClick={() => redirect("/assets/" + stockProfit.stock)} size="icon">
                         <TrendingUp />
                       </Button>

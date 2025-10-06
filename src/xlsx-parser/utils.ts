@@ -43,3 +43,28 @@ export function getDateRange(start: Date, end: Date): Date[] {
   }
   return arr;
 }
+
+/**
+ * Converts a price in a given currency to USD using provided rates.
+ * @param price - cena w oryginalnej walucie
+ * @param currency - kod waluty (np. "EUR", "GBP", "USD", "GBp")
+ * @param rates - obiekt kursów walutowych { EUR: 1.08, GBP: 1.25, ... } (kursy względem USD)
+ */
+export function convertToUSD(
+  price: number | undefined,
+  currency: string,
+  rates: Record<string, number>,
+): number | undefined {
+  if (!currency || currency === "USD" || price === undefined) {
+    return price;
+  }
+  if (currency === "GBp") {
+    // GBp = pensy brytyjskie, 100 GBp = 1 GBP, więc najpierw na GBP, potem na USD
+    const gbpPrice = price / 100;
+    return rates["USDGBP"] ? gbpPrice * (1 / rates["USDGBP"]) : gbpPrice;
+  }
+  if (rates["USD" + currency]) {
+    return price * (1 / rates["USD" + currency]);
+  }
+  return price;
+}

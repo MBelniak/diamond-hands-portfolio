@@ -1,10 +1,13 @@
 "use client";
 import { redirect } from "next/navigation";
 import { useStore } from "@/lib/store";
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { use } from "react";
+import { Bar, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { use, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { DualRangeSlider } from "@/components/ui/dual-range-slider";
+import { getDateRange } from "@/xlsx-parser/utils";
+import { addYears } from "date-fns";
 
 const chartKeys = {
   stockPrice: "Price",
@@ -27,25 +30,65 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
 
   const assetData = portfolioAnalysis.assetsAnalysis[asset as string];
 
-  const priceHistory: ChartData[] = portfolioAnalysis.portfolioTimeline
-    .filter((data) => data.stocks[asset] != null)
-    .map((data) => {
-      const date = data.date.slice(0, 10);
-      const price = data.stocks[asset].splitAdjustedPrice;
-      const openEvent = assetData.openEvents.find((e) => e.date === date);
-      let openMarker;
+  const priceHistory: ChartData[] = getDateRange(addYears(new Date(), -3), new Date()).map((date) => {
+    const dateStr = date.toISOString().slice(0, 10);
 
-      if (openEvent) {
-        openMarker = openEvent ? openEvent.stockValueOnBuy / openEvent.volume : undefined;
+    const data = portfolioAnalysis.portfolioTimeline
+      .filter((data) => data.stocks[asset] != null)
+      .find((data) => data.date.slice(0, 10) === dateStr);
+
+    if (!data) {
+      return {
+        date: dateStr,
+        price: portfolioAnalysis.stockPrices[asset as string].splitAdjustedPrice[dateStr],
+        openMarker: undefined,
+        closeMarker: undefined,
+        volumeMarker: undefined,
+      };
+    }
+
+    const price = data.stocks[asset].splitAdjustedPrice;
+    const openEvent = assetData.openEvents.find((e) => e.date === dateStr);
+    let openMarker;
+    let volumeMarker;
+
+    if (openEvent) {
+      openMarker = openEvent ? openEvent.stockValueOnBuy / openEvent.volume : undefined;
+      volumeMarker = openEvent ? openEvent.volume : undefined;
+    } else {
+      const openPosition = assetData.openPositions.find((e) => e.date === dateStr);
+      openMarker = openPosition ? openPosition.stockValueOnBuy / openPosition.volume : undefined;
+      volumeMarker = openPosition ? openPosition.volume : undefined;
+    }
+
+    const closeEvent = assetData.closeEvents.find((e) => e.date === dateStr);
+    const closeMarker = closeEvent ? closeEvent.stockValueOnSell / closeEvent.volume : undefined;
+    if (closeMarker) {
+      volumeMarker = closeEvent!.volume + (volumeMarker ?? 0);
+    }
+    return { price, date: dateStr, openMarker, closeMarker, volumeMarker };
+  });
+
+  const minWindowSize = 7;
+  const [range, setRange] = useState<[number, number]>([0, priceHistory.length - 1]);
+
+  const windowStart = Math.max(0, Math.min(range[0], priceHistory.length - minWindowSize));
+  const windowEnd = Math.max(windowStart + minWindowSize - 1, Math.min(range[1], priceHistory.length - 1));
+  const windowedData = priceHistory.slice(windowStart, windowEnd + 1);
+
+  const handleRangeChange = (values: [number, number]) => {
+    let [start, end] = values;
+    if (end - start < minWindowSize - 1) {
+      if (start === range[0]) {
+        end = start + minWindowSize - 1;
       } else {
-        const openPosition = assetData.openPositions.find((e) => e.date === date);
-        openMarker = openPosition ? openPosition.stockValueOnBuy / openPosition.volume : undefined;
+        start = end - minWindowSize + 1;
       }
-
-      const closeEvent = assetData.closeEvents.find((e) => e.date === date);
-      const closeMarker = closeEvent ? closeEvent.stockValueOnSell / closeEvent.volume : undefined;
-      return { price, date, openMarker, closeMarker };
-    });
+    }
+    start = Math.max(0, Math.min(start, priceHistory.length - minWindowSize));
+    end = Math.max(start + minWindowSize - 1, Math.min(end, priceHistory.length - 1));
+    setRange([start, end]);
+  };
 
   return (
     <div className={"flex flex-col w-full items-center gap-8 mb-16 mt-8"}>
@@ -60,9 +103,18 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
         <h2 className="text-2xl font-bold text-white mb-6 text-center drop-shadow-lg">{asset}</h2>
         <div style={{ width: "100%", padding: "0 24px", boxSizing: "border-box", height: 350 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={priceHistory}>
+            <LineChart data={windowedData}>
               <XAxis dataKey="date" tick={{ fontSize: 12, fill: "#fff" }} />
               <YAxis
+                tick={{ fontSize: 12, fill: "#fff" }}
+                domain={[
+                  (dataMin: number) => Math.floor(dataMin - 0.03 * dataMin),
+                  (dataMax: number) => Math.ceil(dataMax + 0.03 * dataMax),
+                ]}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
                 tick={{ fontSize: 12, fill: "#fff" }}
                 domain={[
                   (dataMin: number) => Math.floor(dataMin - 0.03 * dataMin),
@@ -81,6 +133,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
                 labelStyle={{ color: "#fff" }}
               />
               <Line
+                isAnimationActive={false}
                 type="monotone"
                 dataKey="price"
                 stroke="#a5b4fc"
@@ -89,6 +142,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
                 name={chartKeys.stockPrice}
               />
               <Line
+                isAnimationActive={false}
                 type="monotone"
                 dataKey="openMarker"
                 stroke="#22c55e"
@@ -98,6 +152,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
                 legendType="circle"
               />
               <Line
+                isAnimationActive={false}
                 type="monotone"
                 dataKey="closeMarker"
                 stroke="#ef4444"
@@ -106,8 +161,23 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
                 name="Close"
                 legendType="circle"
               />
+              <Bar yAxisId="right" dataKey="volumeMarker" fill="#38bdf8" name="Volume" barSize={12} opacity={0.7} />
             </LineChart>
           </ResponsiveContainer>
+        </div>
+        <div className={"w-full mt-4 flex flex-col gap-8 px-8"}>
+          <label className="text-white font-semibold">
+            Date range: {priceHistory[windowStart].date} - {priceHistory[windowEnd].date}
+          </label>
+          <DualRangeSlider
+            min={0}
+            max={priceHistory.length - 1}
+            value={[windowStart, windowEnd]}
+            step={1}
+            minStepsBetweenThumbs={minWindowSize - 1}
+            onValueChange={handleRangeChange}
+            style={{ width: "100%" }}
+          />
         </div>
       </div>
     </div>

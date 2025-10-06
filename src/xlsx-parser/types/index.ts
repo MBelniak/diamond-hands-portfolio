@@ -45,15 +45,6 @@ export type PortfolioEvent = {
     ))
 );
 
-export type TimelineCheckpoint = {
-  date: Date;
-  cash: number;
-  balance: number;
-  stocks: Record<string, Stock>;
-  profitOrLoss: number;
-  cashWithdrawalOrDeposit: number | null;
-};
-
 export type AssetsHistoricalData = {
   [stockSymbol: string]: {
     openPositions: { volume: number; stockValueOnBuy: number; profitOrLoss: number; date: string }[];
@@ -74,4 +65,5 @@ export type StocksHistoricalPrices = Record<string, StockPricesRecord>; // symbo
 export type PortfolioAnalysis = {
   assetsAnalysis: AssetsHistoricalData;
   portfolioTimeline: PortfolioValue[];
+  stockPrices: StocksHistoricalPrices;
 };

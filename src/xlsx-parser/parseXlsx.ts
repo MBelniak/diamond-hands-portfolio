@@ -1,6 +1,6 @@
 // @ts-expect-error no typings for this file
 import XLSX from "xlsx/xlsx.js";
-import { isSameDay, startOfDay } from "date-fns";
+import { addYears, isSameDay, startOfDay } from "date-fns";
 import { addDays } from "date-fns/addDays";
 import { isBefore } from "date-fns/isBefore";
 import {
@@ -12,7 +12,6 @@ import {
   type Stock,
   StockPricesRecord,
   StocksHistoricalPrices,
-  type TimelineCheckpoint,
 } from "./types";
 import { merge } from "lodash-es";
 import { createClient, SetOptions } from "redis";
@@ -27,7 +26,7 @@ import {
   STOCK_OPEN_EVENT,
   STOCK_OPEN_POSITION,
 } from "@/xlsx-parser/consts";
-import { formatDate, getDateRange, getStockAPISymbol } from "@/xlsx-parser/utils";
+import { convertToUSD, formatDate, getDateRange, getStockAPISymbol } from "@/xlsx-parser/utils";
 
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 const REDIS_EXPIRE_IN_DAY: SetOptions = {
@@ -170,54 +169,6 @@ function getClosedStocksCloseEvents(workbook: any): PortfolioEvent[] {
     }));
 }
 
-function createEventTimeline(allEvents: PortfolioEvent[]): TimelineCheckpoint[] {
-  // Store values over time
-  let cash = 0;
-  let balance = 0;
-  let accProfitOrLoss = 0;
-  const stocks = new Map<string, Stock>();
-  const timeline = [];
-  for (const event of allEvents) {
-    if (event.type === CASH) {
-      cash += event.cashChange;
-      if (event.cashWithdrawalOrDeposit) {
-        balance += event.cashWithdrawalOrDeposit; // Update balance on withdrawal or deposit
-      }
-    } else {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      if ([STOCK_OPEN_EVENT, STOCK_OPEN_POSITION].includes(event.type) && event.stockSymbol) {
-        if (!stocks.has(event.stockSymbol)) {
-          stocks.set(event.stockSymbol, { volume: 0 });
-        }
-        stocks.set(event.stockSymbol, { volume: stocks.get(event.stockSymbol)!.volume + event.stocksVolumeChange });
-      } else if (event.type === STOCK_CLOSE_EVENT && event.stockSymbol) {
-        if (stocks.has(event.stockSymbol)) {
-          const stockRecord = stocks.get(event.stockSymbol)!;
-          stocks.set(event.stockSymbol, {
-            volume: stockRecord.volume - event.stocksVolumeChange,
-            takenProfitOrLoss: (stockRecord.takenProfitOrLoss ?? 0) + event.profitOrLoss,
-          });
-          if (stocks.get(event.stockSymbol)!.volume <= 1e-6) {
-            stocks.get(event.stockSymbol)!.volume = 0;
-          }
-        }
-        accProfitOrLoss += event.profitOrLoss || 0; // Add profit or loss from closed position
-      }
-    }
-    timeline.push({
-      date: event.date,
-      cash,
-      balance,
-      stocks: Object.fromEntries(stocks), // Create a copy of the stocks map
-      profitOrLoss: accProfitOrLoss,
-      cashWithdrawalOrDeposit:
-        event.type === CASH && event.cashWithdrawalOrDeposit ? event.cashWithdrawalOrDeposit : null,
-    });
-  }
-  return timeline;
-}
-
 /**
  * Parses the sheet and tracks the value of cash and stocks over time.
  * Returns an array of objects { date, cash, stocks } sorted ascending by date.
@@ -293,27 +244,6 @@ function parseSplits(splits: Record<string, { date: number; numerator: number; d
     effective_date: new Date(split.date * 1000).toISOString().slice(0, 10),
     split_factor: (split.numerator / split.denominator).toString(),
   }));
-}
-
-/**
- * Converts a price in a given currency to USD using provided rates.
- * @param price - cena w oryginalnej walucie
- * @param currency - kod waluty (np. "EUR", "GBP", "USD", "GBp")
- * @param rates - obiekt kursów walutowych { EUR: 1.08, GBP: 1.25, ... } (kursy względem USD)
- */
-function convertToUSD(price: number | undefined, currency: string, rates: Record<string, number>): number | undefined {
-  if (!currency || currency === "USD" || price === undefined) {
-    return price;
-  }
-  if (currency === "GBp") {
-    // GBp = pensy brytyjskie, 100 GBp = 1 GBP, więc najpierw na GBP, potem na USD
-    const gbpPrice = price / 100;
-    return rates["USDGBP"] ? gbpPrice * (1 / rates["USDGBP"]) : gbpPrice;
-  }
-  if (rates["USD" + currency]) {
-    return price * (1 / rates["USD" + currency]);
-  }
-  return price;
 }
 
 function populatePriceMapForDate(date: Date, closePrice: number, splits: Split[], prices: StockPricesRecord) {
@@ -444,19 +374,16 @@ async function fetchExchangeRates(
   return exchangeRates;
 }
 
-async function populatePricesForStocks(
-  timeline: TimelineCheckpoint[],
-  startDate: Date,
-): Promise<StocksHistoricalPrices> {
-  const symbols = Array.from(new Set(timeline.flatMap((t) => Object.keys(t.stocks))));
-
+/**
+ * Returns prices in stock's original currency
+ * @param stocks
+ * @param startDate
+ */
+async function getPricesForStocks(stocks: Set<string>, startDate: Date): Promise<StocksHistoricalPrices> {
   const endDate = new Date();
   const stockPricesRecord: StocksHistoricalPrices = {};
-  if (!symbols.includes(SP500)) {
-    symbols.push(SP500);
-  }
 
-  for (const symbol of symbols) {
+  for (const symbol of stocks) {
     if (await redis.exists(getStockPricesRedisKey(symbol, startDate, endDate))) {
       stockPricesRecord[symbol] = JSON.parse(
         (await redis.get(getStockPricesRedisKey(symbol, startDate, endDate))) as string,
@@ -464,13 +391,6 @@ async function populatePricesForStocks(
     } else {
       stockPricesRecord[symbol] = await populateStockPricesForSymbol(symbol, startDate, endDate);
     }
-
-    timeline.forEach((item) => {
-      if (Object.keys(item.stocks).some((key) => key === symbol)) {
-        const dateKey = formatDate(item.date);
-        item.stocks[symbol].price = stockPricesRecord[symbol]?.price[dateKey] ?? undefined;
-      }
-    });
   }
 
   return stockPricesRecord;
@@ -494,108 +414,169 @@ function getStocksValueCached(
   return stocksValue;
 }
 
+function getNextDayPortfolioValue(
+  previousState: PortfolioValue,
+  date: Date,
+  prices: StocksHistoricalPrices,
+  exchangeRates: Record<string, Record<string, number>>,
+): PortfolioValue {
+  const dateKey = formatDate(date);
+
+  return {
+    date: date.toISOString(),
+    cash: previousState.cash,
+    balance: previousState.balance,
+    stocks: Object.fromEntries(
+      Object.entries(previousState.stocks).map(([symbol, stock]) => [
+        symbol,
+        {
+          ...stock,
+          splitAdjustedPrice: convertToUSD(
+            prices[symbol]?.splitAdjustedPrice[dateKey],
+            prices[symbol]?.currency,
+            exchangeRates[dateKey] || {},
+          ),
+          price: convertToUSD(prices[symbol]?.price[dateKey], prices[symbol]?.currency, exchangeRates[dateKey] || {}),
+        },
+      ]),
+    ),
+    portfolioValue: previousState.cash + getStocksValueCached(previousState.stocks, date, prices, exchangeRates),
+    profitOrLoss: previousState.profitOrLoss,
+    sp500Stock: {
+      volume: previousState.sp500Stock.volume || 0,
+      price: convertToUSD(prices[SP500]?.price[dateKey], prices[SP500]?.currency, exchangeRates[dateKey] || {}),
+    },
+    sp500Value: getStocksValueCached(
+      { [SP500]: { volume: previousState.sp500Stock.volume || 0 } },
+      date,
+      prices,
+      exchangeRates,
+    ),
+  };
+}
+
+function getPortfolioValueOnEventDay(
+  cash: number,
+  balance: number,
+  stocks: Record<string, Stock>,
+  profitOrLoss: number,
+  sp500Volume: number,
+  date: Date,
+  prices: StocksHistoricalPrices,
+  exchangeRates: Record<string, Record<string, number>>,
+): PortfolioValue {
+  const dateKey = formatDate(date);
+
+  return {
+    cash,
+    balance,
+    profitOrLoss,
+    date: date.toISOString(),
+    stocks: Object.fromEntries(
+      Object.entries(stocks).map(([symbol, stock]) => [
+        symbol,
+        {
+          ...stock,
+          splitAdjustedPrice: convertToUSD(
+            prices[symbol]?.splitAdjustedPrice[dateKey],
+            prices[symbol]?.currency,
+            exchangeRates[dateKey] || {},
+          ),
+          price: convertToUSD(prices[symbol]?.price[dateKey], prices[symbol]?.currency, exchangeRates[dateKey] || {}),
+        },
+      ]),
+    ),
+    portfolioValue: cash + getStocksValueCached(stocks, date, prices, exchangeRates),
+    sp500Stock: { volume: sp500Volume, price: prices[SP500]?.price[dateKey] ?? undefined },
+    sp500Value: getStocksValueCached({ [SP500]: { volume: sp500Volume } }, date, prices, exchangeRates),
+  };
+}
+
 /**
  * Main function: for each day fetches the close price and calculates the portfolio value
  */
 async function getPortfolioValueData(
-  timeline: TimelineCheckpoint[],
+  portfolioEvents: PortfolioEvent[],
   prices: StocksHistoricalPrices,
   exchangeRates: Record<string, Record<string, number>>,
 ): Promise<PortfolioValue[]> {
+  let cash = 0;
+  let balance = 0;
+  let profitOrLoss = 0;
+
+  const stocks = {} as Record<string, Stock>;
   // Date range
-  const startDate = timeline[0].date;
+  const startDate = addYears(new Date(), -3);
   const allDates = getDateRange(startDate, addDays(new Date(), -1));
 
   // For each date, find the portfolio state (cash, stocks) and fetch the close price
   const result: PortfolioValue[] = [];
   for (const day of allDates) {
-    const dateKey = formatDate(day);
     // Find events for this day
-    const dayEvents = timeline.filter((t) => isSameDay(t.date, day));
+    const dayEvents = portfolioEvents.filter((t) => isSameDay(t.date, day));
 
     if (dayEvents.length === 0) {
       const previousState = result.at(-1);
       if (!previousState) {
+        result.push({
+          date: day.toISOString(),
+          cash: 0,
+          balance: 0,
+          stocks: {},
+          portfolioValue: 0,
+          profitOrLoss: 0,
+          sp500Stock: { volume: 0 },
+          sp500Value: 0,
+        });
         continue;
       }
 
-      result.push({
-        date: day.toISOString(),
-        cash: previousState.cash,
-        balance: previousState.balance,
-        stocks: Object.fromEntries(
-          Object.entries(previousState.stocks).map(([symbol, stock]) => [
-            symbol,
-            {
-              ...stock,
-              splitAdjustedPrice: convertToUSD(
-                prices[symbol]?.splitAdjustedPrice[dateKey],
-                prices[symbol]?.currency,
-                exchangeRates[dateKey] || {},
-              ),
-              price: convertToUSD(
-                prices[symbol]?.price[dateKey],
-                prices[symbol]?.currency,
-                exchangeRates[dateKey] || {},
-              ),
-            },
-          ]),
-        ),
-        portfolioValue: previousState.cash + getStocksValueCached(previousState.stocks, day, prices, exchangeRates),
-        profitOrLoss: previousState.profitOrLoss,
-        sp500Stock: {
-          volume: previousState.sp500Stock.volume || 0,
-          price: convertToUSD(prices[SP500]?.price[dateKey], prices[SP500]?.currency, exchangeRates[dateKey] || {}),
-        },
-        sp500Value: getStocksValueCached(
-          { [SP500]: { volume: previousState.sp500Stock.volume || 0 } },
-          day,
-          prices,
-          exchangeRates,
-        ),
-      });
+      result.push(getNextDayPortfolioValue(previousState, day, prices, exchangeRates));
     } else {
-      const finalState = dayEvents.at(-1)!;
+      for (const event of dayEvents) {
+        if (event.type === CASH) {
+          cash += event.cashChange;
+          if (event.cashWithdrawalOrDeposit) {
+            balance += event.cashWithdrawalOrDeposit; // Update balance on withdrawal or deposit
+          }
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-expect-error
+        } else if ([STOCK_OPEN_EVENT, STOCK_OPEN_POSITION].includes(event.type) && event.stockSymbol) {
+          if (!(event.stockSymbol in stocks)) {
+            stocks[event.stockSymbol] = { volume: 0 };
+          }
+          stocks[event.stockSymbol] = { volume: stocks[event.stockSymbol].volume + event.stocksVolumeChange };
+        } else if (event.type === STOCK_CLOSE_EVENT && event.stockSymbol) {
+          if (event.stockSymbol in stocks) {
+            const stockRecord = stocks[event.stockSymbol];
+            stocks[event.stockSymbol] = {
+              volume: stockRecord.volume - event.stocksVolumeChange,
+              takenProfitOrLoss: (stockRecord.takenProfitOrLoss ?? 0) + event.profitOrLoss,
+            };
+            if (stocks[event.stockSymbol].volume <= 1e-6) {
+              stocks[event.stockSymbol].volume = 0;
+            }
+          }
+          profitOrLoss += event.profitOrLoss || 0; // Add profit or loss from closed position
+        }
+      }
+
       let sp500Volume = result.at(-1)?.sp500Stock.volume || 0;
-      if (dayEvents.some((e) => e.cashWithdrawalOrDeposit)) {
+      if (dayEvents.some((e) => e.type === CASH)) {
         const sp500Price = prices[SP500]?.price[formatDate(day)] || null;
         if (sp500Price === null) {
-          console.warn("No SP500 price for date:", formatDate(day));
+          console.warn("No SP500 price for date: ", formatDate(day));
           continue;
         }
         const withdrawalOrDepositBalance = dayEvents
-          .filter((e) => e.cashWithdrawalOrDeposit)
+          .filter((e): e is PortfolioEvent & { type: typeof CASH } => e.type === CASH && !!e.cashWithdrawalOrDeposit)
           .reduce((acc, e) => acc + (e.cashWithdrawalOrDeposit || 0), 0);
         sp500Volume += withdrawalOrDepositBalance / sp500Price;
       }
 
-      result.push({
-        date: day.toISOString(),
-        cash: finalState.cash,
-        balance: finalState.balance,
-        stocks: Object.fromEntries(
-          Object.entries(finalState.stocks).map(([symbol, stock]) => [
-            symbol,
-            {
-              ...stock,
-              splitAdjustedPrice: convertToUSD(
-                prices[symbol]?.splitAdjustedPrice[dateKey],
-                prices[symbol]?.currency,
-                exchangeRates[dateKey] || {},
-              ),
-              price: convertToUSD(
-                prices[symbol]?.price[dateKey],
-                prices[symbol]?.currency,
-                exchangeRates[dateKey] || {},
-              ),
-            },
-          ]),
-        ),
-        portfolioValue: finalState.cash + getStocksValueCached(finalState.stocks, day, prices, exchangeRates),
-        profitOrLoss: finalState.profitOrLoss,
-        sp500Stock: { volume: sp500Volume, price: prices[SP500]?.price[dateKey] ?? undefined },
-        sp500Value: getStocksValueCached({ [SP500]: { volume: sp500Volume } }, day, prices, exchangeRates),
-      });
+      result.push(
+        getPortfolioValueOnEventDay(cash, balance, stocks, profitOrLoss, sp500Volume, day, prices, exchangeRates),
+      );
     }
   }
 
@@ -694,6 +675,42 @@ function getAssetsAnalysis(
     }, {} as AssetsHistoricalData);
 }
 
+function getStockSymbolsFromEvents(events: PortfolioEvent[]): Set<string> {
+  return events.reduce((acc, next) => {
+    if (
+      [STOCK_OPEN_EVENT, STOCK_OPEN_POSITION].includes(
+        next.type as typeof STOCK_OPEN_EVENT | typeof STOCK_OPEN_POSITION,
+      )
+    ) {
+      acc.add(
+        (next as PortfolioEvent & { type: typeof STOCK_OPEN_EVENT | typeof STOCK_OPEN_POSITION }).stockSymbol as string,
+      );
+    }
+
+    return acc;
+  }, new Set<string>());
+}
+
+function convertPricesToUSD(
+  prices: StocksHistoricalPrices,
+  exchangeRates: Record<string, Record<string, number>>,
+): StocksHistoricalPrices {
+  return Object.entries(prices).reduce((acc, [symbol, priceRecord]) => {
+    acc[symbol] = {
+      currency: "USD",
+      price: {},
+      splitAdjustedPrice: {},
+    };
+    for (const [date, price] of Object.entries(priceRecord.price)) {
+      acc[symbol].price[date] = convertToUSD(price, priceRecord.currency, exchangeRates[date] || {})!;
+    }
+    for (const [date, price] of Object.entries(priceRecord.splitAdjustedPrice)) {
+      acc[symbol].splitAdjustedPrice[date] = convertToUSD(price, priceRecord.currency, exchangeRates[date] || {})!;
+    }
+    return acc;
+  }, {} as StocksHistoricalPrices);
+}
+
 async function getAnalysisFromXlsxBuffer(xlsxArrayBuffer: ArrayBuffer): Promise<PortfolioAnalysis> {
   const workbook = XLSX.read(xlsxArrayBuffer);
   const { cashEvents, openPositions, closedStocksOpenEvents, closedStocksCloseEvents } =
@@ -704,13 +721,15 @@ async function getAnalysisFromXlsxBuffer(xlsxArrayBuffer: ArrayBuffer): Promise<
     (a, b) => a.date.getTime() - b.date.getTime(),
   );
 
-  const timeline = createEventTimeline(allEvents);
+  const stockSymbols = getStockSymbolsFromEvents(allEvents);
+  stockSymbols.add(SP500);
 
-  if (!timeline.length) return { assetsAnalysis: {}, portfolioTimeline: [] };
+  if (!allEvents.length) return { assetsAnalysis: {}, portfolioTimeline: [], stockPrices: {} };
 
-  const startDate = timeline[0].date;
+  const startDate = addYears(new Date(), -3);
 
-  const prices = await populatePricesForStocks(timeline, startDate);
+  const prices = await getPricesForStocks(stockSymbols, startDate);
+
   const currencies = new Set(
     Object.values(prices)
       .map(({ currency }) => currency)
@@ -719,7 +738,7 @@ async function getAnalysisFromXlsxBuffer(xlsxArrayBuffer: ArrayBuffer): Promise<
 
   const exchangeRates = await fetchExchangeRates(currencies, startDate);
 
-  const portfolioTimeline = await getPortfolioValueData(timeline, prices, exchangeRates);
+  const portfolioTimeline = await getPortfolioValueData(allEvents, prices, exchangeRates);
 
   const assetsAnalysis = getAssetsAnalysis(
     openPositions,
@@ -729,7 +748,9 @@ async function getAnalysisFromXlsxBuffer(xlsxArrayBuffer: ArrayBuffer): Promise<
     exchangeRates,
   );
 
-  return { assetsAnalysis, portfolioTimeline };
+  const pricesInUSD = convertPricesToUSD(prices, exchangeRates);
+
+  return { assetsAnalysis, portfolioTimeline, stockPrices: pricesInUSD };
 }
 
 export default getAnalysisFromXlsxBuffer;
