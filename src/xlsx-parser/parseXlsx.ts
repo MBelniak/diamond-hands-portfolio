@@ -27,6 +27,7 @@ import {
   STOCK_OPEN_POSITION,
 } from "@/xlsx-parser/consts";
 import { convertToUSD, formatDate, getDateRange, getStockAPISymbol } from "@/xlsx-parser/utils";
+import { setTimeout } from "node:timers/promises";
 
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 const REDIS_EXPIRE_IN_DAY: SetOptions = {
@@ -285,6 +286,9 @@ async function fetchStockClosePriceRange(
       for (let i = 0; i < timestamp.length; i++) {
         const date = new Date(timestamp[i] * 1000);
         if (date >= startDate && date <= endDate) {
+          if (!close[i] && close[i - 1]) {
+            close[i] = close[i - 1];
+          }
           populatePriceMapForDate(date, close[i], splits ? parseSplits(splits) : [], pricesRecord);
         }
       }
@@ -368,6 +372,8 @@ async function fetchExchangeRates(
     } else {
       throw new Error("Failed to fetch exchange rates:" + (await response.text()));
     }
+
+    await setTimeout(1000); // To avoid hitting rate limits
   }
 
   await redis.set(getExchangeRatesRedisKey(today), JSON.stringify(exchangeRates), REDIS_EXPIRE_IN_DAY);
@@ -396,19 +402,13 @@ async function getPricesForStocks(stocks: Set<string>, startDate: Date): Promise
   return stockPricesRecord;
 }
 
-function getStocksValueCached(
-  stocks: Record<string, Stock>,
-  date: Date,
-  priceCache: StocksHistoricalPrices,
-  exchangeRates: Record<string, Record<string, number>>,
-): number {
+function getStocksValueCached(stocks: Record<string, Stock>, date: Date, priceCache: StocksHistoricalPrices): number {
   let stocksValue = 0;
   const dateKey = date.toISOString().slice(0, 10);
   for (const symbol in stocks) {
     const closePrice = priceCache[symbol]?.price[dateKey] ?? null;
     if (closePrice !== null) {
-      stocksValue +=
-        convertToUSD(closePrice, priceCache[symbol].currency, exchangeRates[dateKey])! * stocks[symbol].volume;
+      stocksValue += closePrice * stocks[symbol].volume;
     }
   }
   return stocksValue;
@@ -418,7 +418,6 @@ function getNextDayPortfolioValue(
   previousState: PortfolioValue,
   date: Date,
   prices: StocksHistoricalPrices,
-  exchangeRates: Record<string, Record<string, number>>,
 ): PortfolioValue {
   const dateKey = formatDate(date);
 
@@ -431,27 +430,18 @@ function getNextDayPortfolioValue(
         symbol,
         {
           ...stock,
-          splitAdjustedPrice: convertToUSD(
-            prices[symbol]?.splitAdjustedPrice[dateKey],
-            prices[symbol]?.currency,
-            exchangeRates[dateKey] || {},
-          ),
-          price: convertToUSD(prices[symbol]?.price[dateKey], prices[symbol]?.currency, exchangeRates[dateKey] || {}),
+          splitAdjustedPrice: prices[symbol]?.splitAdjustedPrice[dateKey],
+          price: prices[symbol]?.price[dateKey],
         },
       ]),
     ),
-    portfolioValue: previousState.cash + getStocksValueCached(previousState.stocks, date, prices, exchangeRates),
+    portfolioValue: previousState.cash + getStocksValueCached(previousState.stocks, date, prices),
     profitOrLoss: previousState.profitOrLoss,
     sp500Stock: {
       volume: previousState.sp500Stock.volume || 0,
-      price: convertToUSD(prices[SP500]?.price[dateKey], prices[SP500]?.currency, exchangeRates[dateKey] || {}),
+      price: prices[SP500]?.price[dateKey],
     },
-    sp500Value: getStocksValueCached(
-      { [SP500]: { volume: previousState.sp500Stock.volume || 0 } },
-      date,
-      prices,
-      exchangeRates,
-    ),
+    sp500Value: getStocksValueCached({ [SP500]: { volume: previousState.sp500Stock.volume || 0 } }, date, prices),
   };
 }
 
@@ -463,7 +453,6 @@ function getPortfolioValueOnEventDay(
   sp500Volume: number,
   date: Date,
   prices: StocksHistoricalPrices,
-  exchangeRates: Record<string, Record<string, number>>,
 ): PortfolioValue {
   const dateKey = formatDate(date);
 
@@ -477,18 +466,14 @@ function getPortfolioValueOnEventDay(
         symbol,
         {
           ...stock,
-          splitAdjustedPrice: convertToUSD(
-            prices[symbol]?.splitAdjustedPrice[dateKey],
-            prices[symbol]?.currency,
-            exchangeRates[dateKey] || {},
-          ),
-          price: convertToUSD(prices[symbol]?.price[dateKey], prices[symbol]?.currency, exchangeRates[dateKey] || {}),
+          splitAdjustedPrice: prices[symbol]?.splitAdjustedPrice[dateKey],
+          price: prices[symbol]?.price[dateKey],
         },
       ]),
     ),
-    portfolioValue: cash + getStocksValueCached(stocks, date, prices, exchangeRates),
+    portfolioValue: cash + getStocksValueCached(stocks, date, prices),
     sp500Stock: { volume: sp500Volume, price: prices[SP500]?.price[dateKey] ?? undefined },
-    sp500Value: getStocksValueCached({ [SP500]: { volume: sp500Volume } }, date, prices, exchangeRates),
+    sp500Value: getStocksValueCached({ [SP500]: { volume: sp500Volume } }, date, prices),
   };
 }
 
@@ -498,7 +483,6 @@ function getPortfolioValueOnEventDay(
 async function getPortfolioValueData(
   portfolioEvents: PortfolioEvent[],
   prices: StocksHistoricalPrices,
-  exchangeRates: Record<string, Record<string, number>>,
 ): Promise<PortfolioValue[]> {
   let cash = 0;
   let balance = 0;
@@ -507,7 +491,7 @@ async function getPortfolioValueData(
   const stocks = {} as Record<string, Stock>;
   // Date range
   const startDate = addYears(new Date(), -3);
-  const allDates = getDateRange(startDate, addDays(new Date(), -1));
+  const allDates = getDateRange(startDate, new Date());
 
   // For each date, find the portfolio state (cash, stocks) and fetch the close price
   const result: PortfolioValue[] = [];
@@ -531,7 +515,7 @@ async function getPortfolioValueData(
         continue;
       }
 
-      result.push(getNextDayPortfolioValue(previousState, day, prices, exchangeRates));
+      result.push(getNextDayPortfolioValue(previousState, day, prices));
     } else {
       for (const event of dayEvents) {
         if (event.type === CASH) {
@@ -574,9 +558,7 @@ async function getPortfolioValueData(
         sp500Volume += withdrawalOrDepositBalance / sp500Price;
       }
 
-      result.push(
-        getPortfolioValueOnEventDay(cash, balance, stocks, profitOrLoss, sp500Volume, day, prices, exchangeRates),
-      );
+      result.push(getPortfolioValueOnEventDay(cash, balance, stocks, profitOrLoss, sp500Volume, day, prices));
     }
   }
 
@@ -598,17 +580,9 @@ function getAssetsAnalysis(
       const stockSymbol = "stockSymbol" in stockEvent ? stockEvent["stockSymbol"] : null;
       if (!stockSymbol) return acc;
 
-      const currentStockPrice = convertToUSD(
-        prices[stockSymbol]?.price[formatDate(new Date())],
-        prices[stockSymbol]?.currency,
-        exchangeRates[formatDate(new Date())] || {},
-      );
+      const currentStockPrice = prices[stockSymbol]?.price[formatDate(new Date())];
 
-      const eventStockPrice = convertToUSD(
-        prices[stockSymbol]?.splitAdjustedPrice[dateKey],
-        prices[stockSymbol]?.currency,
-        exchangeRates[dateKey] || {},
-      );
+      const eventStockPrice = prices[stockSymbol]?.splitAdjustedPrice[dateKey];
 
       if (!acc[stockSymbol]) {
         acc[stockSymbol] = {
@@ -738,17 +712,17 @@ async function getAnalysisFromXlsxBuffer(xlsxArrayBuffer: ArrayBuffer): Promise<
 
   const exchangeRates = await fetchExchangeRates(currencies, startDate);
 
-  const portfolioTimeline = await getPortfolioValueData(allEvents, prices, exchangeRates);
+  const pricesInUSD = convertPricesToUSD(prices, exchangeRates);
+
+  const portfolioTimeline = await getPortfolioValueData(allEvents, pricesInUSD);
 
   const assetsAnalysis = getAssetsAnalysis(
     openPositions,
     closedStocksOpenEvents,
     closedStocksCloseEvents,
-    prices,
+    pricesInUSD,
     exchangeRates,
   );
-
-  const pricesInUSD = convertPricesToUSD(prices, exchangeRates);
 
   return { assetsAnalysis, portfolioTimeline, stockPrices: pricesInUSD };
 }
