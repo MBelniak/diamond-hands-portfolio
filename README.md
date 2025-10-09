@@ -2,8 +2,11 @@
 
 Parses xlsx report file from XTB platform and draws a chart of portfolio value,
 cash and profit over time, with comparison to S&P 500 index.
+Present assets breakdown with potential profits if positions were never closed.
 
-Just a playground of what's possible with public API of yahoo.
+Just a playground to see what's possible with public yahoo API (historical stock prices, split events).
+Uses Currency Exchange API for fetching historical exchange rates.
+Redis database is used to cache the prices and exchange rates, updated daily.
 
 ![Performance](performance.png)
 ![Assets](assets.png)
