@@ -58,7 +58,7 @@ function ProfitText({
   if (!last) return null;
 
   return (
-    <div className="flex flex-col text-xs text-gray-300 mt-2 space-y-0.5">
+    <div className="flex flex-col text-xs text-gray-300 mt-1 space-y-0.5">
       {windowSizes.map(({ label, daysAgo }) => {
         const startIdx = timeline.length - 1 - daysAgo;
         if (startIdx < 0) return null;
@@ -95,18 +95,24 @@ export const PerformanceKeyFigures = () => {
   const sp500Percentage = last.balance !== 0 ? (sp500ProfitOrLoss / last.balance) * 100 : 0;
   const realizedProfitOrLoss = last.profitOrLoss;
   const realizedPercentage = last.balance !== 0 ? (realizedProfitOrLoss / last.balance) * 100 : 0;
+  const totalProfitOrLoss = last.portfolioValue - last.balance;
+  const toalProfitOrLossPercentage = last.balance !== 0 ? (totalProfitOrLoss / last.balance) * 100 : 0;
 
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl w-full flex-col flex flex-wrap lg:flex-row lg:justify-around">
       <div className="p-8 flex flex-col items-start">
         <strong className="text-white text-lg mb-2 drop-shadow">Total portfolio value</strong>
         <KeyFigureValue>${last.portfolioValue.toFixed(2)}</KeyFigureValue>
-        <div className={"grid grid-cols-[auto_1fr] gap-x-4 mt-1"}>
+        <div className={"grid grid-cols-[auto_1fr] gap-x-4 mt-3"}>
+          <p className="text-sm text-gray-200">{totalProfitOrLoss > 0 ? "Total profit: " : "Total loss: "}</p>
+          <span className={profitOrLossTextColor(totalProfitOrLoss)}>
+            ${totalProfitOrLoss.toFixed(2)} ({toalProfitOrLossPercentage.toFixed(2)}%)
+          </span>
           <p className="text-sm text-gray-200">{realizedProfitOrLoss > 0 ? "Cashed in: " : "Lost: "}</p>
           <span className={profitOrLossTextColor(realizedProfitOrLoss)}>
             ${realizedProfitOrLoss.toFixed(2)} ({realizedPercentage.toFixed(2)}%)
           </span>
-          <p className="text-sm text-gray-200 mt-1">Open:</p>
+          <p className="text-sm text-gray-200">Open:</p>
           <ProfitText
             portfolioAnalysis={portfolioAnalysis}
             windowSizes={[
@@ -125,7 +131,7 @@ export const PerformanceKeyFigures = () => {
       <div className="p-8 flex flex-col items-start">
         <strong className="text-white text-lg mb-2 drop-shadow">If invested in SP500</strong>
         <KeyFigureValue>${last.sp500Value.toFixed(2)}</KeyFigureValue>
-        <p className={"text-sm text-gray-200 mt-1"}>
+        <p className={"text-sm text-gray-200 mt-2"}>
           {sp500ProfitOrLoss >= 0 ? "Potential profit: " : "Potential loss: "}
           <span className={clsx("text-sm  mt-1", profitOrLossTextColor(sp500ProfitOrLoss))}>
             ${sp500ProfitOrLoss.toFixed(2)} ({sp500Percentage.toFixed(2)}%)
