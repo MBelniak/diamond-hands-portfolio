@@ -32,7 +32,7 @@ type SidebarContextProps = {
 };
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
-const sidebarBackground = "bg-white dark:bg-gradient-to-br dark:from-gray-900 dark:via-indigo-900 dark:to-blue-900";
+const sidebarBackground = "light-gradient dark:dark-gradient";
 
 function useSidebar() {
   const context = React.useContext(SidebarContext);
@@ -331,14 +331,14 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 const darkSidebarMenuButtonVariants =
-  "dark:active:text-white dark:hover:bg-indigo-800 dark:active:bg-indigo-900 dark:hover:text-white";
+  "dark:active:text-white dark:hover:bg-slate-800 dark:active:bg-slate-900 dark:hover:text-white";
 
 const sidebarMenuButtonVariants = cva(
   "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring" +
     " transition-[width,height,padding] focus-visible:ring-2 hover:bg-gray-200 active:bg-gray-300" +
     " disabled:pointer-events-none disabled:opacity-50" +
-    " group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-indigo-900" +
-    " data-[active=true]:font-medium data-[active=true]:text-white data-[state=open]:hover:bg-indigo-800 data-[state=open]:hover:text-white" +
+    " group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-slate-900" +
+    " data-[active=true]:font-medium data-[active=true]:text-white data-[state=open]:hover:bg-slate-800 data-[state=open]:hover:text-white" +
     " group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0" +
     darkSidebarMenuButtonVariants,
   {
@@ -346,7 +346,7 @@ const sidebarMenuButtonVariants = cva(
       variant: {
         default: "",
         outline:
-          "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-indigo-800 hover:text-white hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
+          "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-slate-800 hover:text-white hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
       },
       size: {
         default: "h-8 text-sm",

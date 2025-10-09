@@ -6,8 +6,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function profitOrLossTextColor(profitOrLoss: number) {
-  if (profitOrLoss > 0) return "text-green-600 dark:text-green-400";
-  if (profitOrLoss < 0) return "text-red-600 dark:text-red-400";
+  if (profitOrLoss > 0) return "text-green-600 dark:text-green-500";
+  if (profitOrLoss < 0) return "text-red-600 dark:text-red-500";
   return "text-gray-900 dark:text-gray-200";
 }
 

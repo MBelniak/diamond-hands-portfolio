@@ -81,7 +81,7 @@
 
 .dark {
   --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
+  --foreground: oklch(0.825 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
@@ -111,7 +111,7 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-  --tooltip-background: rgba(30, 50, 150, 1);
+  --tooltip-background: var(--color-slate-700);
 }
 
 @layer base {
@@ -121,4 +121,24 @@
   body {
     @apply bg-gray-50 text-foreground;
   }
+}
+
+@utility dark-gradient {
+  --tw-gradient-position: to bottom right in oklab;
+  --tw-gradient-from: var(--color-gray-900) ;
+  --tw-gradient-via: var(--color-slate-900) ;
+  --tw-gradient-to: var(--color-stone-900);
+  --tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) 0%, var(--tw-gradient-via) 50%, var(--tw-gradient-to) 100%;
+  --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) 0%, var(--tw-gradient-to) 100%);
+  background-image: linear-gradient(var(--tw-gradient-stops));
+}
+
+@utility light-gradient {
+  --tw-gradient-position: to bottom right in oklab;
+  --tw-gradient-from: var(--color-gray-50) ;
+  --tw-gradient-via: var(--color-gray-200) ;
+  --tw-gradient-to: var(--color-slate-100);
+  --tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) 0%, var(--tw-gradient-via) 50%, var(--tw-gradient-to) 100%;
+  --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) 0%, var(--tw-gradient-to) 100%);
+  background-image: linear-gradient(var(--tw-gradient-stops));
 }
