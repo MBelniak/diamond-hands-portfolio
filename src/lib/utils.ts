@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { PortfolioAnalysis } from "@/xlsx-parser/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -37,7 +38,7 @@ export const portfolioAnalysisDB = {
     });
   },
 
-  async setPortfolioAnalysis(data: any) {
+  async setPortfolioAnalysis(data: PortfolioAnalysis) {
     const db = await this.getDB();
     return new Promise<void>((resolve, reject) => {
       const tx = db.transaction(this.storeName, "readwrite");
@@ -50,7 +51,7 @@ export const portfolioAnalysisDB = {
 
   async getPortfolioAnalysis() {
     const db = await this.getDB();
-    return new Promise<any>((resolve, reject) => {
+    return new Promise<PortfolioAnalysis>((resolve, reject) => {
       const tx = db.transaction(this.storeName, "readonly");
       const store = tx.objectStore(this.storeName);
       const request = store.get("portfolioAnalysis");

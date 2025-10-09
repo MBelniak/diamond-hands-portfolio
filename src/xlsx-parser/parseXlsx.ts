@@ -571,7 +571,6 @@ function getAssetsAnalysis(
   stockClosedPositionsOpenEvents: PortfolioEvent[],
   stockCloseEvents: PortfolioEvent[],
   prices: StocksHistoricalPrices,
-  exchangeRates: Record<string, Record<string, number>>,
 ): AssetsHistoricalData {
   return stockOpenPositions
     .concat(stockClosedPositionsOpenEvents)
@@ -717,13 +716,7 @@ async function getAnalysisFromXlsxBuffer(xlsxArrayBuffer: ArrayBuffer): Promise<
 
   const portfolioTimeline = await getPortfolioValueData(allEvents, pricesInUSD);
 
-  const assetsAnalysis = getAssetsAnalysis(
-    openPositions,
-    closedStocksOpenEvents,
-    closedStocksCloseEvents,
-    pricesInUSD,
-    exchangeRates,
-  );
+  const assetsAnalysis = getAssetsAnalysis(openPositions, closedStocksOpenEvents, closedStocksCloseEvents, pricesInUSD);
 
   return { assetsAnalysis, portfolioTimeline, stockPrices: pricesInUSD };
 }
