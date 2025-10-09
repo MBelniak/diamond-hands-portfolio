@@ -94,19 +94,19 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
     <div className={"flex flex-col w-full items-center gap-8 mb-16 mt-8"}>
       <div className={"w-full max-w-3xl flex"}>
         <Button onClick={() => redirect("/assets")} variant="ghost">
-          <Link href="/assets" className="text-md text-white hover:underline inline-block py-6">
+          <Link href="/assets" className="text-md hover:underline inline-block py-6">
             &larr; Back to Assets Overview
           </Link>
         </Button>
       </div>
       <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 w-full max-w-3xl">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center drop-shadow-lg">{asset}</h2>
+        <h2 className="text-2xl font-bold  mb-6 text-center drop-shadow-lg">{asset}</h2>
         <div style={{ width: "100%", padding: "0 24px", boxSizing: "border-box", height: 350 }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={windowedData}>
-              <XAxis dataKey="date" tick={{ fontSize: 12, fill: "#fff" }} />
+              <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--foreground)" }} />
               <YAxis
-                tick={{ fontSize: 12, fill: "#fff" }}
+                tick={{ fontSize: 12, fill: "var(--foreground)" }}
                 domain={[
                   (dataMin: number) => Math.floor(dataMin - 0.03 * dataMin),
                   (dataMax: number) => Math.ceil(dataMax + 0.03 * dataMax),
@@ -115,7 +115,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
               <YAxis
                 yAxisId="right"
                 orientation="right"
-                tick={{ fontSize: 12, fill: "#fff" }}
+                tick={{ fontSize: 12, fill: "var(--foreground)" }}
                 domain={[
                   (dataMin: number) => Math.floor(dataMin - 0.03 * dataMin),
                   (dataMax: number) => Math.ceil(dataMax + 0.03 * dataMax),
@@ -125,18 +125,18 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
                 formatter={(value: number) => value?.toFixed(2)}
                 labelFormatter={(label) => `Date: ${label}`}
                 contentStyle={{
-                  background: "rgba(30, 50, 150, 1)",
+                  background: "var(--tooltip-background)",
                   borderRadius: "0.75rem",
-                  color: "#fff",
+                  color: "var(--foreground)",
                   border: "1px solid #a5b4fc",
                 }}
-                labelStyle={{ color: "#fff" }}
+                labelStyle={{ color: "var(--foreground)" }}
               />
               <Line
                 isAnimationActive={false}
                 type="monotone"
                 dataKey="price"
-                stroke="#a5b4fc"
+                stroke="#85a4dc"
                 strokeWidth={2}
                 dot={false}
                 name={chartKeys.stockPrice}
@@ -166,7 +166,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
           </ResponsiveContainer>
         </div>
         <div className={"w-full mt-4 flex flex-col gap-8 px-8"}>
-          <label className="text-white font-semibold">
+          <label className=" font-semibold">
             Date range: {priceHistory[windowStart].date} - {priceHistory[windowEnd].date}
           </label>
           <DualRangeSlider

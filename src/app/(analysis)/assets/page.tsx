@@ -19,28 +19,28 @@ export default function Assets() {
   }, [assetsAnalysis]);
 
   function getProfitLossTextClass(value: number): string {
-    // Progi dla strat
+    // Loss thresholds
     if (value < -1000) {
-      return "text-red-700 font-extrabold text-xl";
+      return "text-red-600 dark:text-red-700 font-extrabold text-xl";
     }
     if (value < -100) {
-      return "text-red-500 font-bold text-lg";
+      return "text-red-500 dark:text-red-500 font-bold text-lg";
     }
     if (value < 0) {
-      return "text-red-400 font-semibold text-lg";
+      return "text-red-400 dark:text-red-400 font-semibold text-lg";
     }
-    // Progi dla zysków
+    // Profit thresholds
     if (value > 1000) {
-      return "text-green-500 font-extrabold text-lg";
+      return "text-green-700 dark:text-green-500 font-extrabold text-lg";
     }
     if (value > 100) {
-      return "text-green-400 font-bold text-lg";
+      return "text-green-600 dark:text-green-400 font-bold text-lg";
     }
     if (value > 0) {
-      return "text-green-300 font-semibold text-lg";
+      return "text-green-500 dark:text-green-300 font-semibold text-lg";
     }
-    // Neutralne
-    return "text-gray-300 font-semibold text-lg";
+    // Neutral
+    return "text-gray-500 dark:text-gray-300 font-semibold text-lg";
   }
 
   const stockProfitArray = stocks
@@ -82,12 +82,12 @@ export default function Assets() {
   return (
     <>
       {" "}
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4">
-        <h2 className="text-3xl font-bold text-white mb-8 text-center drop-shadow-lg">Assets breakdown</h2>
+      <div className="bg-white/80 dark:bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4">
+        <h2 className="text-3xl font-bold mb-8 text-center text-gray-900 dark:text-gray-100">Assets breakdown</h2>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-gray-200 rounded-xl overflow-hidden shadow-lg">
+          <table className="w-full text-sm text-left text-gray-700 dark:text-gray-200 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-transparent">
             <thead>
-              <tr className="bg-indigo-800/80">
+              <tr className="bg-gray-100 dark:bg-indigo-800/80">
                 <th className="px-4 py-3 font-semibold">Asset</th>
                 <th className="px-4 py-3 font-semibold">Profit/Loss ($)</th>
                 <th className="px-4 py-3 font-semibold">Potential Profit/Loss ($)</th>
@@ -101,30 +101,44 @@ export default function Assets() {
                   stockPotentialProfitArray.find((s) => s.stock === stockProfit.stock)?.potentialValue ?? 0;
 
                 return (
-                  <tr key={stockProfit.stock} className="hover:bg-indigo-900/30 transition-colors duration-150">
-                    <td className="px-4 py-3 border-b border-indigo-700 rounded-l-md">{stockProfit.stock}</td>
-                    <td className={`px-4 py-3 border-b border-indigo-700 ${getProfitLossTextClass(profitOrLoss)}`}>
+                  <tr
+                    key={stockProfit.stock}
+                    className="hover:bg-gray-200 dark:hover:bg-indigo-900/30 transition-colors duration-150"
+                  >
+                    <td className="px-4 py-3 border-b border-gray-300 dark:border-indigo-700 rounded-l-md">
+                      {stockProfit.stock}
+                    </td>
+                    <td
+                      className={`px-4 py-3 border-b border-gray-300 dark:border-indigo-700 ${getProfitLossTextClass(profitOrLoss)}`}
+                    >
                       {profitOrLoss?.toFixed(2) ?? 0}
                     </td>
-                    <td className={`px-4 py-3 border-b border-indigo-700 ${getProfitLossTextClass(potentialValue)}`}>
+                    <td
+                      className={`px-4 py-3 border-b border-gray-300 dark:border-indigo-700 ${getProfitLossTextClass(potentialValue)}`}
+                    >
                       {potentialValue?.toFixed(2) ?? 0}
                     </td>
-                    <td className={`px-4 py-3 border-b border-indigo-700 rounded-r-md`}>
-                      <Button onClick={() => redirect("/assets/" + stockProfit.stock)} size="icon">
+                    <td className={`px-4 py-3 border-b border-gray-300 dark:border-indigo-700 rounded-r-md`}>
+                      <Button
+                        variant={"secondary"}
+                        onClick={() => redirect("/assets/" + stockProfit.stock)}
+                        size="icon"
+                      >
                         <TrendingUp />
                       </Button>
                     </td>
                   </tr>
                 );
               })}
-              <tr className="bg-indigo-700/80 font-bold text-white">
-                <td className="px-4 py-3 rounded-bl-xl">Total</td>
+              <tr className="bg-gray-100 dark:bg-indigo-700/80 font-bold ">
+                <td className="px-4 py-3 ">Total</td>
                 <td className="px-4 py-3">
                   {stockProfitArray.reduce((acc, stock) => stock.profitOrLoss + acc, 0).toFixed(2)}
                 </td>
-                <td className="px-4 py-3 rounded-br-xl">
+                <td className="px-4 py-3 ">
                   {stockPotentialProfitArray.reduce((acc, stock) => stock.potentialValue + acc, 0).toFixed(2)}
                 </td>
+                <td />
               </tr>
             </tbody>
           </table>

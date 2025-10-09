@@ -4,6 +4,7 @@ import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "rec
 import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { useStore } from "@/lib/store";
 import { redirect } from "next/navigation";
+import { isDarkMode } from "@/lib/utils";
 
 const currency = "$";
 const chartKeys = {
@@ -91,16 +92,14 @@ export function PerformanceChart() {
 
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl w-full p-6">
-      <h2 className="text-2xl font-bold text-white mb-6 text-center drop-shadow-lg">
-        Portfolio value over time ({currency})
-      </h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">Portfolio value over time ({currency})</h2>
       <div style={{ width: "100%", padding: "0 24px", boxSizing: "border-box", height: 350 }}>
         <ResponsiveContainer width="100%" height="100%">
           {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
           {/*@ts-ignore*/}
           <LineChart data={windowedData}>
-            <XAxis dataKey="date" tick={{ fontSize: 12, fill: "#fff" }} />
-            <YAxis tick={{ fontSize: 12, fill: "#fff" }} />
+            <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--foreground)" }} />
+            <YAxis tick={{ fontSize: 12, fill: "var(--foreground)" }} />
             <Tooltip
               formatter={(value: number) => value.toFixed(2)}
               labelFormatter={(label) => `Date: ${label}`}
@@ -108,12 +107,12 @@ export function PerformanceChart() {
                 return { portfolioValue: -1, profitOrLoss: 1, cash: 2 }[dataKey as string] || 3;
               }}
               contentStyle={{
-                background: "rgba(30, 50, 150, 1)",
+                background: "var(--tooltip-background)",
                 borderRadius: "0.75rem",
-                color: "#fff",
+                color: "var(--foreground)",
                 border: "1px solid #a5b4fc",
               }}
-              labelStyle={{ color: "#fff" }}
+              labelStyle={{ color: "var(--foreground)" }}
             />
             {/* Render only enabled lines */}
             {chartLineConfig.map(
@@ -141,7 +140,7 @@ export function PerformanceChart() {
             key={line.key}
             onClick={() => toggleLine(line.key)}
             className={`flex items-center gap-2 px-3 py-1 rounded-full font-medium transition cursor-pointer
-              ${enabledLines[line.key] ? "bg-white/5 text-white" : "bg-gray-700/40 text-gray-400"}
+              ${enabledLines[line.key] ? "bg-white/5 " : "bg-gray-700/40 text-gray-400"}
               border border-white/30 hover:bg-white/30`}
             style={{ borderColor: line.color }}
             type="button"
@@ -161,7 +160,7 @@ export function PerformanceChart() {
         ))}
       </div>
       <div className={"w-full mt-4 flex flex-col gap-8 px-8"}>
-        <label className="text-white font-semibold">
+        <label className=" font-semibold">
           Date range: {data[windowStart].date} - {data[windowEnd].date}
         </label>
         <DualRangeSlider

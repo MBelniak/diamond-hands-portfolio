@@ -32,6 +32,7 @@ type SidebarContextProps = {
 };
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
+const sidebarBackground = "bg-white dark:bg-gradient-to-br dark:from-gray-900 dark:via-indigo-900 dark:to-blue-900";
 
 function useSidebar() {
   const context = React.useContext(SidebarContext);
@@ -153,7 +154,7 @@ function Sidebar({
       <div
         data-slot="sidebar"
         className={cn(
-          "bg-gradient-to-br from-gray-900 via-indigo-900 to-blue-900 bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl flex h-full w-(--sidebar-width) flex-col text-white",
+          `${sidebarBackground} backdrop-blur-lg rounded-2xl shadow-2xl flex h-full w-(--sidebar-width) flex-col `,
           className,
         )}
         {...props}
@@ -170,7 +171,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-gradient-to-br from-gray-900 via-indigo-900 to-blue-900 bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl text-white w-(--sidebar-width) p-0 [&>button]:hidden"
+          className={`${sidebarBackground}  backdrop-blur-lg rounded-2xl shadow-2xl text-white w-(--sidebar-width) p-0 [&>button]:hidden`}
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -190,7 +191,7 @@ function Sidebar({
 
   return (
     <div
-      className="group peer text-white hidden md:block"
+      className="group peer  hidden md:block"
       data-state={state}
       data-collapsible={state === "collapsed" ? collapsible : ""}
       data-variant={variant}
@@ -212,10 +213,10 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex bg-gradient-to-br from-gray-900 via-indigo-900 to-blue-900 backdrop-blur-lg shadow-2xl text-white",
+          `fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex ${sidebarBackground} backdrop-blur-lg shadow-2xl `,
           side === "left"
-            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] border-r border-black"
-            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] border-l border-black",
+            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] border-r dark:border-black"
+            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] border-l dark:border-black",
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
@@ -329,13 +330,21 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Zmiana kolorów dla menu buttonów (hover/active/disabled)
+const darkSidebarMenuButtonVariants =
+  "dark:active:text-white dark:hover:bg-indigo-800 dark:active:bg-indigo-900 dark:hover:text-white";
+
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-indigo-900 active:text-white hover:bg-indigo-800 hover:text-white disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-indigo-900 data-[active=true]:font-medium data-[active=true]:text-white data-[state=open]:hover:bg-indigo-800 data-[state=open]:hover:text-white group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring" +
+    " transition-[width,height,padding] focus-visible:ring-2 hover:bg-gray-200 active:bg-gray-300" +
+    " disabled:pointer-events-none disabled:opacity-50" +
+    " group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-indigo-900" +
+    " data-[active=true]:font-medium data-[active=true]:text-white data-[state=open]:hover:bg-indigo-800 data-[state=open]:hover:text-white" +
+    " group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0" +
+    darkSidebarMenuButtonVariants,
   {
     variants: {
       variant: {
-        default: "hover:bg-indigo-800 hover:text-white",
+        default: "",
         outline:
           "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-indigo-800 hover:text-white hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
       },
@@ -352,7 +361,6 @@ const sidebarMenuButtonVariants = cva(
   },
 );
 
-// Divider (Separator) - czarny kolor
 function SidebarSeparator({ className, ...props }: React.ComponentProps<typeof Separator>) {
   return (
     <Separator
@@ -401,7 +409,7 @@ function SidebarGroupLabel({
       data-slot="sidebar-group-label"
       data-sidebar="group-label"
       className={cn(
-        "text-sidebar-foreground/70 ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+        "text-foreground/70 ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
         className,
       )}

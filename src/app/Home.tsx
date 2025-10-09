@@ -1,22 +1,25 @@
 "use client";
-import React from "react";
-import { useDropzone } from "react-dropzone";
+import React, { useEffect } from "react";
 import { useStore } from "../lib/store";
 import { redirect } from "next/navigation";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
-import { useUploadXlsxAnalysisFiles } from "@/hooks/useUploadXlsxAnalysisFiles";
+import { portfolioAnalysisDB } from "../lib/utils";
+import { usePortfolioAnalysisQuery } from "../hooks/usePortfolioAnalysisQuery";
+import { LandingPage } from "@/app/LandingPage";
 
 export default function Home() {
   const { portfolioAnalysis, setPortfolioAnalysis } = useStore();
-  const { mutate: onDrop, isPending: isUploading, error } = useUploadXlsxAnalysisFiles(setPortfolioAnalysis);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: (files) => onDrop(files),
-    accept: {
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
-    },
-    multiple: false,
-  });
+  const { isFetching, data, error } = usePortfolioAnalysisQuery();
+
+  useEffect(() => {
+    if (data) {
+      setPortfolioAnalysis(data);
+    } else if (error) {
+      portfolioAnalysisDB.removePortfolioAnalysis().then();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, error]);
 
   if (portfolioAnalysis != null) {
     redirect("/performance");
@@ -24,25 +27,13 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <h1 className="text-2xl font-bold mb-6">Upload XLSX file</h1>
-      {!isUploading && (
-        <div
-          {...getRootProps()}
-          className={`w-96 h-48 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${isDragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-white"}`}
-        >
-          <input {...getInputProps()} />
-          <span className="text-gray-500">
-            {isDragActive ? "Drop XLSX file here..." : "Drag XLSX file here or click to select"}
-          </span>
-        </div>
-      )}
-      {isUploading && (
+      {isFetching && (
         <>
           <DiamondLoader />
-          <p className="mt-4 text-center text-sm text-blue-500">Uploading file...</p>
+          <p className="mt-4 text-center text-sm text-blue-500">Loading portfolio analysis...</p>
         </>
       )}
-      {error && <p className="mt-4 text-center text-sm text-red-500">{error.message}</p>}
+      {!isFetching && <LandingPage />}
     </div>
   );
 }
