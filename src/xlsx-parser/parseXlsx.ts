@@ -362,8 +362,9 @@ async function fetchExchangeRates(
         .join(","),
     );
 
-    console.log("Fetching from " + `https://api.currencylayer.com/timeframe?${searchParams.toString()}`);
-    const response = await fetch(`https://api.currencylayer.com/timeframe?${searchParams.toString()}`);
+    const finalURL = `https://apilayer.net/timeframe?${searchParams.toString()}`;
+    console.log("Fetching from " + finalURL);
+    const response = await fetch(finalURL);
 
     if (response.ok) {
       const data = (await response.json()).quotes as Record<string, Record<string, number>>;
@@ -422,7 +423,7 @@ function getNextDayPortfolioValue(
   const dateKey = formatDate(date);
 
   return {
-    date: date.toISOString(),
+    date: formatDate(date),
     cash: previousState.cash,
     balance: previousState.balance,
     stocks: Object.fromEntries(
@@ -460,7 +461,7 @@ function getPortfolioValueOnEventDay(
     cash,
     balance,
     profitOrLoss,
-    date: date.toISOString(),
+    date: formatDate(date),
     stocks: Object.fromEntries(
       Object.entries(stocks).map(([symbol, stock]) => [
         symbol,
@@ -503,7 +504,7 @@ async function getPortfolioValueData(
       const previousState = result.at(-1);
       if (!previousState) {
         result.push({
-          date: day.toISOString(),
+          date: formatDate(day),
           cash: 0,
           balance: 0,
           stocks: {},
