@@ -13,6 +13,29 @@ const chartKeys = {
   sp500Value: "S&P 500",
 };
 
+const chartLineConfig = [
+  {
+    key: "portfolioValue",
+    label: chartKeys.portfolioValue,
+    color: "#a5b4fc",
+  },
+  {
+    key: "profitOrLoss",
+    label: chartKeys.profitOrLoss,
+    color: "#38bdf8",
+  },
+  {
+    key: "cash",
+    label: chartKeys.cash,
+    color: "#8884d8aa",
+  },
+  {
+    key: "sp500Value",
+    label: chartKeys.sp500Value,
+    color: "#34d399",
+  },
+];
+
 export function PerformanceChart() {
   const { portfolioAnalysis } = useStore();
 
@@ -51,6 +74,21 @@ export function PerformanceChart() {
     setRange([start, end]);
   };
 
+  // Track which lines are enabled
+  const [enabledLines, setEnabledLines] = useState<Record<string, boolean>>({
+    portfolioValue: true,
+    profitOrLoss: true,
+    cash: true,
+    sp500Value: true,
+  });
+
+  const toggleLine = (key: string) => {
+    setEnabledLines((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl w-full p-6">
       <h2 className="text-2xl font-bold text-white mb-6 text-center drop-shadow-lg">
@@ -77,44 +115,50 @@ export function PerformanceChart() {
               }}
               labelStyle={{ color: "#fff" }}
             />
-            <Line
-              isAnimationActive={false}
-              type="monotone"
-              dataKey="portfolioValue"
-              stroke="#a5b4fc"
-              strokeWidth={2}
-              dot={false}
-              name={chartKeys.portfolioValue}
-            />
-            <Line
-              isAnimationActive={false}
-              type="monotone"
-              dataKey="profitOrLoss"
-              stroke="#38bdf8"
-              strokeWidth={2}
-              dot={false}
-              name={chartKeys.profitOrLoss}
-            />
-            <Line
-              isAnimationActive={false}
-              type="monotone"
-              dataKey="cash"
-              stroke="#8884d8aa"
-              strokeWidth={2}
-              dot={false}
-              name={chartKeys.cash}
-            />
-            <Line
-              isAnimationActive={false}
-              type="monotone"
-              dataKey="sp500Value"
-              stroke="#34d399"
-              strokeWidth={2}
-              dot={false}
-              name={chartKeys.sp500Value}
-            />
+            {/* Render only enabled lines */}
+            {chartLineConfig.map(
+              (line) =>
+                enabledLines[line.key] && (
+                  <Line
+                    key={line.key}
+                    isAnimationActive={false}
+                    type="monotone"
+                    dataKey={line.key}
+                    stroke={line.color}
+                    strokeWidth={2}
+                    dot={false}
+                    name={line.label}
+                  />
+                ),
+            )}
           </LineChart>
         </ResponsiveContainer>
+      </div>
+      {/* Legend below chart */}
+      <div className="flex flex-wrap gap-4 justify-center mt-4">
+        {chartLineConfig.map((line) => (
+          <button
+            key={line.key}
+            onClick={() => toggleLine(line.key)}
+            className={`flex items-center gap-2 px-3 py-1 rounded-full font-medium transition cursor-pointer
+              ${enabledLines[line.key] ? "bg-white/5 text-white" : "bg-gray-700/40 text-gray-400"}
+              border border-white/30 hover:bg-white/30`}
+            style={{ borderColor: line.color }}
+            type="button"
+          >
+            <span
+              style={{
+                display: "inline-block",
+                width: 16,
+                height: 4,
+                background: line.color,
+                borderRadius: 2,
+                opacity: enabledLines[line.key] ? 1 : 0.4,
+              }}
+            />
+            {line.label}
+          </button>
+        ))}
       </div>
       <div className={"w-full mt-4 flex flex-col gap-8 px-8"}>
         <label className="text-white font-semibold">
