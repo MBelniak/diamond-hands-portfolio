@@ -1,6 +1,6 @@
 // @ts-expect-error no typings for this file
 import XLSX from "xlsx/xlsx.js";
-import { addYears, isSameDay, startOfDay } from "date-fns";
+import { addYears, isAfter, isSameDay, startOfDay } from "date-fns";
 import { addDays } from "date-fns/addDays";
 import { isBefore } from "date-fns/isBefore";
 import {
@@ -206,7 +206,7 @@ async function fetchHistoricalStockData(
   chart?: {
     result?: {
       timestamp?: number[];
-      meta?: { currency: string };
+      meta?: { currency: string; regularMarketPrice: number; currentTradingPeriod: { regular: { end: number } } };
       indicators?: {
         quote?: {
           close: number[];
@@ -279,6 +279,11 @@ async function fetchStockClosePriceRange(
     const currency = data.chart?.result?.[0]?.meta?.currency ?? "USD";
     const close = data.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
     const splits = data.chart?.result?.[0]?.events?.splits;
+    const regularMarketPrice = data.chart?.result?.[0]?.meta?.regularMarketPrice;
+    const tradingPeriodRegularEndTimestamp = data.chart?.result?.[0]?.meta?.currentTradingPeriod?.regular?.end;
+    const tradingPeriodRegularEndDate = tradingPeriodRegularEndTimestamp
+      ? new Date(tradingPeriodRegularEndTimestamp * 1000)
+      : null;
 
     if (timestamp && close) {
       const pricesRecord = { currency, price: {}, splitAdjustedPrice: {} };
@@ -289,7 +294,17 @@ async function fetchStockClosePriceRange(
           if (!close[i] && close[i - 1]) {
             close[i] = close[i - 1];
           }
-          populatePriceMapForDate(date, close[i], splits ? parseSplits(splits) : [], pricesRecord);
+          if (
+            tradingPeriodRegularEndDate &&
+            (isSameDay(date, tradingPeriodRegularEndDate) || isAfter(date, tradingPeriodRegularEndDate)) &&
+            isBefore(new Date(), tradingPeriodRegularEndDate) &&
+            regularMarketPrice
+          ) {
+            // If market is still open and we ask for today's or future date, return current price
+            populatePriceMapForDate(date, regularMarketPrice, splits ? parseSplits(splits) : [], pricesRecord);
+          } else {
+            populatePriceMapForDate(date, close[i], splits ? parseSplits(splits) : [], pricesRecord);
+          }
         }
       }
       return pricesRecord;

@@ -32,7 +32,7 @@ export const LandingPage = () => {
   });
 
   return (
-    <div>
+    <div className={"flex flex-col items-center justify-center"}>
       <h1 className="text-2xl font-bold mb-6">Upload XLSX file</h1>
       {!isUploading && (
         <div
