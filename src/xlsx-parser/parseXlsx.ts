@@ -5,6 +5,8 @@ import { addDays } from "date-fns/addDays";
 import { isBefore } from "date-fns/isBefore";
 import {
   type AssetsHistoricalData,
+  CashEvent,
+  CashFlow,
   type PortfolioAnalysis,
   type PortfolioEvent,
   type PortfolioValue,
@@ -26,8 +28,9 @@ import {
   STOCK_OPEN_EVENT,
   STOCK_OPEN_POSITION,
 } from "@/xlsx-parser/consts";
-import { convertToUSD, formatDate, getDateRange, getStockAPISymbol } from "@/xlsx-parser/utils";
+import { convertToUSD, getDateRange, getStockAPISymbol } from "@/xlsx-parser/utils";
 import { setTimeout } from "node:timers/promises";
+import { formatDate } from "@/lib/utils";
 
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 const REDIS_EXPIRE_IN_DAY: SetOptions = {
@@ -84,7 +87,7 @@ function extractHeaderAndKeys<T extends readonly string[]>(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getCashEvents(workbook: any): PortfolioEvent[] {
+function getCashEvents(workbook: any): CashEvent[] {
   const cashSheet = workbook.Sheets[CASH_OPERATION_HISTORY];
   const cashData: Record<string, string>[] = XLSX.utils.sheet_to_json(cashSheet);
 
@@ -176,7 +179,7 @@ function getClosedStocksCloseEvents(workbook: any): PortfolioEvent[] {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getCashAndStocksEvents(workbook: any): {
-  cashEvents: PortfolioEvent[];
+  cashEvents: CashEvent[];
   openPositions: PortfolioEvent[];
   closedStocksOpenEvents: PortfolioEvent[];
   closedStocksCloseEvents: PortfolioEvent[];
@@ -441,6 +444,10 @@ function getNextDayPortfolioValue(
     date: formatDate(date),
     cash: previousState.cash,
     balance: previousState.balance,
+    oneDayProfit:
+      getStocksValueCached(previousState.stocks, date, prices) -
+      getStocksValueCached(previousState.stocks, addDays(date, -1), prices),
+    totalCapitalInvested: previousState.totalCapitalInvested,
     stocks: Object.fromEntries(
       Object.entries(previousState.stocks).map(([symbol, stock]) => [
         symbol,
@@ -464,11 +471,13 @@ function getNextDayPortfolioValue(
 function getPortfolioValueOnEventDay(
   cash: number,
   balance: number,
+  totalCapitalInvested: number,
   stocks: Record<string, Stock>,
   profitOrLoss: number,
   sp500Volume: number,
   date: Date,
   prices: StocksHistoricalPrices,
+  previousState: PortfolioValue,
 ): PortfolioValue {
   const dateKey = formatDate(date);
 
@@ -476,6 +485,10 @@ function getPortfolioValueOnEventDay(
     cash,
     balance,
     profitOrLoss,
+    totalCapitalInvested,
+    oneDayProfit:
+      getStocksValueCached(previousState.stocks, date, prices) -
+      getStocksValueCached(previousState.stocks, addDays(date, -1), prices),
     date: formatDate(date),
     stocks: Object.fromEntries(
       Object.entries(stocks).map(([symbol, stock]) => [
@@ -496,12 +509,10 @@ function getPortfolioValueOnEventDay(
 /**
  * Main function: for each day fetches the close price and calculates the portfolio value
  */
-async function getPortfolioValueData(
-  portfolioEvents: PortfolioEvent[],
-  prices: StocksHistoricalPrices,
-): Promise<PortfolioValue[]> {
+function getPortfolioValueData(portfolioEvents: PortfolioEvent[], prices: StocksHistoricalPrices): PortfolioValue[] {
   let cash = 0;
   let balance = 0;
+  let totalCapitalInvested = 0;
   let profitOrLoss = 0;
 
   const stocks = {} as Record<string, Stock>;
@@ -522,6 +533,8 @@ async function getPortfolioValueData(
           date: formatDate(day),
           cash: 0,
           balance: 0,
+          totalCapitalInvested: 0,
+          oneDayProfit: 0,
           stocks: {},
           portfolioValue: 0,
           profitOrLoss: 0,
@@ -538,6 +551,9 @@ async function getPortfolioValueData(
           cash += event.cashChange;
           if (event.cashWithdrawalOrDeposit) {
             balance += event.cashWithdrawalOrDeposit; // Update balance on withdrawal or deposit
+            if (event.cashWithdrawalOrDeposit > 0) {
+              totalCapitalInvested += event.cashWithdrawalOrDeposit; // Track total capital invested
+            }
           }
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-expect-error
@@ -568,13 +584,28 @@ async function getPortfolioValueData(
           console.warn("No SP500 price for date: ", formatDate(day));
           continue;
         }
-        const withdrawalOrDepositBalance = dayEvents
-          .filter((e): e is PortfolioEvent & { type: typeof CASH } => e.type === CASH && !!e.cashWithdrawalOrDeposit)
-          .reduce((acc, e) => acc + (e.cashWithdrawalOrDeposit || 0), 0);
-        sp500Volume += withdrawalOrDepositBalance / sp500Price;
+        const depositBalance = dayEvents
+          .filter(
+            (e): e is PortfolioEvent & { type: typeof CASH } =>
+              e.type === CASH && !!e.cashWithdrawalOrDeposit && e.cashWithdrawalOrDeposit > 0,
+          )
+          .reduce((acc, e) => acc + e.cashWithdrawalOrDeposit!, 0);
+        sp500Volume += depositBalance / sp500Price;
       }
 
-      result.push(getPortfolioValueOnEventDay(cash, balance, stocks, profitOrLoss, sp500Volume, day, prices));
+      result.push(
+        getPortfolioValueOnEventDay(
+          cash,
+          balance,
+          totalCapitalInvested,
+          stocks,
+          profitOrLoss,
+          sp500Volume,
+          day,
+          prices,
+          result.at(-1)!,
+        ),
+      );
     }
   }
 
@@ -595,8 +626,6 @@ function getAssetsAnalysis(
       const stockSymbol = "stockSymbol" in stockEvent ? stockEvent["stockSymbol"] : null;
       if (!stockSymbol) return acc;
 
-      const currentStockPrice = prices[stockSymbol]?.price[formatDate(new Date())];
-
       const eventStockPrice = prices[stockSymbol]?.splitAdjustedPrice[dateKey];
 
       if (!acc[stockSymbol]) {
@@ -604,7 +633,6 @@ function getAssetsAnalysis(
           openPositions: [],
           closeEvents: [],
           openEvents: [],
-          currentStockPrice,
         };
       }
 
@@ -620,7 +648,6 @@ function getAssetsAnalysis(
                 profitOrLoss: stockEvent.profitOrLoss,
               },
             ],
-            currentStockPrice,
           },
         });
       } else if (stockEvent.type === STOCK_OPEN_EVENT) {
@@ -637,7 +664,6 @@ function getAssetsAnalysis(
                 stockValueOnBuy: eventStockPrice ? stockEvent.stocksVolumeChange * eventStockPrice : undefined,
               },
             ],
-            currentStockPrice,
           },
         });
       } else if (stockEvent.type === STOCK_CLOSE_EVENT) {
@@ -655,7 +681,6 @@ function getAssetsAnalysis(
                 profitOrLoss: stockEvent.profitOrLoss,
               },
             ],
-            currentStockPrice,
           },
         });
       }
@@ -700,6 +725,15 @@ function convertPricesToUSD(
   }, {} as StocksHistoricalPrices);
 }
 
+const getCashFlow = (cashEvents: CashEvent[]): CashFlow => {
+  return cashEvents.reduce((acc, event) => {
+    if (event.cashWithdrawalOrDeposit) {
+      return [...acc, { date: formatDate(event.date), amount: event.cashWithdrawalOrDeposit }];
+    }
+    return acc;
+  }, [] as CashFlow);
+};
+
 async function getAnalysisFromXlsxBuffer(xlsxArrayBuffer: ArrayBuffer): Promise<PortfolioAnalysis> {
   const workbook = XLSX.read(xlsxArrayBuffer);
   const { cashEvents, openPositions, closedStocksOpenEvents, closedStocksCloseEvents } =
@@ -713,7 +747,7 @@ async function getAnalysisFromXlsxBuffer(xlsxArrayBuffer: ArrayBuffer): Promise<
   const stockSymbols = getStockSymbolsFromEvents(allEvents);
   stockSymbols.add(SP500);
 
-  if (!allEvents.length) return { assetsAnalysis: {}, portfolioTimeline: [], stockPrices: {} };
+  if (!allEvents.length) return { assetsAnalysis: {}, portfolioTimeline: [], cashFlow: [], stockPrices: {} };
 
   const startDate = addYears(new Date(), -3);
 
@@ -729,11 +763,17 @@ async function getAnalysisFromXlsxBuffer(xlsxArrayBuffer: ArrayBuffer): Promise<
 
   const pricesInUSD = convertPricesToUSD(prices, exchangeRates);
 
-  const portfolioTimeline = await getPortfolioValueData(allEvents, pricesInUSD);
+  const portfolioTimeline = getPortfolioValueData(allEvents, pricesInUSD);
 
   const assetsAnalysis = getAssetsAnalysis(openPositions, closedStocksOpenEvents, closedStocksCloseEvents, pricesInUSD);
+  const cashFlow = getCashFlow(cashEvents);
 
-  return { assetsAnalysis, portfolioTimeline, stockPrices: pricesInUSD };
+  return {
+    assetsAnalysis,
+    portfolioTimeline,
+    cashFlow,
+    stockPrices: pricesInUSD,
+  };
 }
 
 export default getAnalysisFromXlsxBuffer;

@@ -1,5 +1,4 @@
 import { isBefore, isSameDay } from "date-fns";
-import { format } from "date-fns/format";
 
 export function symbolToYahooSuffix(symbol: string): string {
   if (symbol.endsWith(".UK")) {
@@ -25,10 +24,6 @@ export function getStockAPISymbol(symbol: string) {
     return "^NDX"; // us 100 index
   }
   return symbol.split(".")[0] + symbolToYahooSuffix(symbol);
-}
-
-export function formatDate(date: Date): string {
-  return format(date, "yyyy-MM-dd");
 }
 
 /**

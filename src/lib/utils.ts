@@ -1,6 +1,7 @@
-import { clsx, type ClassValue } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { PortfolioAnalysis } from "@/xlsx-parser/types";
+import { format } from "date-fns/format";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -49,6 +50,7 @@ export const portfolioAnalysisDB = {
     });
   },
 
+  // TODO extrapolate data further if opened in the future
   async getPortfolioAnalysis() {
     const db = await this.getDB();
     return new Promise<PortfolioAnalysis>((resolve, reject) => {
@@ -71,3 +73,7 @@ export const portfolioAnalysisDB = {
     });
   },
 };
+
+export function formatDate(date: Date): string {
+  return format(date, "yyyy-MM-dd");
+}

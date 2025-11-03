@@ -12,10 +12,12 @@ export type PortfolioValue = {
   date: string;
   cash: number;
   balance: number;
+  totalCapitalInvested: number;
   stocks: Record<string, Stock>;
   portfolioValue: number;
   profitOrLoss: number;
   profitOrLossIfNotSelling?: number;
+  oneDayProfit: number;
   sp500Stock: Stock;
   sp500Value: number;
 };
@@ -28,8 +30,8 @@ export type PortfolioEvent = {
 } & (
   | {
       type: typeof CASH;
-      cashChange: number;
-      cashWithdrawalOrDeposit: number | null;
+      cashChange: number; // all cash operations
+      cashWithdrawalOrDeposit: number | null; // only user-initiated deposits/withdrawals
     }
   | ({
       stocksVolumeChange: number;
@@ -45,25 +47,28 @@ export type PortfolioEvent = {
     ))
 );
 
+export type CashEvent = PortfolioEvent & { type: typeof CASH };
+
 export type AssetsHistoricalData = {
   [stockSymbol: string]: {
     openPositions: { volume: number; stockValueOnBuy: number; profitOrLoss: number; date: string }[];
     openEvents: { volume: number; stockValueOnBuy: number; date: string }[];
     closeEvents: { volume: number; stockValueOnSell: number; profitOrLoss: number; date: string }[];
-    currentStockPrice: number | undefined;
   };
 };
 
 export type StockPricesRecord = {
   currency: string;
-  price: Record<string, number>;
-  splitAdjustedPrice: Record<string, number>;
+  price: Record<string, number>; // date -> price
+  splitAdjustedPrice: Record<string, number>; // date -> split adjusted price
 };
 
 export type StocksHistoricalPrices = Record<string, StockPricesRecord>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>}
+export type CashFlow = { amount: number; date: string }[]; // date -> cash flow
 
 export type PortfolioAnalysis = {
   assetsAnalysis: AssetsHistoricalData;
   portfolioTimeline: PortfolioValue[];
   stockPrices: StocksHistoricalPrices;
+  cashFlow: CashFlow;
 };

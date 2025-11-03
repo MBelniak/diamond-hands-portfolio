@@ -4,6 +4,7 @@ import { useStore } from "@/lib/store";
 import { redirect } from "next/navigation";
 import { TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/utils";
 
 export default function Assets() {
   const { portfolioAnalysis } = useStore();
@@ -69,9 +70,8 @@ export default function Assets() {
 
     const potentialValue = assetEvents?.openEvents?.reduce(
       (acc: number, val: { volume: number; stockValueOnBuy: number }) => {
-        return (
-          acc + (assetEvents?.currentStockPrice ? val.volume * assetEvents.currentStockPrice - val.stockValueOnBuy : 0)
-        );
+        const currentPrice = portfolioAnalysis.stockPrices[stock].price[formatDate(new Date())];
+        return acc + (currentPrice ? val.volume * currentPrice - val.stockValueOnBuy : 0);
       },
       0,
     );
