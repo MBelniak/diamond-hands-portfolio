@@ -6,7 +6,6 @@ import { clsx } from "clsx";
 import { profitOrLossTextColor } from "@/lib/utils";
 import { PortfolioValueSummary } from "@/app/(analysis)/performance/PortfolioValueSummary";
 import { PortfolioCapitalSummary } from "@/app/(analysis)/performance/PortfolioCapitalSummary";
-import { calculateMWR, calculateTWR } from "@/lib/return-metrics";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CircleQuestionMark } from "lucide-react";
 

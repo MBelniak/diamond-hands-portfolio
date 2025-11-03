@@ -4,7 +4,6 @@ import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "rec
 import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { useStore } from "@/lib/store";
 import { redirect } from "next/navigation";
-import { isDarkMode } from "@/lib/utils";
 
 const currency = "$";
 const chartKeys = {
