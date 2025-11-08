@@ -1,6 +1,6 @@
 "use client";
 import { TrendingUp, Wallet } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import {
   SidebarGroup,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { Switch } from "@/components/ui/switch";
+import { useCurrentTheme } from "@/hooks/useCurrentTheme";
 
 const items = [
   {
@@ -28,23 +29,14 @@ const items = [
 
 export const SidebarMenuContent = () => {
   // Theme switcher logic
-  const [isDark, setIsDark] = useState(false);
-
-  // On mount, set theme from localStorage or system preference
-  useEffect(() => {
-    const local = localStorage.getItem("theme");
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const shouldBeDark = local ? local === "dark" : systemPrefersDark;
-    setIsDark(shouldBeDark);
-    document.body.classList.toggle("dark", shouldBeDark);
-  }, []);
+  const { getCurrentTheme, setCurrentTheme } = useCurrentTheme();
+  const [isDark, setIsDark] = useState(() => getCurrentTheme() === "dark");
 
   // When toggled, update theme and localStorage
   const handleThemeToggle = () => {
     const newIsDark = !isDark;
     setIsDark(newIsDark);
-    document.body.classList.toggle("dark", newIsDark);
-    localStorage.setItem("theme", newIsDark ? "dark" : "light");
+    setCurrentTheme(newIsDark ? "dark" : "light");
   };
 
   return (
