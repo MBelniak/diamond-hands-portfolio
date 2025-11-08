@@ -1,7 +1,7 @@
 import { CashEvent, PortfolioData, type PortfolioEvent } from "@/lib/xlsx-parser/types";
 import container from "@/iocContainer";
 import { AbstractDatabaseClient } from "@/database/index";
-import { Models, Query, Role } from "node-appwrite";
+import { Models, Query } from "node-appwrite";
 import { User } from "@clerk/nextjs/server";
 import { STORAGE_FILE_ID, USER_FILES_TABLE, USER_ID_COLUMN } from "@/database/consts";
 import { v4 } from "uuid";
