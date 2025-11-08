@@ -1,11 +1,11 @@
-import { PortfolioAnalysis } from "@/xlsx-parser/types";
+import { PortfolioAnalysis } from "@/lib/xlsx-parser/types";
 import {
   calculateMWR,
   calculateSimpleReturn,
   calculateTWR,
   getProfitFromOpenPositions,
   ReturnMetric,
-} from "@/lib/return-metrics";
+} from "@/lib/returnMetrics";
 import { profitOrLossTextColor } from "@/lib/utils";
 import React from "react";
 import { addDays } from "date-fns/addDays";

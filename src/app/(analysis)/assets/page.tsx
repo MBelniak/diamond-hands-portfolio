@@ -1,22 +1,23 @@
 "use client";
 import { useMemo } from "react";
-import { useStore } from "@/lib/store";
 import { redirect } from "next/navigation";
 import { TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
+import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
+import { DiamondLoader } from "@/components/ui/DiamondLoader";
 
-export default function Assets() {
-  const { portfolioAnalysis } = useStore();
+export default function AssetsPage() {
+  const { data: portfolioAnalysis, error, isLoading } = usePortfolioAnalysis();
 
-  if (!portfolioAnalysis) {
+  if (error) {
     redirect("/");
   }
 
-  const assetsAnalysis = portfolioAnalysis.assetsAnalysis;
+  const assetsAnalysis = portfolioAnalysis?.assetsAnalysis;
 
   const stocks = useMemo(() => {
-    return Array.from(new Set(Object.keys(assetsAnalysis)));
+    return Array.from(new Set(Object.keys(assetsAnalysis ?? {})));
   }, [assetsAnalysis]);
 
   function getProfitLossTextClass(value: number): string {
@@ -46,7 +47,7 @@ export default function Assets() {
 
   const stockProfitArray = stocks
     .map((stock) => {
-      const assetEvents = assetsAnalysis[stock];
+      const assetEvents = assetsAnalysis?.[stock];
       let profitOrLoss = 0;
 
       if (assetEvents?.closeEvents) {
@@ -66,11 +67,11 @@ export default function Assets() {
     .toSorted((left, right) => right.profitOrLoss - left.profitOrLoss);
 
   const stockPotentialProfitArray = stocks.map((stock) => {
-    const assetEvents = assetsAnalysis[stock];
+    const assetEvents = assetsAnalysis?.[stock];
 
     const potentialValue = assetEvents?.openEvents?.reduce(
       (acc: number, val: { volume: number; stockValueOnBuy: number }) => {
-        const currentPrice = portfolioAnalysis.stockPrices[stock].price[formatDate(new Date())];
+        const currentPrice = portfolioAnalysis?.stockPrices[stock]?.price[formatDate(new Date())];
         return acc + (currentPrice ? val.volume * currentPrice - val.stockValueOnBuy : 0);
       },
       0,
@@ -78,6 +79,15 @@ export default function Assets() {
 
     return { stock, potentialValue: potentialValue ?? 0 };
   });
+
+  if (isLoading) {
+    return (
+      <>
+        <DiamondLoader />
+        <p>loading your data...</p>
+      </>
+    );
+  }
 
   return (
     <>

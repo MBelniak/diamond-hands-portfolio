@@ -25,7 +25,7 @@ export type PortfolioValue = {
 export type Split = { effective_date: string; split_factor: string };
 
 export type PortfolioEvent = {
-  date: Date;
+  date: string;
   type: typeof CASH | typeof STOCK_OPEN_POSITION | typeof STOCK_OPEN_EVENT | typeof STOCK_CLOSE_EVENT;
 } & (
   | {
@@ -71,4 +71,14 @@ export type PortfolioAnalysis = {
   portfolioTimeline: PortfolioValue[];
   stockPrices: StocksHistoricalPrices;
   cashFlow: CashFlow;
+};
+
+export type PortfolioData = {
+  stockPrices: StocksHistoricalPrices;
+  portfolioEvents: {
+    cashEvents: CashEvent[];
+    openPositions: PortfolioEvent[];
+    closedStocksOpenEvents: PortfolioEvent[];
+    closedStocksCloseEvents: PortfolioEvent[];
+  };
 };

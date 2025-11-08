@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { DualRangeSlider } from "@/components/ui/dual-range-slider";
-import { useStore } from "@/lib/store";
-import { redirect } from "next/navigation";
+import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
+import { PortfolioAnalysis } from "@/lib/xlsx-parser/types";
 
 const currency = "$";
 const chartKeys = {
@@ -37,15 +37,12 @@ const chartLineConfig = [
 ];
 
 export function PerformanceChart() {
-  const { portfolioAnalysis } = useStore();
-
-  if (!portfolioAnalysis) {
-    redirect("/");
-  }
+  const { data } = usePortfolioAnalysis();
+  const portfolioAnalysis = data as PortfolioAnalysis;
 
   const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
 
-  const data = portfolioTimeline
+  const validTimeline = portfolioTimeline
     .map((item) => ({ ...item, date: item.date.slice(0, 10) }))
     .slice(
       portfolioTimeline.findIndex((record) => Object.entries(record.stocks).length || record.cash),
@@ -53,11 +50,11 @@ export function PerformanceChart() {
     );
 
   const minWindowSize = 7;
-  const [range, setRange] = useState<[number, number]>([0, data.length - 1]);
+  const [range, setRange] = useState<[number, number]>([0, validTimeline.length - 1]);
 
-  const windowStart = Math.max(0, Math.min(range[0], data.length - minWindowSize));
-  const windowEnd = Math.max(windowStart + minWindowSize - 1, Math.min(range[1], data.length - 1));
-  const windowedData = data.slice(windowStart, windowEnd + 1);
+  const windowStart = Math.max(0, Math.min(range[0], validTimeline.length - minWindowSize));
+  const windowEnd = Math.max(windowStart + minWindowSize - 1, Math.min(range[1], validTimeline.length - 1));
+  const windowedData = validTimeline.slice(windowStart, windowEnd + 1);
 
   const handleRangeChange = (values: [number, number]) => {
     let [start, end] = values;
@@ -69,8 +66,8 @@ export function PerformanceChart() {
       }
     }
 
-    start = Math.max(0, Math.min(start, data.length - minWindowSize));
-    end = Math.max(start + minWindowSize - 1, Math.min(end, data.length - 1));
+    start = Math.max(0, Math.min(start, validTimeline.length - minWindowSize));
+    end = Math.max(start + minWindowSize - 1, Math.min(end, validTimeline.length - 1));
     setRange([start, end]);
   };
 
@@ -160,11 +157,11 @@ export function PerformanceChart() {
       </div>
       <div className={"w-full mt-4 flex flex-col gap-8 px-8"}>
         <label className=" font-semibold">
-          Date range: {data[windowStart].date} - {data[windowEnd].date}
+          Date range: {validTimeline[windowStart].date} - {validTimeline[windowEnd].date}
         </label>
         <DualRangeSlider
           min={0}
-          max={data.length - 1}
+          max={validTimeline.length - 1}
           value={[windowStart, windowEnd]}
           step={1}
           minStepsBetweenThumbs={minWindowSize - 1}

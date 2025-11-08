@@ -1,4 +1,4 @@
-import { CashFlow, PortfolioAnalysis, PortfolioValue } from "@/xlsx-parser/types";
+import { CashFlow, PortfolioAnalysis, PortfolioValue } from "@/lib/xlsx-parser/types";
 import { addDays } from "date-fns/addDays";
 import { formatDate } from "@/lib/utils";
 import { xirr } from "node-irr";
@@ -87,8 +87,6 @@ export function calculateMWR(portfolioTimeline: PortfolioValue[], cashFlow: Cash
   const windowStartDate = addDays(today, -daysAgo);
   const cashFlowWindow = getCashFlowForPeriod(cashFlow, portfolioTimeline, windowStartDate, today);
 
-  console.dir(cashFlowWindow);
-  console.dir("Sum: " + cashFlowWindow.reduce((sum, cf) => sum + cf.amount, 0));
   const rate = xirr(cashFlowWindow).rate;
   return (1 + rate) ** 365 - 1;
 }

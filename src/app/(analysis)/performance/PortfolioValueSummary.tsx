@@ -1,9 +1,9 @@
 import { profitOrLossTextColor } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { clsx } from "clsx";
-import { calculateMWR, calculateTWR, getProfitFromOpenPositions, ReturnMetric } from "@/lib/return-metrics";
+import { calculateMWR, calculateTWR, getProfitFromOpenPositions, ReturnMetric } from "@/lib/returnMetrics";
 import React, { type PropsWithChildren } from "react";
-import { PortfolioAnalysis } from "@/xlsx-parser/types";
+import { PortfolioAnalysis } from "@/lib/xlsx-parser/types";
 import { ProfitMetrics } from "./ProfitMetrics";
 import { useStore } from "@/lib/store";
 

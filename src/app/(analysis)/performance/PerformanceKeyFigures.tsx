@@ -1,29 +1,29 @@
 "use client";
 import React, { type PropsWithChildren } from "react";
 import { useStore } from "@/lib/store";
-import { redirect } from "next/navigation";
 import { clsx } from "clsx";
 import { profitOrLossTextColor } from "@/lib/utils";
 import { PortfolioValueSummary } from "@/app/(analysis)/performance/PortfolioValueSummary";
 import { PortfolioCapitalSummary } from "@/app/(analysis)/performance/PortfolioCapitalSummary";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CircleQuestionMark } from "lucide-react";
+import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
+import { PortfolioAnalysis } from "@/lib/xlsx-parser/types";
 
 const KeyFigureValue: React.FC<PropsWithChildren> = ({ children }) => {
   return <p className={"text-2xl  font-bold"}>{children}</p>;
 };
 
 export const PerformanceKeyFigures = () => {
-  const { portfolioAnalysis, selectedReturnMetric } = useStore();
-
-  if (!portfolioAnalysis) {
-    redirect("/");
-  }
+  const { selectedReturnMetric } = useStore();
+  const { data } = usePortfolioAnalysis();
+  const portfolioAnalysis = data as PortfolioAnalysis;
 
   const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
   if (!portfolioTimeline.length) {
     return null;
   }
+
   const last = portfolioTimeline.at(-1)!;
   const sp500ProfitOrLoss = last.sp500Value - last.totalCapitalInvested;
   const sp500Percentage = {

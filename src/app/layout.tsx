@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { initDatabase } from "@/database/appwrite";
+import { ClerkProvider } from "@clerk/nextjs";
+import ReactQueryProviders from "@/app/_react-query/ReactQueryProviders";
+import React from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,14 +27,20 @@ export const metadata: Metadata = {
   },
 };
 
+await initDatabase(process.env.APPWRITE_DATABASE_ID!);
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}>{children}</body>
-    </html>
+    <ClerkProvider afterSignOutUrl={"/sign-in"}>
+      <html lang="en">
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}>
+          <ReactQueryProviders>{children}</ReactQueryProviders>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

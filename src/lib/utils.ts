@@ -1,7 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
+import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
-import { PortfolioAnalysis } from "@/xlsx-parser/types";
-import { format } from "date-fns/format";
+import { PortfolioData } from "@/lib/xlsx-parser/types";
+import { openDB } from "idb";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -21,56 +22,59 @@ export const isDarkMode = (): boolean => {
 };
 
 // IndexedDB utility for portfolioAnalysis
-export const portfolioAnalysisDB = {
+export const portfolioDataDB = {
   dbName: "DiamondHandsDB",
-  storeName: "portfolioAnalysisStore",
+  storeName: "portfolioDataStore",
 
   async getDB() {
-    return new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, 1);
-      request.onupgradeneeded = () => {
-        const db = request.result;
+    return openDB(this.dbName, 1, {
+      upgrade: (db) => {
         if (!db.objectStoreNames.contains(this.storeName)) {
           db.createObjectStore(this.storeName);
         }
-      };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      },
     });
   },
 
-  async setPortfolioAnalysis(data: PortfolioAnalysis) {
+  async setPortfolioData(data: PortfolioData): Promise<void> {
     const db = await this.getDB();
-    return new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(this.storeName, "readwrite");
-      const store = tx.objectStore(this.storeName);
-      store.put(data, "portfolioAnalysis");
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
+    const expiry = new Date();
+    expiry.setHours(23, 59, 59, 999);
+    await db.put(this.storeName, { data, expiry }, "portfolioData");
   },
 
-  // TODO extrapolate data further if opened in the future
-  async getPortfolioAnalysis() {
+  async getPortfolioData(): Promise<PortfolioData | null> {
     const db = await this.getDB();
-    return new Promise<PortfolioAnalysis>((resolve, reject) => {
-      const tx = db.transaction(this.storeName, "readonly");
-      const store = tx.objectStore(this.storeName);
-      const request = store.get("portfolioAnalysis");
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
+    let result;
+    try {
+      result = await db.get(this.storeName, "portfolioData");
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+    const { expiry, data } = result || {};
+    if (data && expiry && new Date() < new Date(expiry)) {
+      return data;
+    } else {
+      try {
+        await db.delete(this.storeName, "portfolioData");
+      } catch (e) {
+        console.error(e);
+        // Failed to delete - just ignore
+        return null;
+      }
+      return null;
+    }
   },
 
-  async removePortfolioAnalysis() {
+  async removePortfolioData(): Promise<void> {
     const db = await this.getDB();
-    return new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(this.storeName, "readwrite");
-      const store = tx.objectStore(this.storeName);
-      store.delete("portfolioAnalysis");
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
+    try {
+      await db.delete(this.storeName, "portfolioData");
+    } catch (e) {
+      console.error(e);
+      // Failed to delete - just ignore
+    }
   },
 };
 

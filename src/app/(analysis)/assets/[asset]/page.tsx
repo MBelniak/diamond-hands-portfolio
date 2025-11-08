@@ -1,13 +1,15 @@
 "use client";
 import { redirect } from "next/navigation";
-import { useStore } from "@/lib/store";
 import { Bar, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { use, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DualRangeSlider } from "@/components/ui/dual-range-slider";
-import { getDateRange } from "@/xlsx-parser/utils";
+import { getDateRange } from "@/lib/xlsx-parser/utils";
 import { addYears } from "date-fns";
+import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
+import { PortfolioAnalysis } from "@/lib/xlsx-parser/types";
+import { DiamondLoader } from "@/components/ui/DiamondLoader";
 
 const chartKeys = {
   stockPrice: "Price",
@@ -20,24 +22,17 @@ type ChartData = {
   closeMarker?: number | null;
 };
 
-export default function AssetChartPage({ params }: { params: Promise<{ asset: string }> }) {
-  const { portfolioAnalysis } = useStore();
-  const { asset } = use(params);
+const getChartData = (portfolioAnalysis: PortfolioAnalysis, asset: string) => {
+  const assetData = portfolioAnalysis.assetsAnalysis[asset];
 
-  if (!portfolioAnalysis) {
-    redirect("/");
-  }
-
-  const assetData = portfolioAnalysis.assetsAnalysis[asset as string];
-
-  const priceHistory: ChartData[] = getDateRange(addYears(new Date(), -3), new Date()).map((date) => {
+  return getDateRange(addYears(new Date(), -3), new Date()).map((date) => {
     const dateStr = date.toISOString().slice(0, 10);
 
-    const data = portfolioAnalysis.portfolioTimeline
+    const dataOnDate = portfolioAnalysis.portfolioTimeline
       .filter((data) => data.stocks[asset] != null)
       .find((data) => data.date.slice(0, 10) === dateStr);
 
-    if (!data) {
+    if (!dataOnDate) {
       return {
         date: dateStr,
         price: portfolioAnalysis.stockPrices[asset as string].splitAdjustedPrice[dateStr],
@@ -47,7 +42,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
       };
     }
 
-    const price = data.stocks[asset].splitAdjustedPrice;
+    const price = dataOnDate.stocks[asset].splitAdjustedPrice;
     const openEvent = assetData.openEvents.find((e) => e.date === dateStr);
     let openMarker;
     let volumeMarker;
@@ -68,9 +63,35 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
     }
     return { price, date: dateStr, openMarker, closeMarker, volumeMarker };
   });
+};
+
+export default function AssetChartPage({ params }: { params: Promise<{ asset: string }> }) {
+  const { asset } = use(params);
+  const { data: portfolioAnalysis, error, isLoading } = usePortfolioAnalysis();
+  const [range, setRange] = useState<[number, number]>([0, 1]);
+
+  useEffect(() => {
+    if (portfolioAnalysis) {
+      setRange([0, getChartData(portfolioAnalysis, asset).length - 1]);
+    }
+  }, [asset, portfolioAnalysis]);
+
+  if (error || (!isLoading && !portfolioAnalysis)) {
+    redirect("/");
+  }
+
+  if (isLoading) {
+    return (
+      <>
+        <DiamondLoader />
+        <p>Loading your data...</p>
+      </>
+    );
+  }
+
+  const priceHistory: ChartData[] = getChartData(portfolioAnalysis!, asset);
 
   const minWindowSize = 7;
-  const [range, setRange] = useState<[number, number]>([0, priceHistory.length - 1]);
 
   const windowStart = Math.max(0, Math.min(range[0], priceHistory.length - minWindowSize));
   const windowEnd = Math.max(windowStart + minWindowSize - 1, Math.min(range[1], priceHistory.length - 1));

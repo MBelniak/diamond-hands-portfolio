@@ -1,27 +1,17 @@
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
-import React, { useCallback } from "react";
+import React from "react";
 import { useDropzone } from "react-dropzone";
 import { useUploadXlsxAnalysisFiles } from "@/hooks/useUploadXlsxAnalysisFiles";
-import { PortfolioAnalysis } from "@/xlsx-parser/types";
-import { portfolioAnalysisDB } from "@/lib/utils";
-import { useStore } from "@/lib/store";
+import { redirect } from "next/navigation";
 
 export const LandingPage = () => {
-  const { setPortfolioAnalysis } = useStore();
-
-  const updatePortfolioAnalysis = useCallback(
-    async (data: PortfolioAnalysis) => {
-      await portfolioAnalysisDB.setPortfolioAnalysis(data);
-      setPortfolioAnalysis(data);
-    },
-    [setPortfolioAnalysis],
-  );
-
   const {
     mutate: onDrop,
     isPending: isUploading,
     error: uploadError,
-  } = useUploadXlsxAnalysisFiles(updatePortfolioAnalysis);
+  } = useUploadXlsxAnalysisFiles(() => {
+    redirect("/performance");
+  });
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (files) => onDrop(files),

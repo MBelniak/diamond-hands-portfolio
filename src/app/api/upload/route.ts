@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import parsePortfolioFile from "../../../xlsx-parser/parseXlsx";
+import { uploadPortfolioData } from "@/lib/xlsx-parser/parseXlsx";
+import { currentUser } from "@clerk/nextjs/server";
 
 export async function POST(request: Request) {
   const formData = await request.formData();
@@ -10,6 +11,13 @@ export async function POST(request: Request) {
   if (!file.name.endsWith(".xlsx")) {
     return NextResponse.json({ error: "Only XLSX files allowed." }, { status: 400 });
   }
-  const analysis = await parsePortfolioFile(await file.arrayBuffer());
-  return Response.json(analysis);
+
+  const user = await currentUser();
+  if (!user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  await uploadPortfolioData(user, await file.arrayBuffer());
+
+  return NextResponse.json({}, { status: 201 });
 }

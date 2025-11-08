@@ -1,7 +1,7 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CircleQuestionMark } from "lucide-react";
 import React, { type PropsWithChildren } from "react";
-import { PortfolioAnalysis } from "@/xlsx-parser/types";
+import { PortfolioAnalysis } from "@/lib/xlsx-parser/types";
 
 const KeyFigureValue: React.FC<PropsWithChildren> = ({ children }) => {
   return <p className={"text-2xl  font-bold"}>{children}</p>;
