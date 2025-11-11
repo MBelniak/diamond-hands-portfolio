@@ -4,6 +4,7 @@ import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "rec
 import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { PortfolioAnalysis } from "@/lib/xlsx-parser/types";
+import { useStore } from "@/lib/store";
 
 const currency = "$";
 const chartKeys = {
@@ -37,13 +38,18 @@ const chartLineConfig = [
 ];
 
 export function PerformanceChart() {
+  const { useWithdrawnCash } = useStore();
   const { data } = usePortfolioAnalysis();
   const portfolioAnalysis = data as PortfolioAnalysis;
 
   const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
 
   const validTimeline = portfolioTimeline
-    .map((item) => ({ ...item, date: item.date.slice(0, 10) }))
+    .map((item) => ({
+      ...item,
+      date: item.date.slice(0, 10),
+      portfolioValue: item.portfolioValue + (useWithdrawnCash ? item.totalCapitalInvested - item.balance : 0),
+    }))
     .slice(
       portfolioTimeline.findIndex((record) => Object.entries(record.stocks).length || record.cash),
       -1,
