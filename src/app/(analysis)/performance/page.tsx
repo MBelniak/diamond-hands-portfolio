@@ -1,19 +1,22 @@
 "use client";
-
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { PerformanceKeyFigures } from "@/app/(analysis)/performance/PerformanceKeyFigures";
 import { PerformanceChart } from "./PerformanceChart";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
+import { useEffect } from "react";
 
 export default function PerformancePage() {
-  const { error, isLoading, data } = usePortfolioAnalysis();
+  const { error, isFetching, data } = usePortfolioAnalysis();
+  const router = useRouter();
 
-  if (error || (!isLoading && !data)) {
-    redirect("/");
-  }
+  useEffect(() => {
+    if (error || (!isFetching && !data)) {
+      router.push("/");
+    }
+  }, [data, error, isFetching, router]);
 
-  if (isLoading) {
+  if (isFetching || error || (!isFetching && !data)) {
     return (
       <>
         <DiamondLoader />

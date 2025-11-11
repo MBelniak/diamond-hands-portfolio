@@ -1,16 +1,19 @@
+"use client";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
 import React from "react";
 import { useDropzone } from "react-dropzone";
 import { useUploadXlsxAnalysisFiles } from "@/hooks/useUploadXlsxAnalysisFiles";
-import { redirect } from "next/navigation";
+import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 
 export const LandingPage = () => {
+  const { refetch: refetchPortfolio } = usePortfolioAnalysis();
+
   const {
     mutate: onDrop,
     isPending: isUploading,
     error: uploadError,
   } = useUploadXlsxAnalysisFiles(() => {
-    redirect("/performance");
+    refetchPortfolio().then();
   });
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

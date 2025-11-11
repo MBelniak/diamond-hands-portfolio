@@ -2,21 +2,22 @@
 import React, { useEffect } from "react";
 import { LandingPage } from "@/app/_components/LandingPage";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
 import { useCurrentTheme } from "@/hooks/useCurrentTheme";
 
 export default function HomePage() {
   useCurrentTheme();
-  const { data, isLoading } = usePortfolioAnalysis();
+  const { data, isFetching } = usePortfolioAnalysis();
+  const router = useRouter();
 
   useEffect(() => {
     if (data) {
-      redirect("/performance");
+      router.push("/performance");
     }
-  }, [data]);
+  }, [data, router]);
 
-  if (isLoading) {
+  if (isFetching || data) {
     return (
       <>
         <DiamondLoader />

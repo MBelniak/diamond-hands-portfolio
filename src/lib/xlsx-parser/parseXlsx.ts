@@ -400,15 +400,17 @@ async function getPricesForStocks(stocks: Set<string>, startDate: Date): Promise
   const endDate = new Date();
   const stockPricesRecord: StocksHistoricalPrices = {};
 
-  for (const symbol of stocks) {
-    if (await redis.exists(getStockPricesRedisKey(symbol, startDate, endDate))) {
-      stockPricesRecord[symbol] = JSON.parse(
-        (await redis.get(getStockPricesRedisKey(symbol, startDate, endDate))) as string,
-      );
-    } else {
-      stockPricesRecord[symbol] = await populateStockPricesForSymbol(symbol, startDate, endDate);
-    }
-  }
+  await Promise.all(
+    Array.from(stocks).map(async (symbol) => {
+      if (await redis.exists(getStockPricesRedisKey(symbol, startDate, endDate))) {
+        stockPricesRecord[symbol] = JSON.parse(
+          (await redis.get(getStockPricesRedisKey(symbol, startDate, endDate))) as string,
+        );
+      } else {
+        stockPricesRecord[symbol] = await populateStockPricesForSymbol(symbol, startDate, endDate);
+      }
+    }),
+  );
 
   return stockPricesRecord;
 }

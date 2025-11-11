@@ -1,5 +1,5 @@
 "use client";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Bar, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import React, { use, useEffect, useState } from "react";
 import Link from "next/link";
@@ -69,6 +69,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
   const { asset } = use(params);
   const { data: portfolioAnalysis, error, isLoading } = usePortfolioAnalysis();
   const [range, setRange] = useState<[number, number]>([0, 1]);
+  const router = useRouter();
 
   useEffect(() => {
     if (portfolioAnalysis) {
@@ -76,11 +77,13 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
     }
   }, [asset, portfolioAnalysis]);
 
-  if (error || (!isLoading && !portfolioAnalysis)) {
-    redirect("/");
-  }
+  useEffect(() => {
+    if (error || (!isLoading && !portfolioAnalysis)) {
+      router.push("/");
+    }
+  }, [error, isLoading, portfolioAnalysis, router]);
 
-  if (isLoading) {
+  if (isLoading || error || (!isLoading && !portfolioAnalysis)) {
     return (
       <>
         <DiamondLoader />
@@ -114,7 +117,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
   return (
     <div className={"flex flex-col w-full items-center gap-8 mb-16 mt-8"}>
       <div className={"w-full max-w-3xl flex"}>
-        <Button onClick={() => redirect("/assets")} variant="ghost">
+        <Button onClick={() => router.push("/assets")} variant="ghost">
           <Link href="/assets" className="text-md hover:underline inline-block py-6">
             &larr; Back to Assets Overview
           </Link>

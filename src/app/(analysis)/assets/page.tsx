@@ -1,6 +1,6 @@
 "use client";
-import { useMemo } from "react";
-import { redirect } from "next/navigation";
+import { useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
@@ -9,10 +9,13 @@ import { DiamondLoader } from "@/components/ui/DiamondLoader";
 
 export default function AssetsPage() {
   const { data: portfolioAnalysis, error, isLoading } = usePortfolioAnalysis();
+  const router = useRouter();
 
-  if (error) {
-    redirect("/");
-  }
+  useEffect(() => {
+    if (error) {
+      router.push("/");
+    }
+  }, [error, router]);
 
   const assetsAnalysis = portfolioAnalysis?.assetsAnalysis;
 
@@ -80,7 +83,7 @@ export default function AssetsPage() {
     return { stock, potentialValue: potentialValue ?? 0 };
   });
 
-  if (isLoading) {
+  if (isLoading || error) {
     return (
       <>
         <DiamondLoader />
@@ -131,7 +134,7 @@ export default function AssetsPage() {
                     <td className={`px-4 py-3 border-b border-gray-300 dark:border-slate-700 rounded-r-md`}>
                       <Button
                         variant={"secondary"}
-                        onClick={() => redirect("/assets/" + stockProfit.stock)}
+                        onClick={() => router.push("/assets/" + stockProfit.stock)}
                         size="icon"
                       >
                         <TrendingUp />
