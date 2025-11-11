@@ -5,8 +5,14 @@ cash and profit over time, with comparison to S&P 500 index.
 Presents assets breakdown with potential profits if positions were never closed.
 
 It's just a playground to see what's possible with public yahoo API (historical stock prices, split events).
-Uses Currency Exchange API for fetching historical exchange rates.
-Redis database is used to cache the prices and exchange rates, updated daily.
+
+### Third party APIs:
+📈 query1.finance.yahoo.com for fetching historical stock prices and split events.\
+💱 Currency Exchange API for fetching historical currency exchange rates.\
+📇 Redis Cloud for caching stock prices and exchange rates, updated daily.\
+📇 Appwrite for storing users' stock events data.\
+🔑 Clerk for authentication
+
 
 ![Performance](performance.png)
 ![Assets](assets.png)
