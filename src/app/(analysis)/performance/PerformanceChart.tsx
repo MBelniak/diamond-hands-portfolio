@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
-import { PortfolioAnalysis } from "@/lib/xlsx-parser/types";
+import { PortfolioAnalysis } from "@/lib/types";
 import { useStore } from "@/lib/store";
 
 const currency = "$";

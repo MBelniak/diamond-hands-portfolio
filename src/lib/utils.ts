@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
-import { PortfolioData } from "@/lib/xlsx-parser/types";
+import { PortfolioData } from "@/lib/types";
 import { openDB } from "idb";
 
 export function cn(...inputs: ClassValue[]) {

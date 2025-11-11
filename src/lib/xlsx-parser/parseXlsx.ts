@@ -10,9 +10,9 @@ import {
   type Split,
   StockPricesRecord,
   StocksHistoricalPrices,
-} from "./types";
-import { createClient, SetOptions } from "redis";
-import { getExchangeRatesRedisKey, getStockPricesRedisKey } from "./redis";
+} from "../types";
+import { createClient } from "redis";
+import { getExchangeRatesRedisKey, getStockPricesRedisKey, REDIS_EXPIRE_IN_DAY } from "../redis";
 import {
   CASH,
   CASH_OPERATION_HISTORY,
@@ -30,12 +30,6 @@ import { UserEventsRepository } from "@/database/UserEventsRepository";
 import { User } from "@clerk/nextjs/server";
 
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
-const REDIS_EXPIRE_IN_DAY: SetOptions = {
-  expiration: {
-    type: "EX",
-    value: 60 * 60 * 24, // 1 day in seconds
-  },
-};
 
 if (!process.env.EXCHANGE_RATES_API_KEY) {
   throw new Error(

@@ -1,7 +1,7 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CircleQuestionMark } from "lucide-react";
 import React, { type PropsWithChildren } from "react";
-import { PortfolioAnalysis } from "@/lib/xlsx-parser/types";
+import { PortfolioAnalysis } from "@/lib/types";
 import { Switch } from "@/components/ui/switch";
 import { useStore } from "@/lib/store";
 
@@ -46,7 +46,20 @@ export const PortfolioCapitalSummary: React.FC<{
       </strong>
       <KeyFigureValue>${last.balance.toFixed(2)}</KeyFigureValue>
       <div className={"mt-4 flex items-center gap-6"}>
-        <strong className="text-lg ">Withdrawn </strong>
+        <strong className="text-lg ">
+          Withdrawn{" "}
+          <Tooltip>
+            <TooltipTrigger>
+              <CircleQuestionMark size={20} />
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="center">
+              <p>
+                Cash withdrawn from the portfolio. Use the switcher to include in or exclude from the total portfolio
+                value
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </strong>
         <Switch checked={useWithdrawnCash} onCheckedChange={(checked) => setUseWithdrawnCash(checked)} />
       </div>
       <KeyFigureValue>${(last.totalCapitalInvested - last.balance).toFixed(2)}</KeyFigureValue>

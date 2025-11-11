@@ -8,7 +8,7 @@ import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { getDateRange } from "@/lib/xlsx-parser/utils";
 import { addYears } from "date-fns";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
-import { PortfolioAnalysis } from "@/lib/xlsx-parser/types";
+import { PortfolioAnalysis } from "@/lib/types";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
 
 const chartKeys = {

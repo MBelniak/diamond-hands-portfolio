@@ -1,4 +1,4 @@
-import { CashEvent, PortfolioData, type PortfolioEvent } from "@/lib/xlsx-parser/types";
+import { CashEvent, PortfolioData, type PortfolioEvent } from "@/lib/types";
 import container from "@/iocContainer";
 import { AbstractDatabaseClient } from "@/database/index";
 import { Models, Query } from "node-appwrite";

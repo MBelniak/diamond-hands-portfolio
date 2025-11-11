@@ -3,7 +3,7 @@ import React from "react";
 import { PortfolioValueSummary } from "@/app/(analysis)/performance/PortfolioValueSummary";
 import { PortfolioCapitalSummary } from "@/app/(analysis)/performance/PortfolioCapitalSummary";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
-import { PortfolioAnalysis } from "@/lib/xlsx-parser/types";
+import { PortfolioAnalysis } from "@/lib/types";
 import { PerformanceSP500Summary } from "@/app/(analysis)/performance/PerformanceSP500Summary";
 
 export const PerformanceKeyFigures = () => {

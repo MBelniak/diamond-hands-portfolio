@@ -5,7 +5,10 @@ import { clsx } from "clsx";
 import { profitOrLossTextColor } from "@/lib/utils";
 import React from "react";
 import { useStore } from "@/lib/store";
-import { PortfolioAnalysis } from "@/lib/xlsx-parser/types";
+import { PortfolioAnalysis } from "@/lib/types";
+import { ProfitMetrics } from "@/app/(analysis)/performance/ProfitMetrics";
+import { calculateMWR, calculateTWR } from "@/lib/returnMetrics";
+import { getSP500CashFlow } from "@/lib/analysis/sp500";
 
 export const PerformanceSP500Summary: React.FC<{
   portfolioAnalysis: PortfolioAnalysis;
@@ -15,10 +18,17 @@ export const PerformanceSP500Summary: React.FC<{
   const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
   const last = portfolioTimeline.at(-1)!;
   const sp500ProfitOrLoss = last.sp500Value - last.totalCapitalInvested;
+  const valueTimeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
+    ...el,
+    value: el.sp500Value,
+    oneDayProfit: el.sp500OneDayProfit,
+  }));
+  const cashFlow = getSP500CashFlow(portfolioAnalysis.cashFlow);
+
   const sp500Percentage = {
     SR: (last.totalCapitalInvested != 0 ? sp500ProfitOrLoss / last.totalCapitalInvested : 0) * 100,
-    TWR: 0, //TODO
-    MWR: 0, //TODO
+    TWR: calculateTWR(valueTimeline, portfolioAnalysis.portfolioTimeline.length - 1) * 100,
+    MWR: calculateMWR(valueTimeline, cashFlow, portfolioAnalysis.portfolioTimeline.length - 1) * 100,
   };
 
   return (
@@ -41,6 +51,19 @@ export const PerformanceSP500Summary: React.FC<{
           ${sp500ProfitOrLoss.toFixed(2)} ({sp500Percentage[selectedReturnMetric].toFixed(2)}%)
         </span>
       </p>
+      <ProfitMetrics
+        cashFlow={cashFlow}
+        timeline={valueTimeline}
+        totalCapitalInvested={portfolioAnalysis.portfolioTimeline.at(-1)!.totalCapitalInvested}
+        windowSizes={[
+          { label: "Week", daysAgo: 7 },
+          { label: "Month", daysAgo: 30 },
+          { label: "3M", daysAgo: 90 },
+          { label: "6M", daysAgo: 180 },
+          { label: "Year", daysAgo: 365 },
+        ]}
+        returnMetric={selectedReturnMetric}
+      />
       <strong className="text-md mt-4">P & L breakdown</strong>
       <p>TODO</p>
     </div>

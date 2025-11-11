@@ -8,7 +8,7 @@ import {
   PortfolioValue,
   Stock,
   StocksHistoricalPrices,
-} from "@/lib/xlsx-parser/types";
+} from "@/lib/types";
 import { addYears, isSameDay } from "date-fns";
 import { formatDate } from "../utils";
 import { addDays } from "date-fns/addDays";
@@ -34,6 +34,7 @@ function getNextDayPortfolioValue(
   prices: StocksHistoricalPrices,
 ): PortfolioValue {
   const dateKey = formatDate(date);
+  const sp500Stock = { [SP500]: { volume: previousState.sp500Stock.volume || 0 } };
 
   return {
     date: formatDate(date),
@@ -42,6 +43,8 @@ function getNextDayPortfolioValue(
     oneDayProfit:
       getStocksValueCached(previousState.stocks, date, prices) -
       getStocksValueCached(previousState.stocks, addDays(date, -1), prices),
+    sp500OneDayProfit:
+      getStocksValueCached(sp500Stock, date, prices) - getStocksValueCached(sp500Stock, addDays(date, -1), prices),
     totalCapitalInvested: previousState.totalCapitalInvested,
     stocks: Object.fromEntries(
       Object.entries(previousState.stocks).map(([symbol, stock]) => [
@@ -59,7 +62,7 @@ function getNextDayPortfolioValue(
       volume: previousState.sp500Stock.volume || 0,
       price: prices[SP500]?.price[dateKey],
     },
-    sp500Value: getStocksValueCached({ [SP500]: { volume: previousState.sp500Stock.volume || 0 } }, date, prices),
+    sp500Value: getStocksValueCached(sp500Stock, date, prices),
   };
 }
 
@@ -75,15 +78,18 @@ function getPortfolioValueOnEventDay(
   previousState: PortfolioValue,
 ): PortfolioValue {
   const dateKey = formatDate(date);
+  const sp500Stock = { [SP500]: { volume: sp500Volume } };
 
   return {
-    cash,
+    cash: cash >= 0 ? cash : 0,
     balance,
     profitOrLoss,
     totalCapitalInvested,
     oneDayProfit:
       getStocksValueCached(previousState.stocks, date, prices) -
       getStocksValueCached(previousState.stocks, addDays(date, -1), prices),
+    sp500OneDayProfit:
+      getStocksValueCached(sp500Stock, date, prices) - getStocksValueCached(sp500Stock, addDays(date, -1), prices),
     date: formatDate(date),
     stocks: Object.fromEntries(
       Object.entries(stocks).map(([symbol, stock]) => [
@@ -97,7 +103,7 @@ function getPortfolioValueOnEventDay(
     ),
     portfolioValue: cash + getStocksValueCached(stocks, date, prices),
     sp500Stock: { volume: sp500Volume, price: prices[SP500]?.price[dateKey] ?? undefined },
-    sp500Value: getStocksValueCached({ [SP500]: { volume: sp500Volume } }, date, prices),
+    sp500Value: getStocksValueCached(sp500Stock, date, prices),
   };
 }
 
@@ -207,6 +213,7 @@ function getPortfolioValueData(portfolioEvents: PortfolioEvent[], prices: Stocks
           balance: 0,
           totalCapitalInvested: 0,
           oneDayProfit: 0,
+          sp500OneDayProfit: 0,
           stocks: {},
           portfolioValue: 0,
           profitOrLoss: 0,

@@ -1,4 +1,4 @@
-import { CASH, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT, STOCK_OPEN_POSITION } from "../consts";
+import { CASH, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT, STOCK_OPEN_POSITION } from "../xlsx-parser/consts";
 
 export type Stock = {
   volume: number;
@@ -8,8 +8,10 @@ export type Stock = {
   splitAdjustedPrice?: number;
 };
 
+export type ISODateString = string;
+
 export type PortfolioValue = {
-  date: string;
+  date: ISODateString;
   cash: number;
   balance: number;
   totalCapitalInvested: number;
@@ -18,14 +20,27 @@ export type PortfolioValue = {
   profitOrLoss: number;
   profitOrLossIfNotSelling?: number;
   oneDayProfit: number;
+  sp500OneDayProfit: number;
   sp500Stock: Stock;
   sp500Value: number;
 };
 
-export type Split = { effective_date: string; split_factor: string };
+export type ValueTimeline = {
+  date: ISODateString;
+  value: number;
+}[];
+
+export type TWRValueTimeline = {
+  date: ISODateString;
+  value: number;
+  oneDayProfit: number;
+  totalCapitalInvested: number;
+}[];
+
+export type Split = { effective_date: ISODateString; split_factor: string };
 
 export type PortfolioEvent = {
-  date: string;
+  date: ISODateString;
   type: typeof CASH | typeof STOCK_OPEN_POSITION | typeof STOCK_OPEN_EVENT | typeof STOCK_CLOSE_EVENT;
 } & (
   | {
@@ -51,20 +66,20 @@ export type CashEvent = PortfolioEvent & { type: typeof CASH };
 
 export type AssetsHistoricalData = {
   [stockSymbol: string]: {
-    openPositions: { volume: number; stockValueOnBuy: number; profitOrLoss: number; date: string }[];
-    openEvents: { volume: number; stockValueOnBuy: number; date: string }[];
-    closeEvents: { volume: number; stockValueOnSell: number; profitOrLoss: number; date: string }[];
+    openPositions: { volume: number; stockValueOnBuy: number; profitOrLoss: number; date: ISODateString }[];
+    openEvents: { volume: number; stockValueOnBuy: number; date: ISODateString }[];
+    closeEvents: { volume: number; stockValueOnSell: number; profitOrLoss: number; date: ISODateString }[];
   };
 };
 
 export type StockPricesRecord = {
   currency: string;
-  price: Record<string, number>; // date -> price
-  splitAdjustedPrice: Record<string, number>; // date -> split adjusted price
+  price: Record<ISODateString, number>; // date -> price
+  splitAdjustedPrice: Record<ISODateString, number>; // date -> split adjusted price
 };
 
-export type StocksHistoricalPrices = Record<string, StockPricesRecord>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>}
-export type CashFlow = { amount: number; date: string }[]; // date -> cash flow
+export type StocksHistoricalPrices = Record<ISODateString, StockPricesRecord>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>}
+export type CashFlow = { amount: number; date: ISODateString }[]; // date -> cash flow
 
 export type PortfolioAnalysis = {
   assetsAnalysis: AssetsHistoricalData;

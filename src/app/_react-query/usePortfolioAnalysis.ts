@@ -1,7 +1,7 @@
 "use client";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { QueryKeys } from "@/app/_react-query/queryKeys";
-import { PortfolioAnalysis, PortfolioData } from "@/lib/xlsx-parser/types";
+import { PortfolioAnalysis, PortfolioData } from "@/lib/types";
 import { analysePortfolio } from "@/lib/analysis/analysePortfolio";
 import { portfolioDataDB } from "@/lib/utils";
 
