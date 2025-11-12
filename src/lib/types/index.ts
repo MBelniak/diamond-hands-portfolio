@@ -20,9 +20,9 @@ export type PortfolioValue = {
   profitOrLoss: number;
   profitOrLossIfNotSelling?: number;
   oneDayProfit: number;
-  sp500OneDayProfit: number;
-  sp500Stock: Stock;
-  sp500Value: number;
+  benchmarkOneDayProfit: number;
+  benchmarkStock: Stock;
+  benchmarkStockValue: number;
 };
 
 export type ValueTimeline = {

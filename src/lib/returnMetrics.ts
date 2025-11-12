@@ -16,6 +16,10 @@ const getCashFlowForPeriod = (cashFlow: CashFlow, windowStartDate: Date, windowE
     .map((operation) => ({ ...operation, amount: -operation.amount }));
 };
 
+export const getCashFlowForBenchmarkComparison = (cashFlow: CashFlow) => {
+  return cashFlow.filter((entry) => entry.amount >= 0);
+};
+
 export const getProfitOrLossForPeriod = (
   cashFlow: CashFlow,
   portfolioTimeline: ValueTimeline,

@@ -1,8 +1,10 @@
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { SettingsDropdownMenu } from "./SettingsDropdownMenu";
 
-export const AuthenticationHeader = () => {
+export const MainHeader = () => {
   return (
     <header className="flex justify-end items-center p-4 gap-4 h-16">
+      <SettingsDropdownMenu />
       <SignedOut>
         <SignInButton />
         <SignUpButton>

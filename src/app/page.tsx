@@ -2,7 +2,7 @@ import React from "react";
 import HomePage from "@/app/_components/HomePage";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { AuthenticationHeader } from "@/app/_components/AuthenticationHeader";
+import { MainHeader } from "@/app/_components/MainHeader";
 
 export default async function Page() {
   const { isAuthenticated } = await auth();
@@ -13,7 +13,7 @@ export default async function Page() {
 
   return (
     <div className={"light-gradient dark:dark-gradient min-h-screen"}>
-      <AuthenticationHeader />
+      <MainHeader />
       <section className={"flex-col h-full gap-8 p-8 flex items-center justify-center"}>
         <HomePage />
       </section>

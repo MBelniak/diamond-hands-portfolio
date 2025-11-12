@@ -5,5 +5,3 @@ export const CASH = "cash" as const;
 export const CLOSED_POSITION_HISTORY = "CLOSED POSITION HISTORY" as const;
 export const CASH_OPERATION_HISTORY = "CASH OPERATION HISTORY" as const;
 export const OPEN_POSITION = "OPEN POSITION" as const;
-
-export const SP500 = "^GSPC" as const;

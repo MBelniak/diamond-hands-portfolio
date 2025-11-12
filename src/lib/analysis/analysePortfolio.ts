@@ -12,9 +12,10 @@ import {
 import { addYears, isSameDay } from "date-fns";
 import { formatDate } from "../utils";
 import { addDays } from "date-fns/addDays";
-import { CASH, SP500, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT, STOCK_OPEN_POSITION } from "@/lib/xlsx-parser/consts";
+import { CASH, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT, STOCK_OPEN_POSITION } from "@/lib/xlsx-parser/consts";
 import { merge } from "lodash-es";
 import { getDateRange } from "../xlsx-parser/utils";
+import { BenchmarkIndex } from "@/lib/benchmarks";
 
 function getStocksValueCached(stocks: Record<string, Stock>, date: Date, priceCache: StocksHistoricalPrices): number {
   let stocksValue = 0;
@@ -32,9 +33,10 @@ function getNextDayPortfolioValue(
   previousState: PortfolioValue,
   date: Date,
   prices: StocksHistoricalPrices,
+  selectedBenchmark: BenchmarkIndex,
 ): PortfolioValue {
   const dateKey = formatDate(date);
-  const sp500Stock = { [SP500]: { volume: previousState.sp500Stock.volume || 0 } };
+  const benchmarkStock = { [selectedBenchmark]: { volume: previousState.benchmarkStock?.volume || 0 } };
 
   return {
     date: formatDate(date),
@@ -43,8 +45,9 @@ function getNextDayPortfolioValue(
     oneDayProfit:
       getStocksValueCached(previousState.stocks, date, prices) -
       getStocksValueCached(previousState.stocks, addDays(date, -1), prices),
-    sp500OneDayProfit:
-      getStocksValueCached(sp500Stock, date, prices) - getStocksValueCached(sp500Stock, addDays(date, -1), prices),
+    benchmarkOneDayProfit:
+      getStocksValueCached(benchmarkStock!, date, prices) -
+      getStocksValueCached(benchmarkStock!, addDays(date, -1), prices),
     totalCapitalInvested: previousState.totalCapitalInvested,
     stocks: Object.fromEntries(
       Object.entries(previousState.stocks).map(([symbol, stock]) => [
@@ -58,11 +61,11 @@ function getNextDayPortfolioValue(
     ),
     portfolioValue: previousState.cash + getStocksValueCached(previousState.stocks, date, prices),
     profitOrLoss: previousState.profitOrLoss,
-    sp500Stock: {
-      volume: previousState.sp500Stock.volume || 0,
-      price: prices[SP500]?.price[dateKey],
+    benchmarkStock: {
+      volume: previousState.benchmarkStock?.volume || 0,
+      price: prices[selectedBenchmark]?.price[dateKey],
     },
-    sp500Value: getStocksValueCached(sp500Stock, date, prices),
+    benchmarkStockValue: getStocksValueCached(benchmarkStock!, date, prices),
   };
 }
 
@@ -72,13 +75,14 @@ function getPortfolioValueOnEventDay(
   totalCapitalInvested: number,
   stocks: Record<string, Stock>,
   profitOrLoss: number,
-  sp500Volume: number,
+  benchmarkVolume: number,
   date: Date,
   prices: StocksHistoricalPrices,
   previousState: PortfolioValue,
+  selectedBenchmark: BenchmarkIndex,
 ): PortfolioValue {
   const dateKey = formatDate(date);
-  const sp500Stock = { [SP500]: { volume: sp500Volume } };
+  const benchmarkStock = { [selectedBenchmark]: { volume: benchmarkVolume } };
 
   return {
     cash: cash >= 0 ? cash : 0,
@@ -88,8 +92,9 @@ function getPortfolioValueOnEventDay(
     oneDayProfit:
       getStocksValueCached(previousState.stocks, date, prices) -
       getStocksValueCached(previousState.stocks, addDays(date, -1), prices),
-    sp500OneDayProfit:
-      getStocksValueCached(sp500Stock, date, prices) - getStocksValueCached(sp500Stock, addDays(date, -1), prices),
+    benchmarkOneDayProfit:
+      getStocksValueCached(benchmarkStock!, date, prices) -
+      getStocksValueCached(benchmarkStock!, addDays(date, -1), prices),
     date: formatDate(date),
     stocks: Object.fromEntries(
       Object.entries(stocks).map(([symbol, stock]) => [
@@ -102,8 +107,8 @@ function getPortfolioValueOnEventDay(
       ]),
     ),
     portfolioValue: cash + getStocksValueCached(stocks, date, prices),
-    sp500Stock: { volume: sp500Volume, price: prices[SP500]?.price[dateKey] ?? undefined },
-    sp500Value: getStocksValueCached(sp500Stock, date, prices),
+    benchmarkStock: { volume: benchmarkVolume, price: prices[selectedBenchmark]?.price[dateKey] ?? undefined },
+    benchmarkStockValue: getStocksValueCached(benchmarkStock!, date, prices),
   };
 }
 
@@ -187,7 +192,11 @@ function getAssetsAnalysis(
 /**
  * Main function: for each day fetches the close price and calculates the portfolio value
  */
-function getPortfolioValueData(portfolioEvents: PortfolioEvent[], prices: StocksHistoricalPrices): PortfolioValue[] {
+function getPortfolioValueData(
+  portfolioEvents: PortfolioEvent[],
+  prices: StocksHistoricalPrices,
+  selectedBenchmark: BenchmarkIndex,
+): PortfolioValue[] {
   let cash = 0;
   let balance = 0;
   let totalCapitalInvested = 0;
@@ -213,17 +222,17 @@ function getPortfolioValueData(portfolioEvents: PortfolioEvent[], prices: Stocks
           balance: 0,
           totalCapitalInvested: 0,
           oneDayProfit: 0,
-          sp500OneDayProfit: 0,
+          benchmarkOneDayProfit: 0,
           stocks: {},
           portfolioValue: 0,
           profitOrLoss: 0,
-          sp500Stock: { volume: 0 },
-          sp500Value: 0,
+          benchmarkStock: { volume: 0 },
+          benchmarkStockValue: 0,
         });
         continue;
       }
 
-      result.push(getNextDayPortfolioValue(previousState, day, prices));
+      result.push(getNextDayPortfolioValue(previousState, day, prices, selectedBenchmark));
     } else {
       for (const event of dayEvents) {
         if (event.type === CASH) {
@@ -256,11 +265,11 @@ function getPortfolioValueData(portfolioEvents: PortfolioEvent[], prices: Stocks
         }
       }
 
-      let sp500Volume = result.at(-1)?.sp500Stock.volume || 0;
+      let benchmarkStockVolume = result.at(-1)?.benchmarkStock?.volume || 0;
       if (dayEvents.some((e) => e.type === CASH)) {
-        const sp500Price = prices[SP500]?.price[formatDate(day)] || null;
-        if (sp500Price === null) {
-          console.warn("No SP500 price for date: ", formatDate(day));
+        const benchmarkStockPrice = prices[selectedBenchmark]?.price[formatDate(day)] || null;
+        if (benchmarkStockPrice === null) {
+          console.warn(`No ${selectedBenchmark} price for date: `, formatDate(day));
           continue;
         }
         const depositBalance = dayEvents
@@ -269,7 +278,7 @@ function getPortfolioValueData(portfolioEvents: PortfolioEvent[], prices: Stocks
               e.type === CASH && !!e.cashWithdrawalOrDeposit && e.cashWithdrawalOrDeposit > 0,
           )
           .reduce((acc, e) => acc + e.cashWithdrawalOrDeposit!, 0);
-        sp500Volume += depositBalance / sp500Price;
+        benchmarkStockVolume += depositBalance / benchmarkStockPrice;
       }
 
       result.push(
@@ -279,10 +288,11 @@ function getPortfolioValueData(portfolioEvents: PortfolioEvent[], prices: Stocks
           totalCapitalInvested,
           stocks,
           profitOrLoss,
-          sp500Volume,
+          benchmarkStockVolume,
           day,
           prices,
           result.at(-1)!,
+          selectedBenchmark,
         ),
       );
     }
@@ -300,13 +310,16 @@ const getCashFlow = (cashEvents: CashEvent[]): CashFlow => {
   }, [] as CashFlow);
 };
 
-export const analysePortfolio = (portfolioData: PortfolioData): PortfolioAnalysis => {
+export const analysePortfolio = (
+  portfolioData: PortfolioData,
+  selectedBenchmark: BenchmarkIndex,
+): PortfolioAnalysis => {
   const { cashEvents, openPositions, closedStocksOpenEvents, closedStocksCloseEvents } = portfolioData.portfolioEvents;
 
   const allEvents = [...cashEvents, ...openPositions, ...closedStocksOpenEvents, ...closedStocksCloseEvents].toSorted(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
-  const portfolioTimeline = getPortfolioValueData(allEvents, portfolioData.stockPrices);
+  const portfolioTimeline = getPortfolioValueData(allEvents, portfolioData.stockPrices, selectedBenchmark);
 
   const assetsAnalysis = getAssetsAnalysis(
     openPositions,

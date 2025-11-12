@@ -7,23 +7,23 @@ import React from "react";
 import { useStore } from "@/lib/store";
 import { PortfolioAnalysis } from "@/lib/types";
 import { ProfitMetrics } from "@/app/(analysis)/performance/ProfitMetrics";
-import { calculateMWR, calculateTWR } from "@/lib/returnMetrics";
-import { getSP500CashFlow } from "@/lib/analysis/sp500";
+import { calculateMWR, calculateTWR, getCashFlowForBenchmarkComparison } from "@/lib/returnMetrics";
+import { BenchmarkIndexToName } from "@/lib/benchmarks";
 
 export const PerformanceSP500Summary: React.FC<{
   portfolioAnalysis: PortfolioAnalysis;
 }> = ({ portfolioAnalysis }) => {
-  const { selectedReturnMetric } = useStore();
+  const { selectedReturnMetric, selectedBenchmark } = useStore();
 
   const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
   const last = portfolioTimeline.at(-1)!;
-  const sp500ProfitOrLoss = last.sp500Value - last.totalCapitalInvested;
+  const sp500ProfitOrLoss = last.benchmarkStockValue - last.totalCapitalInvested;
   const valueTimeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
     ...el,
-    value: el.sp500Value,
-    oneDayProfit: el.sp500OneDayProfit,
+    value: el.benchmarkStockValue,
+    oneDayProfit: el.benchmarkOneDayProfit,
   }));
-  const cashFlow = getSP500CashFlow(portfolioAnalysis.cashFlow);
+  const cashFlow = getCashFlowForBenchmarkComparison(portfolioAnalysis.cashFlow);
 
   const sp500Percentage = {
     SR: (last.totalCapitalInvested != 0 ? sp500ProfitOrLoss / last.totalCapitalInvested : 0) * 100,
@@ -34,7 +34,7 @@ export const PerformanceSP500Summary: React.FC<{
   return (
     <div className="p-8 flex flex-col items-start">
       <strong className=" text-lg ">
-        If invested in SP500{" "}
+        If invested in {BenchmarkIndexToName[selectedBenchmark]}{" "}
         <Tooltip>
           <TooltipTrigger>
             <CircleQuestionMark size={20} />
@@ -44,7 +44,7 @@ export const PerformanceSP500Summary: React.FC<{
           </TooltipContent>
         </Tooltip>
       </strong>
-      <p className={"text-2xl  font-bold"}>${last.sp500Value.toFixed(2)}</p>
+      <p className={"text-2xl  font-bold"}>${last.benchmarkStockValue.toFixed(2)}</p>
       <p className={"text-sm  text-gray-800 dark:text-gray-200 mt-2"}>
         {sp500ProfitOrLoss >= 0 ? "Potential profit: " : "Potential loss: "}
         <span className={clsx("text-sm  mt-1", profitOrLossTextColor(sp500ProfitOrLoss))}>

@@ -5,16 +5,16 @@ import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { PortfolioAnalysis } from "@/lib/types";
 import { useStore } from "@/lib/store";
+import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
 
 const currency = "$";
 const chartKeys = {
   portfolioValue: "Portfolio value",
   profitOrLoss: "Realized profit/loss",
   cash: "Cash",
-  sp500Value: "S&P 500",
 };
 
-const chartLineConfig = [
+const getChartLineConfig = (selectedBenchmark: BenchmarkIndex) => [
   {
     key: "portfolioValue",
     label: chartKeys.portfolioValue,
@@ -31,14 +31,14 @@ const chartLineConfig = [
     color: "#8884d8aa",
   },
   {
-    key: "sp500Value",
-    label: chartKeys.sp500Value,
+    key: "benchmarkStockValue",
+    label: BenchmarkIndexToName[selectedBenchmark],
     color: "#34d399",
   },
 ];
 
 export function PerformanceChart() {
-  const { useWithdrawnCash } = useStore();
+  const { useWithdrawnCash, selectedBenchmark } = useStore();
   const { data } = usePortfolioAnalysis();
   const portfolioAnalysis = data as PortfolioAnalysis;
 
@@ -82,7 +82,7 @@ export function PerformanceChart() {
     portfolioValue: true,
     profitOrLoss: true,
     cash: true,
-    sp500Value: true,
+    benchmarkStockValue: true,
   });
 
   const toggleLine = (key: string) => {
@@ -117,7 +117,7 @@ export function PerformanceChart() {
               labelStyle={{ color: "var(--foreground)" }}
             />
             {/* Render only enabled lines */}
-            {chartLineConfig.map(
+            {getChartLineConfig(selectedBenchmark).map(
               (line) =>
                 enabledLines[line.key] && (
                   <Line
@@ -137,7 +137,7 @@ export function PerformanceChart() {
       </div>
       {/* Legend below chart */}
       <div className="flex flex-wrap gap-4 justify-center mt-4">
-        {chartLineConfig.map((line) => (
+        {getChartLineConfig(selectedBenchmark).map((line) => (
           <button
             key={line.key}
             onClick={() => toggleLine(line.key)}

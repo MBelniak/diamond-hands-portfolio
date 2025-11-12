@@ -18,7 +18,6 @@ import {
   CASH_OPERATION_HISTORY,
   CLOSED_POSITION_HISTORY,
   OPEN_POSITION,
-  SP500,
   STOCK_CLOSE_EVENT,
   STOCK_OPEN_EVENT,
   STOCK_OPEN_POSITION,
@@ -28,6 +27,7 @@ import { setTimeout } from "node:timers/promises";
 import { formatDate } from "@/lib/utils";
 import { UserEventsRepository } from "@/database/UserEventsRepository";
 import { User } from "@clerk/nextjs/server";
+import { BenchmarkIndex } from "@/lib/benchmarks";
 
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 
@@ -475,7 +475,9 @@ export async function getPortfolioData(user: User): Promise<PortfolioData | null
   if (!allEvents.length) return null;
 
   const stockSymbols = getStockSymbolsFromEvents(allEvents);
-  stockSymbols.add(SP500);
+  stockSymbols.add(BenchmarkIndex.SP_500);
+  stockSymbols.add(BenchmarkIndex.DOW_JONES);
+  stockSymbols.add(BenchmarkIndex.NASDAQ);
 
   const startDate = addYears(new Date(), -3);
 
