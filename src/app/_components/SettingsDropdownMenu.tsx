@@ -1,13 +1,9 @@
-"use client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CogIcon } from "lucide-react";
 import React from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BenchmarkIndex } from "@/lib/benchmarks";
-import { useStore } from "@/lib/store";
+import { SettingsPopover } from "@/app/_components/SettingsPopover";
 
 export const SettingsDropdownMenu: React.FC = () => {
-  const { selectedBenchmark, setSelectedBenchmark } = useStore();
   return (
     <Popover>
       <PopoverTrigger>
@@ -20,19 +16,7 @@ export const SettingsDropdownMenu: React.FC = () => {
         </div>
       </PopoverTrigger>
       <PopoverContent>
-        <div className={"flex gap-2 p-2 items-center"}>
-          <span className={"text-nowrap"}>Comparison index:</span>
-          <Select defaultValue={selectedBenchmark} onValueChange={setSelectedBenchmark}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={BenchmarkIndex.SP_500}>S&P 500</SelectItem>
-              <SelectItem value={BenchmarkIndex.NASDAQ}>Nasdaq</SelectItem>
-              <SelectItem value={BenchmarkIndex.DOW_JONES}>Dow Jones</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <SettingsPopover />
       </PopoverContent>
     </Popover>
   );
