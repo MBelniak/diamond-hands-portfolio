@@ -333,6 +333,7 @@ export const analysePortfolio = (
     assetsAnalysis,
     portfolioTimeline,
     stockPrices: portfolioData.stockPrices,
+    stocksMetadata: portfolioData.stocksMetadata,
     cashFlow,
   };
 };

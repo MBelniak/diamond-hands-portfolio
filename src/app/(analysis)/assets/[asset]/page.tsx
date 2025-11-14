@@ -67,15 +67,17 @@ const getChartData = (portfolioAnalysis: PortfolioAnalysis, asset: string) => {
 
 export default function AssetChartPage({ params }: { params: Promise<{ asset: string }> }) {
   const { asset } = use(params);
+  const assetSymbol = decodeURIComponent(asset);
   const { data: portfolioAnalysis, error, isLoading } = usePortfolioAnalysis();
+  const assetFullName = portfolioAnalysis?.stocksMetadata[assetSymbol]?.fullName ?? assetSymbol;
   const [range, setRange] = useState<[number, number]>([0, 1]);
   const router = useRouter();
 
   useEffect(() => {
     if (portfolioAnalysis) {
-      setRange([0, getChartData(portfolioAnalysis, asset).length - 1]);
+      setRange([0, getChartData(portfolioAnalysis, assetSymbol).length - 1]);
     }
-  }, [asset, portfolioAnalysis]);
+  }, [assetSymbol, portfolioAnalysis]);
 
   useEffect(() => {
     if (error || (!isLoading && !portfolioAnalysis)) {
@@ -92,7 +94,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
     );
   }
 
-  const priceHistory: ChartData[] = getChartData(portfolioAnalysis!, asset);
+  const priceHistory: ChartData[] = getChartData(portfolioAnalysis!, assetSymbol);
 
   const minWindowSize = 7;
 
@@ -124,7 +126,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
         </Button>
       </div>
       <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 w-full max-w-3xl">
-        <h2 className="text-2xl font-bold  mb-6 text-center drop-shadow-lg">{asset}</h2>
+        <h2 className="text-2xl font-bold  mb-6 text-center drop-shadow-lg">{assetFullName}</h2>
         <div style={{ width: "100%", padding: "0 24px", boxSizing: "border-box", height: 350 }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={windowedData}>

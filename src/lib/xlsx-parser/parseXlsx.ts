@@ -10,9 +10,17 @@ import {
   type Split,
   StockPricesRecord,
   StocksHistoricalPrices,
+  StocksMetadata,
+  StockSymbol,
+  TickerMetadata,
 } from "../types";
 import { createClient } from "redis";
-import { getExchangeRatesRedisKey, getStockPricesRedisKey, REDIS_EXPIRE_IN_DAY } from "../redis";
+import {
+  getExchangeRatesRedisKey,
+  getStockPricesRedisKey,
+  getTickerMetadataRedisKey,
+  REDIS_EXPIRE_IN_DAY,
+} from "../redis";
 import {
   CASH,
   CASH_OPERATION_HISTORY,
@@ -27,7 +35,8 @@ import { setTimeout } from "node:timers/promises";
 import { formatDate } from "@/lib/utils";
 import { UserEventsRepository } from "@/database/UserEventsRepository";
 import { User } from "@clerk/nextjs/server";
-import { BenchmarkIndex } from "@/lib/benchmarks";
+import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
+import { pick } from "lodash-es";
 
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 
@@ -460,6 +469,56 @@ export async function uploadPortfolioData(user: User, xlsxArrayBuffer: ArrayBuff
   await UserEventsRepository.saveEventsToDB(events, user);
 }
 
+const getTickerMetadata = async (stockSymbol: StockSymbol) => {
+  if (await redis.exists(getTickerMetadataRedisKey(stockSymbol))) {
+    return JSON.parse((await redis.get(getTickerMetadataRedisKey(stockSymbol))) as string) as TickerMetadata;
+  }
+
+  if (!process.env.API_NINJAS_KEY) {
+    console.warn("process.env.API_NINJAS_KEY not provided!");
+    return null;
+  }
+
+  const URL = `https://api.api-ninjas.com/v1/ticker?ticker=${stockSymbol}`;
+  console.log(`Fetching from ${URL}`);
+  const response = await fetch(URL, {
+    headers: {
+      "X-Api-Key": process.env.API_NINJAS_KEY as string,
+    },
+  });
+
+  if (response.ok) {
+    const metadata = pick(await response.json(), ["name", "ticker"]) as TickerMetadata;
+    await redis.set(getTickerMetadataRedisKey(stockSymbol), JSON.stringify(metadata));
+    return metadata;
+  }
+  return null;
+};
+
+async function getStocksMetadata(stockSymbols: Set<string>): Promise<StocksMetadata> {
+  const result = await Promise.allSettled(
+    Array.from(stockSymbols)
+      .map(async (symbol) => {
+        return {
+          symbol,
+          fullName: (await getTickerMetadata(getStockAPISymbol(symbol)))?.name,
+        };
+      })
+      .concat(
+        Object.values(BenchmarkIndex).map((value) =>
+          Promise.resolve({
+            symbol: value,
+            fullName: BenchmarkIndexToName[value],
+          }),
+        ),
+      ),
+  );
+
+  return result
+    .filter((res) => res.status === "fulfilled")
+    .reduce((acc, res) => ({ ...acc, [res.value.symbol]: res.value }), {});
+}
+
 export async function getPortfolioData(user: User): Promise<PortfolioData | null> {
   const events = await getPortfolioEvents(user);
   if (!events) {
@@ -481,7 +540,19 @@ export async function getPortfolioData(user: User): Promise<PortfolioData | null
 
   const startDate = new Date(2022, 0, 0);
 
-  const prices = await getPricesForStocks(stockSymbols, startDate);
+  const [pricesResult, stocksMetadataResult] = await Promise.allSettled([
+    getPricesForStocks(stockSymbols, startDate),
+    getStocksMetadata(stockSymbols),
+  ]);
+
+  const prices =
+    pricesResult.status === "fulfilled"
+      ? (pricesResult.value as StocksHistoricalPrices)
+      : ({} as StocksHistoricalPrices);
+  const stocksMetadata =
+    stocksMetadataResult.status === "fulfilled"
+      ? (stocksMetadataResult.value as StocksMetadata)
+      : ({} as StocksMetadata);
 
   const currencies = new Set(
     Object.values(prices)
@@ -489,12 +560,16 @@ export async function getPortfolioData(user: User): Promise<PortfolioData | null
       .filter(Boolean),
   );
 
-  const exchangeRates = await fetchExchangeRates(currencies, startDate);
+  // fetchExchangeRates relies on prices -> run after prices resolved
+  const exchangeRates = await fetchExchangeRates(currencies, startDate).catch(
+    () => ({}) as Record<string, Record<string, number>>,
+  );
 
   const pricesInUSD = convertPricesToUSD(prices, exchangeRates);
 
   return {
     portfolioEvents: events,
     stockPrices: pricesInUSD,
+    stocksMetadata: stocksMetadata,
   };
 }

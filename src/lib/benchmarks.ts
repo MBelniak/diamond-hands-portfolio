@@ -1,4 +1,4 @@
-export const enum BenchmarkIndex {
+export enum BenchmarkIndex {
   SP_500 = "^GSPC",
   NASDAQ = "^IXIC",
   DOW_JONES = "^DJI",

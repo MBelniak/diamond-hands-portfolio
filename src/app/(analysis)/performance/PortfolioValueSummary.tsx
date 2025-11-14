@@ -51,16 +51,16 @@ export const PortfolioValueSummary: React.FC<{
       <strong className=" text-lg mb-2">Total portfolio value</strong>
       <MainFigureValue>${totalPortfolioValue.toFixed(2)}</MainFigureValue>
       <div className={"grid grid-cols-[auto_1fr] gap-x-4 mt-3"}>
-        <p className="text-sm  text-gray-800 dark:text-gray-200">
+        <p className="text-sm text-gray-800 dark:text-gray-200">
           {totalProfitOrLoss > 0 ? "Total profit: " : "Total loss: "}
         </p>
-        <span className={profitOrLossTextColor(totalProfitOrLoss)}>
+        <span className={clsx(profitOrLossTextColor(totalProfitOrLoss), "text-end")}>
           ${totalProfitOrLoss.toFixed(2)} ({totalProfitPercentage[selectedReturnMetric].toFixed(2)}%)
         </span>
         <p className="text-sm  text-gray-800 dark:text-gray-200">
           {realizedProfitOrLoss > 0 ? "Cashed in: " : "Lost: "}
         </p>
-        <span className={profitOrLossTextColor(realizedProfitOrLoss)}>
+        <span className={clsx(profitOrLossTextColor(realizedProfitOrLoss), "text-end")}>
           ${realizedProfitOrLoss.toFixed(2)} ({realizedPercentage.toFixed(2)}%)
         </span>
         <p className="text-sm  text-gray-800 dark:text-gray-200">Open:</p>

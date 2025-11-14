@@ -9,6 +9,7 @@ export type Stock = {
 };
 
 export type ISODateString = string;
+export type StockSymbol = string;
 
 export type PortfolioValue = {
   date: ISODateString;
@@ -78,18 +79,26 @@ export type StockPricesRecord = {
   splitAdjustedPrice: Record<ISODateString, number>; // date -> split adjusted price
 };
 
-export type StocksHistoricalPrices = Record<ISODateString, StockPricesRecord>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>}
+export type TickerMetadata = {
+  name: string;
+  ticker: string;
+};
+
+export type StocksHistoricalPrices = Record<StockSymbol, StockPricesRecord>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>}
 export type CashFlow = { amount: number; date: ISODateString }[]; // date -> cash flow
+export type StocksMetadata = Record<StockSymbol, { symbol: StockSymbol; fullName: string | null }>;
 
 export type PortfolioAnalysis = {
   assetsAnalysis: AssetsHistoricalData;
   portfolioTimeline: PortfolioValue[];
   stockPrices: StocksHistoricalPrices;
+  stocksMetadata: StocksMetadata;
   cashFlow: CashFlow;
 };
 
 export type PortfolioData = {
   stockPrices: StocksHistoricalPrices;
+  stocksMetadata: StocksMetadata;
   portfolioEvents: {
     cashEvents: CashEvent[];
     openPositions: PortfolioEvent[];

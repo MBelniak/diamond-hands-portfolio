@@ -9,6 +9,7 @@ import { PortfolioAnalysis } from "@/lib/types";
 import { ProfitMetrics } from "@/app/(analysis)/performance/ProfitMetrics";
 import { calculateMWR, calculateTWR, getCashFlowForBenchmarkComparison } from "@/lib/returnMetrics";
 import { BenchmarkIndexToName } from "@/lib/benchmarks";
+import Link from "next/link";
 
 export const PerformanceSP500Summary: React.FC<{
   portfolioAnalysis: PortfolioAnalysis;
@@ -34,7 +35,10 @@ export const PerformanceSP500Summary: React.FC<{
   return (
     <div className="p-8 flex flex-col items-start">
       <strong className=" text-lg ">
-        If invested in {BenchmarkIndexToName[selectedBenchmark]}{" "}
+        If invested in{" "}
+        <Link href={`/assets/${selectedBenchmark}`} className={"underline"}>
+          {BenchmarkIndexToName[selectedBenchmark]}
+        </Link>{" "}
         <Tooltip>
           <TooltipTrigger>
             <CircleQuestionMark size={20} />
@@ -46,10 +50,10 @@ export const PerformanceSP500Summary: React.FC<{
           </TooltipContent>
         </Tooltip>
       </strong>
-      <p className={"text-2xl  font-bold"}>${last.benchmarkStockValue.toFixed(2)}</p>
-      <p className={"text-sm  text-gray-800 dark:text-gray-200 mt-2"}>
+      <p className={"text-2xl font-bold"}>${last.benchmarkStockValue.toFixed(2)}</p>
+      <p className={"text-sm text-gray-800 dark:text-gray-200 mt-2 w-full flex justify-between"}>
         {sp500ProfitOrLoss >= 0 ? "Potential profit: " : "Potential loss: "}
-        <span className={clsx("text-sm  mt-1", profitOrLossTextColor(sp500ProfitOrLoss))}>
+        <span className={clsx("text-sm", profitOrLossTextColor(sp500ProfitOrLoss))}>
           ${sp500ProfitOrLoss.toFixed(2)} ({sp500Percentage[selectedReturnMetric].toFixed(2)}%)
         </span>
       </p>
