@@ -40,7 +40,9 @@ export const PerformanceSP500Summary: React.FC<{
             <CircleQuestionMark size={20} />
           </TooltipTrigger>
           <TooltipContent side="bottom" align="center">
-            <p>If invested all deposited cash into S&P 500 index without withdrawals</p>
+            <p>
+              If invested all deposited cash into {BenchmarkIndexToName[selectedBenchmark]} index without withdrawals
+            </p>
           </TooltipContent>
         </Tooltip>
       </strong>
