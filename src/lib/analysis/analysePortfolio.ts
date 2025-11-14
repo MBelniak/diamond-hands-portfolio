@@ -144,7 +144,7 @@ function getAssetsAnalysis(
               {
                 date: formatDate(new Date(stockEvent.date)),
                 volume: stockEvent.stocksVolumeChange,
-                stockValueOnBuy: eventStockPrice ? stockEvent.stocksVolumeChange * eventStockPrice : undefined,
+                stockPriceOnBuy: eventStockPrice,
                 profitOrLoss: stockEvent.profitOrLoss,
               },
             ],
@@ -161,7 +161,7 @@ function getAssetsAnalysis(
               {
                 date: formatDate(new Date(stockEvent.date)),
                 volume: stockEvent.stocksVolumeChange,
-                stockValueOnBuy: eventStockPrice ? stockEvent.stocksVolumeChange * eventStockPrice : undefined,
+                stockPriceOnBuy: eventStockPrice,
               },
             ],
           },
@@ -177,7 +177,7 @@ function getAssetsAnalysis(
               {
                 date: formatDate(new Date(stockEvent.date)),
                 volume: stockEvent.stocksVolumeChange,
-                stockValueOnSell: eventStockPrice ? stockEvent.stocksVolumeChange * eventStockPrice : undefined,
+                stockPriceOnSell: eventStockPrice,
                 profitOrLoss: stockEvent.profitOrLoss,
               },
             ],

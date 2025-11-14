@@ -1,6 +1,6 @@
 // @ts-expect-error no typings for this file
 import XLSX from "xlsx/xlsx.js";
-import { addYears, isAfter, isSameDay, startOfDay } from "date-fns";
+import { isAfter, isSameDay, startOfDay } from "date-fns";
 import { addDays } from "date-fns/addDays";
 import { isBefore } from "date-fns/isBefore";
 import {
@@ -479,7 +479,7 @@ export async function getPortfolioData(user: User): Promise<PortfolioData | null
   stockSymbols.add(BenchmarkIndex.DOW_JONES);
   stockSymbols.add(BenchmarkIndex.NASDAQ);
 
-  const startDate = addYears(new Date(), -3);
+  const startDate = new Date(2022, 0, 0);
 
   const prices = await getPricesForStocks(stockSymbols, startDate);
 

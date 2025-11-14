@@ -81,3 +81,12 @@ export const portfolioDataDB = {
 export function formatDate(date: Date): string {
   return format(date, "yyyy-MM-dd");
 }
+
+export const CFDIndices: Record<string, { lotSize: number }> = {
+  GOLD: {
+    lotSize: 100, // leverage is already included in the volume in xtb report.
+  },
+  OIL: {
+    lotSize: 1000,
+  },
+};

@@ -48,16 +48,16 @@ const getChartData = (portfolioAnalysis: PortfolioAnalysis, asset: string) => {
     let volumeMarker;
 
     if (openEvent) {
-      openMarker = openEvent ? openEvent.stockValueOnBuy / openEvent.volume : undefined;
+      openMarker = openEvent ? openEvent.stockPriceOnBuy : undefined;
       volumeMarker = openEvent ? openEvent.volume : undefined;
     } else {
       const openPosition = assetData.openPositions.find((e) => e.date === dateStr);
-      openMarker = openPosition ? openPosition.stockValueOnBuy / openPosition.volume : undefined;
+      openMarker = openPosition ? openPosition.stockPriceOnBuy : undefined;
       volumeMarker = openPosition ? openPosition.volume : undefined;
     }
 
     const closeEvent = assetData.closeEvents.find((e) => e.date === dateStr);
-    const closeMarker = closeEvent ? closeEvent.stockValueOnSell / closeEvent.volume : undefined;
+    const closeMarker = closeEvent ? closeEvent.stockPriceOnSell : undefined;
     if (closeMarker) {
       volumeMarker = closeEvent!.volume + (volumeMarker ?? 0);
     }

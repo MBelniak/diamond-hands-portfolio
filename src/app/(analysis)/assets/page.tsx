@@ -3,9 +3,34 @@ import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/utils";
+import { CFDIndices, formatDate } from "@/lib/utils";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
+
+function getProfitLossTextClass(value: number): string {
+  // Loss thresholds
+  if (value < -1000) {
+    return "text-red-600 dark:text-red-700 font-extrabold text-xl";
+  }
+  if (value < -100) {
+    return "text-red-500 dark:text-red-500 font-bold text-lg";
+  }
+  if (value < 0) {
+    return "text-red-400 dark:text-red-400 font-semibold text-lg";
+  }
+  // Profit thresholds
+  if (value > 1000) {
+    return "text-green-700 dark:text-green-500 font-extrabold text-lg";
+  }
+  if (value > 100) {
+    return "text-green-600 dark:text-green-400 font-bold text-lg";
+  }
+  if (value > 0) {
+    return "text-green-500 dark:text-green-300 font-semibold text-lg";
+  }
+  // Neutral
+  return "text-gray-500 dark:text-gray-300 font-semibold text-lg";
+}
 
 export default function AssetsPage() {
   const { data: portfolioAnalysis, error, isLoading } = usePortfolioAnalysis();
@@ -22,31 +47,6 @@ export default function AssetsPage() {
   const stocks = useMemo(() => {
     return Array.from(new Set(Object.keys(assetsAnalysis ?? {})));
   }, [assetsAnalysis]);
-
-  function getProfitLossTextClass(value: number): string {
-    // Loss thresholds
-    if (value < -1000) {
-      return "text-red-600 dark:text-red-700 font-extrabold text-xl";
-    }
-    if (value < -100) {
-      return "text-red-500 dark:text-red-500 font-bold text-lg";
-    }
-    if (value < 0) {
-      return "text-red-400 dark:text-red-400 font-semibold text-lg";
-    }
-    // Profit thresholds
-    if (value > 1000) {
-      return "text-green-700 dark:text-green-500 font-extrabold text-lg";
-    }
-    if (value > 100) {
-      return "text-green-600 dark:text-green-400 font-bold text-lg";
-    }
-    if (value > 0) {
-      return "text-green-500 dark:text-green-300 font-semibold text-lg";
-    }
-    // Neutral
-    return "text-gray-500 dark:text-gray-300 font-semibold text-lg";
-  }
 
   const stockProfitArray = stocks
     .map((stock) => {
@@ -72,13 +72,12 @@ export default function AssetsPage() {
   const stockPotentialProfitArray = stocks.map((stock) => {
     const assetEvents = assetsAnalysis?.[stock];
 
-    const potentialValue = assetEvents?.openEvents?.reduce(
-      (acc: number, val: { volume: number; stockValueOnBuy: number }) => {
-        const currentPrice = portfolioAnalysis?.stockPrices[stock]?.price[formatDate(new Date())];
-        return acc + (currentPrice ? val.volume * currentPrice - val.stockValueOnBuy : 0);
-      },
-      0,
-    );
+    const potentialValue = assetEvents?.openEvents?.reduce((acc: number, event) => {
+      const currentPrice = portfolioAnalysis?.stockPrices[stock]?.price[formatDate(new Date())];
+      const lotSize = stock in CFDIndices ? CFDIndices[stock].lotSize : 1;
+      const volume = event.volume * lotSize;
+      return acc + (currentPrice ? volume * currentPrice - event.volume * event.stockPriceOnBuy * lotSize : 0);
+    }, 0);
 
     return { stock, potentialValue: potentialValue ?? 0 };
   });
