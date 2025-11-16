@@ -2,7 +2,7 @@
 import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useStore } from "@/lib/store";
-import { BenchmarkIndex } from "@/lib/benchmarks";
+import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
 
 export const SettingsPopover: React.FC = () => {
   const { selectedBenchmark, setSelectedBenchmark } = useStore();
@@ -15,9 +15,13 @@ export const SettingsPopover: React.FC = () => {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={BenchmarkIndex.SP_500}>S&P 500</SelectItem>
-          <SelectItem value={BenchmarkIndex.NASDAQ}>Nasdaq</SelectItem>
-          <SelectItem value={BenchmarkIndex.DOW_JONES}>Dow Jones</SelectItem>
+          {Object.values(BenchmarkIndex).map((value) => {
+            return (
+              <SelectItem key={value} value={value}>
+                {BenchmarkIndexToName[value]}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
     </div>

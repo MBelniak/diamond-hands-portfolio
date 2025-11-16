@@ -534,9 +534,9 @@ export async function getPortfolioData(user: User): Promise<PortfolioData | null
   if (!allEvents.length) return null;
 
   const stockSymbols = getStockSymbolsFromEvents(allEvents);
-  stockSymbols.add(BenchmarkIndex.SP_500);
-  stockSymbols.add(BenchmarkIndex.DOW_JONES);
-  stockSymbols.add(BenchmarkIndex.NASDAQ);
+  Object.values(BenchmarkIndex).forEach((value) => {
+    stockSymbols.add(value);
+  });
 
   const startDate = new Date(2022, 0, 0);
 

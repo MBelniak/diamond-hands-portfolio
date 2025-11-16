@@ -6,6 +6,7 @@ import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { PortfolioAnalysis } from "@/lib/types";
 import { useStore } from "@/lib/store";
 import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
+import { MIN_WINDOW_SIZE, useDateRange } from "@/hooks/useDateRange";
 
 const currency = "$";
 const chartKeys = {
@@ -55,27 +56,7 @@ export function PerformanceChart() {
       -1,
     );
 
-  const minWindowSize = 7;
-  const [range, setRange] = useState<[number, number]>([0, validTimeline.length - 1]);
-
-  const windowStart = Math.max(0, Math.min(range[0], validTimeline.length - minWindowSize));
-  const windowEnd = Math.max(windowStart + minWindowSize - 1, Math.min(range[1], validTimeline.length - 1));
-  const windowedData = validTimeline.slice(windowStart, windowEnd + 1);
-
-  const handleRangeChange = (values: [number, number]) => {
-    let [start, end] = values;
-    if (end - start < minWindowSize - 1) {
-      if (start === range[0]) {
-        end = start + minWindowSize - 1;
-      } else {
-        start = end - minWindowSize + 1;
-      }
-    }
-
-    start = Math.max(0, Math.min(start, validTimeline.length - minWindowSize));
-    end = Math.max(start + minWindowSize - 1, Math.min(end, validTimeline.length - 1));
-    setRange([start, end]);
-  };
+  const [range, handleRangeChange] = useDateRange(validTimeline.length - 1);
 
   // Track which lines are enabled
   const [enabledLines, setEnabledLines] = useState<Record<string, boolean>>({
@@ -91,6 +72,10 @@ export function PerformanceChart() {
       [key]: !prev[key],
     }));
   };
+
+  const windowStart = Math.max(0, Math.min(range[0], validTimeline.length - MIN_WINDOW_SIZE));
+  const windowEnd = Math.max(windowStart + MIN_WINDOW_SIZE - 1, Math.min(range[1], validTimeline.length - 1));
+  const windowedData = validTimeline.slice(windowStart, windowEnd + 1);
 
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl w-full p-6">
@@ -170,7 +155,7 @@ export function PerformanceChart() {
           max={validTimeline.length - 1}
           value={[windowStart, windowEnd]}
           step={1}
-          minStepsBetweenThumbs={minWindowSize - 1}
+          minStepsBetweenThumbs={MIN_WINDOW_SIZE - 1}
           onValueChange={handleRangeChange}
           style={{ width: "100%" }}
         />
