@@ -7,6 +7,7 @@ import { useStore } from "@/lib/store";
 import { PortfolioAnalysis } from "@/lib/types";
 import { useState } from "react";
 import { Area, AreaChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CustomTooltip } from "./PerformanceChartTooltip";
 
 const currency = "$";
 const chartKeys = {
@@ -102,20 +103,7 @@ export function PerformanceChart() {
           <AreaChart data={windowedData}>
             <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--foreground)" }} />
             <YAxis tick={{ fontSize: 12, fill: "var(--foreground)" }} />
-            <Tooltip
-              formatter={(value: number) => value.toFixed(2)}
-              labelFormatter={(label) => `Date: ${label}`}
-              itemSorter={({ dataKey }) => {
-                return { portfolioValue: -1, profit: 0, realizedProfitOrLoss: 1, cash: 2 }[dataKey as string] || 3;
-              }}
-              contentStyle={{
-                background: "var(--tooltip-background)",
-                borderRadius: "0.75rem",
-                color: "var(--foreground)",
-                border: "1px solid #a5b4fc",
-              }}
-              labelStyle={{ color: "var(--foreground)" }}
-            />
+            <Tooltip content={<CustomTooltip />} />
 
             {enabledLines.profit && (
               <>

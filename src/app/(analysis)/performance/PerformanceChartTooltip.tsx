@@ -1,0 +1,59 @@
+import { useMemo } from "react";
+
+const orderMap: Record<string, number> = {
+  portfolioValue: -1,
+  profit: 0,
+  realizedProfitOrLoss: 1,
+  cash: 2,
+  benchmarkStockValue: 3,
+};
+
+const formatValue = (value: number) => (typeof value === "number" ? value.toFixed(2) : value);
+const formatLabel = (l: any) => `Date: ${l}`;
+
+const contentStyle: React.CSSProperties = {
+  background: "var(--tooltip-background)",
+  borderRadius: "0.75rem",
+  color: "var(--foreground)",
+  border: "1px solid #a5b4fc",
+  padding: "0.5rem 0.75rem",
+};
+
+const labelStyle: React.CSSProperties = { color: "var(--foreground)", fontWeight: 600, marginBottom: 6 };
+
+export const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload || !payload.length) return null;
+
+  const filteredKeys = useMemo(
+    () =>
+      payload
+        .filter((p: any) => p.dataKey !== "profitPositive" && p.dataKey !== "profitNegative")
+        .sort((a: any, b: any) => (orderMap[a.dataKey as string] ?? 3) - (orderMap[b.dataKey as string] ?? 3)),
+    [payload],
+  );
+
+  return (
+    <div style={contentStyle}>
+      <div style={labelStyle}>{formatLabel(label)}</div>
+      {filteredKeys.map((entry: any, idx: number) => (
+        <div key={idx} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 2,
+                background: entry.color ?? entry.stroke ?? "transparent",
+                display: "inline-block",
+              }}
+            />
+            <span style={{ color: "var(--foreground)" }}>{entry.name ?? entry.dataKey}</span>
+          </div>
+          <div style={{ color: "var(--foreground)", fontVariantNumeric: "tabular-nums" }}>
+            {formatValue(entry.value)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
