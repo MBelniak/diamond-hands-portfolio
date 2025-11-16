@@ -1,18 +1,19 @@
 "use client";
-import { useState } from "react";
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
-import { PortfolioAnalysis } from "@/lib/types";
-import { useStore } from "@/lib/store";
-import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
+import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { MIN_WINDOW_SIZE, useDateRange } from "@/hooks/useDateRange";
+import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
+import { useStore } from "@/lib/store";
+import { PortfolioAnalysis } from "@/lib/types";
+import { useState } from "react";
+import { Area, AreaChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const currency = "$";
 const chartKeys = {
   portfolioValue: "Portfolio value",
-  profitOrLoss: "Realized profit/loss",
+  realizedProfitOrLoss: "Realized profit/loss",
   cash: "Cash",
+  profit: "Profit/Loss",
 };
 
 const getChartLineConfig = (selectedBenchmark: BenchmarkIndex) => [
@@ -22,9 +23,14 @@ const getChartLineConfig = (selectedBenchmark: BenchmarkIndex) => [
     color: "#a5b4fc",
   },
   {
-    key: "profitOrLoss",
-    label: chartKeys.profitOrLoss,
+    key: "profit",
+    label: chartKeys.profit,
     color: "#38bdf8",
+  },
+  {
+    key: "realizedProfitOrLoss",
+    label: chartKeys.realizedProfitOrLoss,
+    color: "#059669",
   },
   {
     key: "cash",
@@ -34,7 +40,7 @@ const getChartLineConfig = (selectedBenchmark: BenchmarkIndex) => [
   {
     key: "benchmarkStockValue",
     label: BenchmarkIndexToName[selectedBenchmark],
-    color: "#34d399",
+    color: "#f472b6",
   },
 ];
 
@@ -46,11 +52,19 @@ export function PerformanceChart() {
   const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
 
   const validTimeline = portfolioTimeline
-    .map((item) => ({
-      ...item,
-      date: item.date.slice(0, 10),
-      portfolioValue: item.portfolioValue + (useWithdrawnCash ? item.totalCapitalInvested - item.balance : 0),
-    }))
+    .map((item) => {
+      const adjPortfolioValue = item.portfolioValue + (useWithdrawnCash ? item.totalCapitalInvested - item.balance : 0);
+      const profit = item.portfolioValue - item.balance;
+      return {
+        ...item,
+        date: item.date.slice(0, 10),
+        portfolioValue: adjPortfolioValue,
+        realizedProfitOrLoss: item.profitOrLoss,
+        profit,
+        profitPositive: profit > 0 ? profit : 0,
+        profitNegative: profit < 0 ? profit : 0,
+      };
+    })
     .slice(
       portfolioTimeline.findIndex((record) => Object.entries(record.stocks).length || record.cash),
       -1,
@@ -61,9 +75,10 @@ export function PerformanceChart() {
   // Track which lines are enabled
   const [enabledLines, setEnabledLines] = useState<Record<string, boolean>>({
     portfolioValue: true,
-    profitOrLoss: true,
-    cash: true,
-    benchmarkStockValue: true,
+    profit: true,
+    realizedProfitOrLoss: false,
+    cash: false,
+    benchmarkStockValue: false,
   });
 
   const toggleLine = (key: string) => {
@@ -84,14 +99,14 @@ export function PerformanceChart() {
         <ResponsiveContainer width="100%" height="100%">
           {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
           {/*@ts-ignore*/}
-          <LineChart data={windowedData}>
+          <AreaChart data={windowedData}>
             <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--foreground)" }} />
             <YAxis tick={{ fontSize: 12, fill: "var(--foreground)" }} />
             <Tooltip
               formatter={(value: number) => value.toFixed(2)}
               labelFormatter={(label) => `Date: ${label}`}
               itemSorter={({ dataKey }) => {
-                return { portfolioValue: -1, profitOrLoss: 1, cash: 2 }[dataKey as string] || 3;
+                return { portfolioValue: -1, profit: 0, realizedProfitOrLoss: 1, cash: 2 }[dataKey as string] || 3;
               }}
               contentStyle={{
                 background: "var(--tooltip-background)",
@@ -101,6 +116,30 @@ export function PerformanceChart() {
               }}
               labelStyle={{ color: "var(--foreground)" }}
             />
+
+            {enabledLines.profit && (
+              <>
+                <Area
+                  isAnimationActive={false}
+                  type="monotone"
+                  dataKey="profitPositive"
+                  stroke="none"
+                  baseValue={0}
+                  fill="rgba(34,197,94,0.18)"
+                  name="Profit (positive)"
+                />
+                <Area
+                  isAnimationActive={false}
+                  type="monotone"
+                  dataKey="profitNegative"
+                  stroke="none"
+                  baseValue={0}
+                  fill="rgba(239,68,68,0.18)"
+                  name="Profit (negative)"
+                />
+              </>
+            )}
+
             {/* Render only enabled lines */}
             {getChartLineConfig(selectedBenchmark).map(
               (line) =>
@@ -117,7 +156,7 @@ export function PerformanceChart() {
                   />
                 ),
             )}
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </div>
       {/* Legend below chart */}
