@@ -491,6 +491,23 @@ const getTickerMetadata = async (stockSymbol: StockSymbol) => {
     const metadata = pick(await response.json(), ["name", "ticker"]) as TickerMetadata;
     await redis.set(getTickerMetadataRedisKey(stockSymbol), JSON.stringify(metadata));
     return metadata;
+  } else {
+    const URL = `https://api.api-ninjas.com/v1/etf?ticker=${stockSymbol}`;
+    console.log(`Fetching from ${URL}`);
+    const response = await fetch(URL, {
+      headers: {
+        "X-Api-Key": process.env.API_NINJAS_KEY as string,
+      },
+    });
+    if (response.ok) {
+      const responseData = pick(await response.json(), ["etf_name", "etf_ticker"]);
+      const metadata = {
+        name: responseData.etf_name,
+        ticker: responseData.etf_ticker,
+      };
+      await redis.set(getTickerMetadataRedisKey(stockSymbol), JSON.stringify(metadata));
+      return metadata;
+    }
   }
   return null;
 };

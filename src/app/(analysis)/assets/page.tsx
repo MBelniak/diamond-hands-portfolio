@@ -55,7 +55,6 @@ export default function AssetsPage() {
 
   return (
     <>
-      {" "}
       <div className="bg-white/80 dark:bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4">
         <h2 className="text-3xl font-bold mb-8 text-center text-gray-900 dark:text-gray-100">Assets breakdown</h2>
         <div className="overflow-x-auto">
