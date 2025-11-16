@@ -42,7 +42,7 @@ export default function AssetsPage() {
     }
   }, [error, router]);
 
-  const { stockProfitArray, stockPotentialProfitArray } = useAssetsBreakdown(portfolioAnalysis);
+  const assetsBreakdown = useAssetsBreakdown(portfolioAnalysis);
 
   if (isLoading || error) {
     return (
@@ -63,41 +63,39 @@ export default function AssetsPage() {
             <thead>
               <tr className="bg-gray-100 dark:bg-slate-800/80">
                 <th className="px-4 py-3 font-semibold">Asset</th>
-                <th className="px-4 py-3 font-semibold">Profit/Loss ($)</th>
-                <th className="px-4 py-3 font-semibold">Potential Profit/Loss ($)</th>
+                <th className="px-4 py-3 font-semibold text-center">Profit/Loss ($)</th>
+                <th className="px-4 py-3 font-semibold text-center">Profit/Loss from open positions ($)</th>
+                <th className="px-4 py-3 font-semibold text-center">Potential Profit/Loss ($)</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
-              {stockProfitArray.map((stockProfit) => {
-                const profitOrLoss = stockProfit.profitOrLoss;
-                const potentialValue =
-                  stockPotentialProfitArray.find((s) => s.stock === stockProfit.stock)?.potentialValue ?? 0;
-
+              {assetsBreakdown.map((asset) => {
                 return (
                   <tr
-                    key={stockProfit.stock}
+                    key={asset.stock}
                     className="hover:bg-gray-200 dark:hover:bg-slate-900/30 transition-colors duration-150"
                   >
                     <td className="px-4 py-3 border-b border-gray-300 dark:border-slate-700 rounded-l-md">
-                      {stockProfit.stock}
+                      {asset.stock}
                     </td>
                     <td
-                      className={`px-4 py-3 border-b border-gray-300 dark:border-slate-700 ${getProfitLossTextClass(profitOrLoss)}`}
+                      className={`px-4 py-3 border-b text-center border-gray-300 dark:border-slate-700 ${getProfitLossTextClass(asset.profitOrLoss)}`}
                     >
-                      {profitOrLoss?.toFixed(2) ?? 0}
+                      {asset.profitOrLoss.toFixed(2)}
                     </td>
                     <td
-                      className={`px-4 py-3 border-b border-gray-300 dark:border-slate-700 ${getProfitLossTextClass(potentialValue)}`}
+                      className={`px-4 py-3 border-b text-center border-gray-300 dark:border-slate-700 ${getProfitLossTextClass(asset.openPositionsProfit)}`}
                     >
-                      {potentialValue?.toFixed(2) ?? 0}
+                      {asset.openPositionsProfit.toFixed(2)}
                     </td>
-                    <td className={`px-4 py-3 border-b border-gray-300 dark:border-slate-700 rounded-r-md`}>
-                      <Button
-                        variant={"secondary"}
-                        onClick={() => router.push("/assets/" + stockProfit.stock)}
-                        size="icon"
-                      >
+                    <td
+                      className={`px-4 py-3 border-b text-center border-gray-300 dark:border-slate-700 ${getProfitLossTextClass(asset.potentialValue)}`}
+                    >
+                      {asset.potentialValue.toFixed(2)}
+                    </td>
+                    <td className={`px-4 py-3 border-b  border-gray-300 dark:border-slate-700 rounded-r-md`}>
+                      <Button variant={"secondary"} onClick={() => router.push("/assets/" + asset.stock)} size="icon">
                         <TrendingUp />
                       </Button>
                     </td>
@@ -106,11 +104,14 @@ export default function AssetsPage() {
               })}
               <tr className="bg-gray-100 dark:bg-slate-700/80 font-bold ">
                 <td className="px-4 py-3 ">Total</td>
-                <td className="px-4 py-3">
-                  {stockProfitArray.reduce((acc, stock) => stock.profitOrLoss + acc, 0).toFixed(2)}
+                <td className="px-4 py-3 text-center">
+                  {assetsBreakdown.reduce((acc, stock) => stock.profitOrLoss + acc, 0).toFixed(2)}
                 </td>
-                <td className="px-4 py-3 ">
-                  {stockPotentialProfitArray.reduce((acc, stock) => stock.potentialValue + acc, 0).toFixed(2)}
+                <td className="px-4 py-3 text-center">
+                  {assetsBreakdown.reduce((acc, stock) => stock.openPositionsProfit + acc, 0).toFixed(2)}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  {assetsBreakdown.reduce((acc, stock) => stock.potentialValue + acc, 0).toFixed(2)}
                 </td>
                 <td />
               </tr>
