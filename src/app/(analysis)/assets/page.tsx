@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
 import { useAssetsBreakdown } from "@/app/(analysis)/assets/useAssetsBreakdown";
+import { sortBy } from "lodash-es";
 
 function getProfitLossTextClass(value: number): string {
   // Loss thresholds
@@ -43,6 +44,7 @@ export default function AssetsPage() {
   }, [error, router]);
 
   const assetsBreakdown = useAssetsBreakdown(portfolioAnalysis);
+  const tableData = sortBy(assetsBreakdown, ["allocation", "profitOrLoss"]).reverse();
 
   if (isLoading || error) {
     return (
@@ -55,21 +57,22 @@ export default function AssetsPage() {
 
   return (
     <>
-      <div className="bg-white/80 dark:bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4">
-        <h2 className="text-3xl font-bold mb-8 text-center text-gray-900 dark:text-gray-100">Assets breakdown</h2>
+      <div className="bg-white/80 dark:bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8  w-full mx-4">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-700 dark:text-gray-200 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-transparent">
             <thead>
               <tr className="bg-gray-100 dark:bg-slate-800/80">
                 <th className="px-4 py-3 font-semibold">Asset</th>
+                <th className="px-4 py-3 font-semibold text-center">Shares</th>
+                <th className="px-4 py-3 font-semibold text-center">Market Value</th>
                 <th className="px-4 py-3 font-semibold text-center">Profit/Loss ($)</th>
-                <th className="px-4 py-3 font-semibold text-center">Profit/Loss from open positions ($)</th>
+                <th className="px-4 py-3 font-semibold text-center">Unrealized Profit/Loss ($)</th>
                 <th className="px-4 py-3 font-semibold text-center">Potential Profit/Loss ($)</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
-              {assetsBreakdown.map((asset) => {
+              {tableData.map((asset) => {
                 return (
                   <tr
                     key={asset.stock}
@@ -77,6 +80,12 @@ export default function AssetsPage() {
                   >
                     <td className="px-4 py-3 border-b border-gray-300 dark:border-slate-700 rounded-l-md">
                       {asset.stock}
+                    </td>
+                    <td className={`px-4 py-3 border-b text-center border-gray-300 dark:border-slate-700`}>
+                      {asset.volume.toFixed(2)}
+                    </td>
+                    <td className={`px-4 py-3 border-b text-center border-gray-300 dark:border-slate-700`}>
+                      {asset.marketValue.toFixed(2) + ` (${(asset.allocation * 100).toFixed(2)}%)`}
                     </td>
                     <td
                       className={`px-4 py-3 border-b text-center border-gray-300 dark:border-slate-700 ${getProfitLossTextClass(asset.profitOrLoss)}`}
@@ -103,6 +112,9 @@ export default function AssetsPage() {
               })}
               <tr className="bg-gray-100 dark:bg-slate-700/80 font-bold ">
                 <td className="px-4 py-3 ">Total</td>
+                <td className="px-4 py-3 text-center">
+                  {assetsBreakdown.reduce((acc, stock) => stock.volume + acc, 0).toFixed(2)}
+                </td>
                 <td className="px-4 py-3 text-center">
                   {assetsBreakdown.reduce((acc, stock) => stock.profitOrLoss + acc, 0).toFixed(2)}
                 </td>

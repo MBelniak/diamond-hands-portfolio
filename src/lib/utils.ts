@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
 import { PortfolioData } from "@/lib/types";
 import { openDB } from "idb";
+import { AssetsHistoricalData, StocksHistoricalPrices } from "@/lib/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -90,3 +91,29 @@ export const CFDIndices: Record<string, { lotSize: number }> = {
     lotSize: 1000,
   },
 };
+
+/**
+ * Returns market value, aggregated volume (taking lotSize into account) and currentPrice for a given stock symbol.
+ * - marketValue is calculated from openPositions using the provided stock prices for the given date (defaults to today).
+ * - volume takes CFD lot sizes into account when the symbol is defined in CFDIndices.
+ */
+export function getStockMarketValue(
+  stock: string,
+  assetsAnalysis?: AssetsHistoricalData,
+  stockPrices?: StocksHistoricalPrices,
+  date: Date = new Date(),
+): { marketValue: number; volume: number; currentPrice: number | undefined } {
+  const assetEvents = assetsAnalysis?.[stock];
+  const openPositions = assetEvents?.openPositions ?? [];
+  const lotSize = stock in CFDIndices ? CFDIndices[stock].lotSize : 1;
+  const dateStr = formatDate(date);
+  const currentPrice = stockPrices?.[stock]?.price?.[dateStr];
+
+  const volume = openPositions.reduce((s: number, pos) => s + (pos.volume ?? 0) * lotSize, 0);
+  const marketValue = openPositions.reduce(
+    (s: number, pos) => s + (currentPrice ? pos.volume * lotSize * currentPrice : 0),
+    0,
+  );
+
+  return { marketValue, volume, currentPrice };
+}
