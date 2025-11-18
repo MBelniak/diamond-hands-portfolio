@@ -154,7 +154,7 @@ export function PerformanceChart() {
             key={line.key}
             onClick={() => toggleLine(line.key)}
             className={`flex items-center gap-2 px-3 py-1 rounded-full font-medium transition cursor-pointer
-              ${enabledLines[line.key] ? "bg-white/5 " : "bg-gray-700/40 text-gray-400"}
+              ${enabledLines[line.key] ? "bg-white/5 " : "bg-gray-700/20 text-gray-400"}
               border border-white/30 hover:bg-white/30`}
             style={{ borderColor: line.color }}
             type="button"

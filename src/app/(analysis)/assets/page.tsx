@@ -119,6 +119,9 @@ export default function AssetsPage() {
                   {assetsBreakdown.reduce((acc, stock) => stock.volume + acc, 0).toFixed(2)}
                 </td>
                 <td className="px-4 py-3 text-center">
+                  {assetsBreakdown.reduce((acc, stock) => stock.marketValue + acc, 0).toFixed(2)}
+                </td>
+                <td className="px-4 py-3 text-center">
                   {assetsBreakdown.reduce((acc, stock) => stock.accProfitOrLoss + acc, 0).toFixed(2)}
                 </td>
                 <td className="px-4 py-3 text-center">
