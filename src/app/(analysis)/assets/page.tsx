@@ -44,7 +44,7 @@ export default function AssetsPage() {
   }, [error, router]);
 
   const assetsBreakdown = useAssetsBreakdown(portfolioAnalysis);
-  const tableData = sortBy(assetsBreakdown, ["allocation", "profitOrLoss"]).reverse();
+  const tableData = sortBy(assetsBreakdown, ["allocation", "accProfitOrLoss"]).reverse();
 
   if (isLoading || error) {
     return (
