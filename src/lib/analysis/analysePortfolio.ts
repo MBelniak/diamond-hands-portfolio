@@ -145,7 +145,6 @@ function getAssetsAnalysis(
                 date: formatDate(new Date(stockEvent.date)),
                 volume: stockEvent.stocksVolumeChange,
                 stockPriceOnBuy: eventStockPrice,
-                profitOrLoss: stockEvent.profitOrLoss,
               },
             ],
           },

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { TooltipContentProps } from "recharts";
 
 const orderMap: Record<string, number> = {
   portfolioValue: -1,
@@ -9,7 +10,7 @@ const orderMap: Record<string, number> = {
 };
 
 const formatValue = (value: number) => (typeof value === "number" ? value.toFixed(2) : value);
-const formatLabel = (l: any) => `Date: ${l}`;
+const formatLabel = (l: unknown) => `Date: ${l}`;
 
 const contentStyle: React.CSSProperties = {
   background: "var(--tooltip-background)",
@@ -21,21 +22,21 @@ const contentStyle: React.CSSProperties = {
 
 const labelStyle: React.CSSProperties = { color: "var(--foreground)", fontWeight: 600, marginBottom: 6 };
 
-export const CustomTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload || !payload.length) return null;
-
+export const CustomTooltip = ({ active, payload, label }: Partial<TooltipContentProps<string | number, string>>) => {
   const filteredKeys = useMemo(
     () =>
       payload
-        .filter((p: any) => p.dataKey !== "profitPositive" && p.dataKey !== "profitNegative")
-        .sort((a: any, b: any) => (orderMap[a.dataKey as string] ?? 3) - (orderMap[b.dataKey as string] ?? 3)),
+        ?.filter((p) => p.dataKey !== "profitPositive" && p.dataKey !== "profitNegative")
+        .sort((a, b) => (orderMap[a.dataKey as string] ?? 3) - (orderMap[b.dataKey as string] ?? 3)),
     [payload],
   );
+
+  if (!active || !payload || !payload.length) return null;
 
   return (
     <div style={contentStyle}>
       <div style={labelStyle}>{formatLabel(label)}</div>
-      {filteredKeys.map((entry: any, idx: number) => (
+      {(filteredKeys ?? []).map((entry, idx: number) => (
         <div key={idx} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span

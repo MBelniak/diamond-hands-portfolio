@@ -65,7 +65,7 @@ export default function AssetsPage() {
                 <th className="px-4 py-3 font-semibold">Asset</th>
                 <th className="px-4 py-3 font-semibold text-center">Shares</th>
                 <th className="px-4 py-3 font-semibold text-center">Market Value</th>
-                <th className="px-4 py-3 font-semibold text-center">Profit/Loss ($)</th>
+                <th className="px-4 py-3 font-semibold text-center">Acc. profit/loss ($)</th>
                 <th className="px-4 py-3 font-semibold text-center">Unrealized Profit/Loss ($)</th>
                 <th className="px-4 py-3 font-semibold text-center">Potential Profit/Loss ($)</th>
                 <th className="px-4 py-3"></th>
@@ -79,7 +79,10 @@ export default function AssetsPage() {
                     className="hover:bg-gray-200 dark:hover:bg-slate-900/30 transition-colors duration-150"
                   >
                     <td className="px-4 py-3 border-b border-gray-300 dark:border-slate-700 rounded-l-md">
-                      {asset.stock}
+                      <p>{asset.stock}</p>
+                      <p className="text-xs max-w-20 overflow-hidden text-ellipsis line-clamp-3">
+                        {portfolioAnalysis?.stocksMetadata[asset.stock].fullName}
+                      </p>
                     </td>
                     <td className={`px-4 py-3 border-b text-center border-gray-300 dark:border-slate-700`}>
                       {asset.volume.toFixed(2)}
@@ -88,14 +91,14 @@ export default function AssetsPage() {
                       {asset.marketValue.toFixed(2) + ` (${(asset.allocation * 100).toFixed(2)}%)`}
                     </td>
                     <td
-                      className={`px-4 py-3 border-b text-center border-gray-300 dark:border-slate-700 ${getProfitLossTextClass(asset.profitOrLoss)}`}
+                      className={`px-4 py-3 border-b text-center border-gray-300 dark:border-slate-700 ${getProfitLossTextClass(asset.accProfitOrLoss)}`}
                     >
-                      {asset.profitOrLoss.toFixed(2)}
+                      {asset.accProfitOrLoss.toFixed(2)}
                     </td>
                     <td
-                      className={`px-4 py-3 border-b text-center border-gray-300 dark:border-slate-700 ${getProfitLossTextClass(asset.openPositionsProfit)}`}
+                      className={`px-4 py-3 border-b text-center border-gray-300 dark:border-slate-700 ${getProfitLossTextClass(asset.unrealizedProfitOrLoss)}`}
                     >
-                      {asset.openPositionsProfit.toFixed(2)}
+                      {asset.unrealizedProfitOrLoss.toFixed(2)}
                     </td>
                     <td
                       className={`px-4 py-3 border-b text-center border-gray-300 dark:border-slate-700 ${getProfitLossTextClass(asset.potentialValue)}`}
@@ -116,10 +119,10 @@ export default function AssetsPage() {
                   {assetsBreakdown.reduce((acc, stock) => stock.volume + acc, 0).toFixed(2)}
                 </td>
                 <td className="px-4 py-3 text-center">
-                  {assetsBreakdown.reduce((acc, stock) => stock.profitOrLoss + acc, 0).toFixed(2)}
+                  {assetsBreakdown.reduce((acc, stock) => stock.accProfitOrLoss + acc, 0).toFixed(2)}
                 </td>
                 <td className="px-4 py-3 text-center">
-                  {assetsBreakdown.reduce((acc, stock) => stock.openPositionsProfit + acc, 0).toFixed(2)}
+                  {assetsBreakdown.reduce((acc, stock) => stock.unrealizedProfitOrLoss + acc, 0).toFixed(2)}
                 </td>
                 <td className="px-4 py-3 text-center">
                   {assetsBreakdown.reduce((acc, stock) => stock.potentialValue + acc, 0).toFixed(2)}

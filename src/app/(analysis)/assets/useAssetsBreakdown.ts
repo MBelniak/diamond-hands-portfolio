@@ -1,4 +1,4 @@
-import { PortfolioAnalysis } from "@/lib/types";
+import { AssetsHistoricalData, PortfolioAnalysis } from "@/lib/types";
 import { CFDIndices, formatDate, getStockMarketValue } from "@/lib/utils";
 import { useMemo } from "react";
 
@@ -6,9 +6,9 @@ export const useAssetsBreakdown = (
   portfolioAnalysis: PortfolioAnalysis | undefined | null,
 ): {
   stock: string;
-  profitOrLoss: number;
+  accProfitOrLoss: number;
   potentialValue: number;
-  openPositionsProfit: number;
+  unrealizedProfitOrLoss: number;
   volume: number;
   allocation: number;
   marketValue: number;
@@ -28,47 +28,47 @@ export const useAssetsBreakdown = (
 
   return useMemo(
     () =>
-      stocks.map((stock) => {
-        const assetEvents = assetsAnalysis?.[stock];
-        let profitOrLoss = 0;
+      stocks
+        .filter((stock) => !!assetsAnalysis?.[stock])
+        .map((stock) => {
+          const assetEvents = assetsAnalysis?.[stock] as AssetsHistoricalData[string];
+          const { marketValue, volume } = getStockMarketValue(stock, assetsAnalysis, portfolioAnalysis?.stockPrices);
 
-        if (assetEvents?.closeEvents) {
-          profitOrLoss += assetEvents.closeEvents.reduce((acc: number, closedPosition: { profitOrLoss: number }) => {
-            return acc + closedPosition.profitOrLoss;
-          }, 0);
-        }
+          const unrealizedProfitOrLoss =
+            marketValue -
+            assetEvents.openPositions.reduce((acc, openPosition) => {
+              const lotSize = stock in CFDIndices ? CFDIndices[stock].lotSize : 1;
+              return acc + openPosition.volume * openPosition.stockPriceOnBuy * lotSize;
+            }, 0);
 
-        if (assetEvents?.openPositions) {
-          profitOrLoss += assetEvents.openPositions.reduce((acc: number, openPosition: { profitOrLoss: number }) => {
-            return acc + openPosition.profitOrLoss;
-          }, 0);
-        }
+          const realizedProfitOrLoss = assetEvents.closeEvents.reduce(
+            (acc: number, closedPosition: { profitOrLoss: number }) => {
+              return acc + closedPosition.profitOrLoss;
+            },
+            0,
+          );
 
-        const potentialValue = assetEvents?.openEvents?.reduce((acc: number, event) => {
-          const currentPrice = portfolioAnalysis?.stockPrices[stock]?.price[formatDate(new Date())];
-          const lotSize = stock in CFDIndices ? CFDIndices[stock].lotSize : 1;
-          const volume = event.volume * lotSize;
-          return acc + (currentPrice ? volume * currentPrice - event.volume * event.stockPriceOnBuy * lotSize : 0);
-        }, 0);
+          const accProfitOrLoss = realizedProfitOrLoss + unrealizedProfitOrLoss;
 
-        const openPositions = assetsAnalysis?.[stock]?.openPositions ?? [];
-        const openPositionsProfit = openPositions.reduce(
-          (s: number, pos: { profitOrLoss: number }) => s + (pos.profitOrLoss ?? 0),
-          0,
-        );
+          const potentialValue = assetEvents?.openEvents
+            ?.concat(assetEvents.openPositions)
+            .reduce((acc: number, event) => {
+              const currentPrice = portfolioAnalysis?.stockPrices[stock]?.price[formatDate(new Date())];
+              const lotSize = stock in CFDIndices ? CFDIndices[stock].lotSize : 1;
+              const volume = event.volume * lotSize;
+              return acc + (currentPrice ? volume * currentPrice - event.volume * event.stockPriceOnBuy * lotSize : 0);
+            }, 0);
 
-        const { marketValue, volume } = getStockMarketValue(stock, assetsAnalysis, portfolioAnalysis?.stockPrices);
-
-        return {
-          stock,
-          profitOrLoss: profitOrLoss ?? 0,
-          potentialValue: potentialValue ?? 0,
-          openPositionsProfit,
-          volume,
-          allocation: summedMarketValue ? marketValue / summedMarketValue : 0,
-          marketValue,
-        };
-      }),
+          return {
+            stock,
+            accProfitOrLoss,
+            potentialValue,
+            unrealizedProfitOrLoss,
+            volume,
+            allocation: summedMarketValue ? marketValue / summedMarketValue : 0,
+            marketValue,
+          };
+        }),
     [assetsAnalysis, portfolioAnalysis?.stockPrices, stocks, summedMarketValue],
   );
 };

@@ -67,7 +67,7 @@ export type CashEvent = PortfolioEvent & { type: typeof CASH };
 
 export type AssetsHistoricalData = {
   [stockSymbol: string]: {
-    openPositions: { volume: number; stockPriceOnBuy: number; profitOrLoss: number; date: ISODateString }[];
+    openPositions: { volume: number; stockPriceOnBuy: number; date: ISODateString }[];
     openEvents: { volume: number; stockPriceOnBuy: number; date: ISODateString }[];
     closeEvents: { volume: number; stockPriceOnSell: number; profitOrLoss: number; date: ISODateString }[];
   };
