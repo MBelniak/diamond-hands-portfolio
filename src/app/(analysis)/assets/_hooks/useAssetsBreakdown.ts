@@ -1,18 +1,9 @@
 import { AssetsHistoricalData, PortfolioAnalysis } from "@/lib/types";
 import { CFDIndices, formatDate, getStockMarketValue } from "@/lib/utils";
 import { useMemo } from "react";
+import { Asset } from "../_types";
 
-export const useAssetsBreakdown = (
-  portfolioAnalysis: PortfolioAnalysis | undefined | null,
-): {
-  stock: string;
-  accProfitOrLoss: number;
-  potentialValue: number;
-  unrealizedProfitOrLoss: number;
-  volume: number;
-  allocation: number;
-  marketValue: number;
-}[] => {
+export const useAssetsBreakdown = (portfolioAnalysis: PortfolioAnalysis | undefined | null): Asset[] => {
   const assetsAnalysis = portfolioAnalysis?.assetsAnalysis;
 
   const stocks = useMemo(() => {
@@ -29,15 +20,19 @@ export const useAssetsBreakdown = (
   return useMemo(
     () =>
       stocks
-        .filter((stock) => !!assetsAnalysis?.[stock])
-        .map((stock) => {
-          const assetEvents = assetsAnalysis?.[stock] as AssetsHistoricalData[string];
-          const { marketValue, volume } = getStockMarketValue(stock, assetsAnalysis, portfolioAnalysis?.stockPrices);
+        .filter((assetSymbol) => !!assetsAnalysis?.[assetSymbol])
+        .map((assetSymbol) => {
+          const assetEvents = assetsAnalysis?.[assetSymbol] as AssetsHistoricalData[string];
+          const { marketValue, volume } = getStockMarketValue(
+            assetSymbol,
+            assetsAnalysis,
+            portfolioAnalysis?.stockPrices,
+          );
 
           const unrealizedProfitOrLoss =
             marketValue -
             assetEvents.openPositions.reduce((acc, openPosition) => {
-              const lotSize = stock in CFDIndices ? CFDIndices[stock].lotSize : 1;
+              const lotSize = assetSymbol in CFDIndices ? CFDIndices[assetSymbol].lotSize : 1;
               return acc + openPosition.volume * openPosition.stockPriceOnBuy * lotSize;
             }, 0);
 
@@ -53,14 +48,15 @@ export const useAssetsBreakdown = (
           const potentialValue = assetEvents?.openEvents
             ?.concat(assetEvents.openPositions)
             .reduce((acc: number, event) => {
-              const currentPrice = portfolioAnalysis?.stockPrices[stock]?.price[formatDate(new Date())];
-              const lotSize = stock in CFDIndices ? CFDIndices[stock].lotSize : 1;
+              const currentPrice = portfolioAnalysis?.stockPrices[assetSymbol]?.price[formatDate(new Date())];
+              const lotSize = assetSymbol in CFDIndices ? CFDIndices[assetSymbol].lotSize : 1;
               const volume = event.volume * lotSize;
               return acc + (currentPrice ? volume * currentPrice - event.volume * event.stockPriceOnBuy * lotSize : 0);
             }, 0);
 
           return {
-            stock,
+            assetSymbol,
+            fullName: portfolioAnalysis?.stocksMetadata[assetSymbol].fullName ?? assetSymbol,
             accProfitOrLoss,
             potentialValue,
             unrealizedProfitOrLoss,
@@ -69,6 +65,6 @@ export const useAssetsBreakdown = (
             marketValue,
           };
         }),
-    [assetsAnalysis, portfolioAnalysis?.stockPrices, stocks, summedMarketValue],
+    [assetsAnalysis, portfolioAnalysis?.stockPrices, portfolioAnalysis?.stocksMetadata, stocks, summedMarketValue],
   );
 };
