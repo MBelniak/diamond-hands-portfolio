@@ -12,10 +12,10 @@ export const useAssetsBreakdown = (portfolioAnalysis: PortfolioAnalysis | undefi
 
   const summedMarketValue = useMemo(() => {
     return stocks.reduce((acc, stock) => {
-      const { marketValue } = getStockMarketValue(stock, assetsAnalysis, portfolioAnalysis?.stockPrices);
+      const { marketValue } = getStockMarketValue(stock, assetsAnalysis, portfolioAnalysis?.stockMarketData);
       return acc + marketValue;
     }, 0);
-  }, [assetsAnalysis, portfolioAnalysis?.stockPrices, stocks]);
+  }, [assetsAnalysis, portfolioAnalysis?.stockMarketData, stocks]);
 
   return useMemo(
     () =>
@@ -26,7 +26,7 @@ export const useAssetsBreakdown = (portfolioAnalysis: PortfolioAnalysis | undefi
           const { marketValue, volume } = getStockMarketValue(
             assetSymbol,
             assetsAnalysis,
-            portfolioAnalysis?.stockPrices,
+            portfolioAnalysis?.stockMarketData,
           );
 
           const unrealizedProfitOrLoss =
@@ -48,7 +48,7 @@ export const useAssetsBreakdown = (portfolioAnalysis: PortfolioAnalysis | undefi
           const potentialValue = assetEvents?.openEvents
             ?.concat(assetEvents.openPositions)
             .reduce((acc: number, event) => {
-              const currentPrice = portfolioAnalysis?.stockPrices[assetSymbol]?.price[formatDate(new Date())];
+              const currentPrice = portfolioAnalysis?.stockMarketData[assetSymbol]?.price[formatDate(new Date())];
               const lotSize = assetSymbol in CFDIndices ? CFDIndices[assetSymbol].lotSize : 1;
               const volume = event.volume * lotSize;
               return acc + (currentPrice ? volume * currentPrice - event.volume * event.stockPriceOnBuy * lotSize : 0);
@@ -56,7 +56,8 @@ export const useAssetsBreakdown = (portfolioAnalysis: PortfolioAnalysis | undefi
 
           return {
             assetSymbol,
-            fullName: portfolioAnalysis?.stocksMetadata[assetSymbol].fullName ?? assetSymbol,
+            longName: portfolioAnalysis?.stockMarketData[assetSymbol].longName ?? assetSymbol,
+            instrumentType: portfolioAnalysis?.stockMarketData[assetSymbol].instrumentType,
             accProfitOrLoss,
             potentialValue,
             unrealizedProfitOrLoss,
@@ -65,6 +66,6 @@ export const useAssetsBreakdown = (portfolioAnalysis: PortfolioAnalysis | undefi
             marketValue,
           };
         }),
-    [assetsAnalysis, portfolioAnalysis?.stockPrices, portfolioAnalysis?.stocksMetadata, stocks, summedMarketValue],
+    [assetsAnalysis, portfolioAnalysis?.stockMarketData, stocks, summedMarketValue],
   );
 };

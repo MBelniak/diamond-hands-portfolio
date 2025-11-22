@@ -73,32 +73,27 @@ export type AssetsHistoricalData = {
   };
 };
 
-export type StockPricesRecord = {
+export type TickerMarketData = {
   currency: string;
   price: Record<ISODateString, number>; // date -> price
   splitAdjustedPrice: Record<ISODateString, number>; // date -> split adjusted price
+  longName: string;
+  instrumentType?: string;
 };
 
-export type TickerMetadata = {
-  name: string;
-  ticker: string;
-};
+export type StockMarketData = Record<StockSymbol, TickerMarketData>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>, longName: string}
 
-export type StocksHistoricalPrices = Record<StockSymbol, StockPricesRecord>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>}
 export type CashFlow = { amount: number; date: ISODateString }[]; // date -> cash flow
-export type StocksMetadata = Record<StockSymbol, { symbol: StockSymbol; fullName: string | null }>;
 
 export type PortfolioAnalysis = {
   assetsAnalysis: AssetsHistoricalData;
   portfolioTimeline: PortfolioValue[];
-  stockPrices: StocksHistoricalPrices;
-  stocksMetadata: StocksMetadata;
+  stockMarketData: StockMarketData;
   cashFlow: CashFlow;
 };
 
 export type PortfolioData = {
-  stockPrices: StocksHistoricalPrices;
-  stocksMetadata: StocksMetadata;
+  stockMarketData: StockMarketData;
   portfolioEvents: {
     cashEvents: CashEvent[];
     openPositions: PortfolioEvent[];

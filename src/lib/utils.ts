@@ -1,9 +1,9 @@
 import { type ClassValue, clsx } from "clsx";
 import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
-import { PortfolioData } from "@/lib/types";
+import { PortfolioData, StockMarketData } from "@/lib/types";
 import { openDB } from "idb";
-import { AssetsHistoricalData, StocksHistoricalPrices } from "@/lib/types";
+import { AssetsHistoricalData } from "@/lib/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -100,14 +100,14 @@ export const CFDIndices: Record<string, { lotSize: number }> = {
 export function getStockMarketValue(
   stock: string,
   assetsAnalysis?: AssetsHistoricalData,
-  stockPrices?: StocksHistoricalPrices,
+  stockMarketData?: StockMarketData,
   date: Date = new Date(),
 ): { marketValue: number; volume: number; currentPrice: number | undefined } {
   const assetEvents = assetsAnalysis?.[stock];
   const openPositions = assetEvents?.openPositions ?? [];
   const lotSize = stock in CFDIndices ? CFDIndices[stock].lotSize : 1;
   const dateStr = formatDate(date);
-  const currentPrice = stockPrices?.[stock]?.price?.[dateStr];
+  const currentPrice = stockMarketData?.[stock]?.price?.[dateStr];
 
   const volume = openPositions.reduce((s: number, pos) => s + (pos.volume ?? 0) * lotSize, 0);
   const marketValue = openPositions.reduce(

@@ -6,6 +6,7 @@ import { Asset } from "../_types";
 import { Button } from "@/components/ui/button";
 import { TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 
 export function getProfitLossTextClass(value: number, maxAbs: number): string {
   if (maxAbs > 0) {
@@ -46,13 +47,17 @@ export const columns: ColumnDef<Asset & { profitScale: number }>[] = [
     header: "Asset",
     cell: (info) => {
       const symbol = info.getValue() as string;
-      const fullName = info.row.original.fullName;
+      const fullName = info.row.original.longName;
+      const instrumentType = info.row.original.instrumentType;
       return (
-        <div className="max-w-40">
-          <p className="font-medium">{symbol}</p>
-          <p className="text-xs text-muted-foreground whitespace-pre-wrap overflow-hidden text-ellipsis line-clamp-3">
-            {fullName}
-          </p>
+        <div className="max-w-40 flex gap-1 items-center justify-between">
+          <div>
+            <p className="font-medium">{symbol}</p>
+            <p className="text-xs text-muted-foreground whitespace-pre-wrap overflow-hidden text-ellipsis line-clamp-3">
+              {fullName}
+            </p>
+          </div>
+          <div>{instrumentType && <Badge variant="outline">{instrumentType}</Badge>}</div>
         </div>
       );
     },

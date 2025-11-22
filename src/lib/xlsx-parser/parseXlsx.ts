@@ -3,22 +3,11 @@ import XLSX from "xlsx/xlsx.js";
 import { isAfter, isSameDay, startOfDay } from "date-fns";
 import { addDays } from "date-fns/addDays";
 import { isBefore } from "date-fns/isBefore";
-import {
-  CashEvent,
-  PortfolioData,
-  type PortfolioEvent,
-  type Split,
-  StockPricesRecord,
-  StocksHistoricalPrices,
-  StocksMetadata,
-  StockSymbol,
-  TickerMetadata,
-} from "../types";
+import { CashEvent, PortfolioData, type PortfolioEvent, type Split, StockMarketData, TickerMarketData } from "../types";
 import { createClient } from "redis";
 import {
   getExchangeRatesRedisKey,
-  getStockPricesRedisKey,
-  getTickerMetadataRedisKey,
+  getStockPricesRedisKey as getTickerMarketDataRedisKey,
   REDIS_EXPIRE_IN_DAY,
 } from "../redis";
 import {
@@ -35,8 +24,7 @@ import { setTimeout } from "node:timers/promises";
 import { formatDate } from "@/lib/utils";
 import { UserEventsRepository } from "@/database/UserEventsRepository";
 import { User } from "@clerk/nextjs/server";
-import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
-import { pick } from "lodash-es";
+import { BenchmarkIndex } from "@/lib/benchmarks";
 
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 
@@ -196,7 +184,7 @@ function getCashAndStocksEvents(workbook: any): PortfolioData["portfolioEvents"]
   };
 }
 
-async function fetchHistoricalStockData(
+async function fetchHistoricalTickerMarketData(
   symbol: string,
   startDate: Date,
   endDate: Date,
@@ -204,7 +192,13 @@ async function fetchHistoricalStockData(
   chart?: {
     result?: {
       timestamp?: number[];
-      meta?: { currency: string; regularMarketPrice: number; currentTradingPeriod: { regular: { end: number } } };
+      meta?: {
+        currency: string;
+        regularMarketPrice: number;
+        longName: string;
+        instrumentType?: string;
+        currentTradingPeriod: { regular: { end: number } };
+      };
       indicators?: {
         quote?: {
           close: number[];
@@ -245,7 +239,7 @@ function parseSplits(splits: Record<string, { date: number; numerator: number; d
   }));
 }
 
-function populatePriceMapForDate(date: Date, closePrice: number, splits: Split[], prices: StockPricesRecord) {
+function populatePriceMapForDate(date: Date, closePrice: number, splits: Split[], prices: TickerMarketData) {
   const isSplitApplicable = (split: Split): boolean => isBefore(date, new Date(split.effective_date));
 
   const dateKey = formatDate(date);
@@ -270,8 +264,8 @@ async function fetchStockClosePriceRange(
   symbol: string,
   startDate: Date,
   endDate: Date,
-): Promise<StockPricesRecord | null> {
-  const data = await fetchHistoricalStockData(symbol, startDate, endDate);
+): Promise<TickerMarketData | null> {
+  const data = await fetchHistoricalTickerMarketData(symbol, startDate, endDate);
   if (data) {
     const timestamp = data.chart?.result?.[0]?.timestamp;
     const currency = data.chart?.result?.[0]?.meta?.currency ?? "USD";
@@ -282,9 +276,11 @@ async function fetchStockClosePriceRange(
     const tradingPeriodRegularEndDate = tradingPeriodRegularEndTimestamp
       ? new Date(tradingPeriodRegularEndTimestamp * 1000)
       : null;
+    const longName = data.chart?.result?.[0]?.meta?.longName ?? symbol;
+    const instrumentType = data.chart?.result?.[0]?.meta?.instrumentType;
 
     if (timestamp && close) {
-      const pricesRecord = { currency, price: {}, splitAdjustedPrice: {} };
+      const pricesRecord = { currency, price: {}, splitAdjustedPrice: {}, longName, instrumentType };
 
       for (let i = 0; i < timestamp.length; i++) {
         const date = new Date(timestamp[i] * 1000);
@@ -313,11 +309,7 @@ async function fetchStockClosePriceRange(
 }
 
 // Fetches stock prices and fills in empty dates by carrying forward the most recent price
-async function populateStockPricesForSymbol(
-  symbol: string,
-  startDate: Date,
-  endDate: Date,
-): Promise<StockPricesRecord> {
+async function getTickerMarketData(symbol: string, startDate: Date, endDate: Date): Promise<TickerMarketData> {
   const currencyAndPrices = await fetchStockClosePriceRange(symbol, startDate, endDate);
 
   if (currencyAndPrices) {
@@ -337,14 +329,14 @@ async function populateStockPricesForSymbol(
       }
     });
     await redis.set(
-      getStockPricesRedisKey(symbol, startDate, endDate),
+      getTickerMarketDataRedisKey(symbol, startDate, endDate),
       JSON.stringify(currencyAndPrices),
       REDIS_EXPIRE_IN_DAY,
     );
     return currencyAndPrices;
   }
 
-  return { currency: "USD", price: {}, splitAdjustedPrice: {} };
+  return { currency: "USD", price: {}, splitAdjustedPrice: {}, longName: symbol };
 }
 
 async function fetchExchangeRates(
@@ -394,28 +386,59 @@ async function fetchExchangeRates(
   return exchangeRates;
 }
 
+const getRawMarketData = async (stocks: Set<string>, startDate: Date, endDate: Date) => {
+  return await Promise.all(
+    Array.from(stocks).map(async (symbol) => {
+      let marketData: TickerMarketData;
+      if (await redis.exists(getTickerMarketDataRedisKey(symbol, startDate, endDate))) {
+        marketData = JSON.parse((await redis.get(getTickerMarketDataRedisKey(symbol, startDate, endDate))) as string);
+      } else {
+        marketData = await getTickerMarketData(symbol, startDate, endDate);
+      }
+      return { symbol, marketData };
+    }),
+  );
+};
+
 /**
  * Returns prices in stock's original currency
  * @param stocks
  * @param startDate
  */
-async function getPricesForStocks(stocks: Set<string>, startDate: Date): Promise<StocksHistoricalPrices> {
+async function getStockMarketData(stocks: Set<string>, startDate: Date): Promise<StockMarketData> {
   const endDate = new Date();
-  const stockPricesRecord: StocksHistoricalPrices = {};
+  const stockMarketData: StockMarketData = {};
 
-  await Promise.all(
-    Array.from(stocks).map(async (symbol) => {
-      if (await redis.exists(getStockPricesRedisKey(symbol, startDate, endDate))) {
-        stockPricesRecord[symbol] = JSON.parse(
-          (await redis.get(getStockPricesRedisKey(symbol, startDate, endDate))) as string,
-        );
-      } else {
-        stockPricesRecord[symbol] = await populateStockPricesForSymbol(symbol, startDate, endDate);
-      }
-    }),
+  const rawMarketData = await getRawMarketData(stocks, startDate, endDate);
+
+  rawMarketData.forEach(({ symbol, marketData }) => {
+    stockMarketData[symbol] = marketData;
+  });
+
+  const currencies = new Set(
+    Object.values(stockMarketData)
+      .map(({ currency }) => currency)
+      .filter(Boolean),
   );
 
-  return stockPricesRecord;
+  const exchangeRates = await fetchExchangeRates(currencies, startDate).catch(
+    () => ({}) as Record<string, Record<string, number>>,
+  );
+
+  for (const [symbol, priceRecord] of Object.entries(stockMarketData)) {
+    for (const [date, price] of Object.entries(priceRecord.price)) {
+      stockMarketData[symbol].price[date] = convertToUSD(price, priceRecord.currency, exchangeRates[date] || {})!;
+    }
+    for (const [date, price] of Object.entries(priceRecord.splitAdjustedPrice)) {
+      stockMarketData[symbol].splitAdjustedPrice[date] = convertToUSD(
+        price,
+        priceRecord.currency,
+        exchangeRates[date] || {},
+      )!;
+    }
+  }
+
+  return stockMarketData;
 }
 
 function getStockSymbolsFromEvents(events: PortfolioEvent[]): Set<string> {
@@ -434,26 +457,6 @@ function getStockSymbolsFromEvents(events: PortfolioEvent[]): Set<string> {
   }, new Set<string>());
 }
 
-function convertPricesToUSD(
-  prices: StocksHistoricalPrices,
-  exchangeRates: Record<string, Record<string, number>>,
-): StocksHistoricalPrices {
-  return Object.entries(prices).reduce((acc, [symbol, priceRecord]) => {
-    acc[symbol] = {
-      currency: "USD",
-      price: {},
-      splitAdjustedPrice: {},
-    };
-    for (const [date, price] of Object.entries(priceRecord.price)) {
-      acc[symbol].price[date] = convertToUSD(price, priceRecord.currency, exchangeRates[date] || {})!;
-    }
-    for (const [date, price] of Object.entries(priceRecord.splitAdjustedPrice)) {
-      acc[symbol].splitAdjustedPrice[date] = convertToUSD(price, priceRecord.currency, exchangeRates[date] || {})!;
-    }
-    return acc;
-  }, {} as StocksHistoricalPrices);
-}
-
 const parsePortfolioEvents = (user: User, xlsxArrayBuffer: ArrayBuffer): PortfolioData["portfolioEvents"] => {
   console.log("Parsing portfolio from xlsx file");
   const workbook = XLSX.read(xlsxArrayBuffer);
@@ -467,73 +470,6 @@ const getPortfolioEvents = async (user: User): Promise<PortfolioData["portfolioE
 export async function uploadPortfolioData(user: User, xlsxArrayBuffer: ArrayBuffer): Promise<void> {
   const events = parsePortfolioEvents(user, xlsxArrayBuffer);
   await UserEventsRepository.saveEventsToDB(events, user);
-}
-
-const getTickerMetadata = async (stockSymbol: StockSymbol) => {
-  if (await redis.exists(getTickerMetadataRedisKey(stockSymbol))) {
-    return JSON.parse((await redis.get(getTickerMetadataRedisKey(stockSymbol))) as string) as TickerMetadata;
-  }
-
-  if (!process.env.API_NINJAS_KEY) {
-    console.warn("process.env.API_NINJAS_KEY not provided!");
-    return null;
-  }
-
-  const URL = `https://api.api-ninjas.com/v1/ticker?ticker=${stockSymbol}`;
-  console.log(`Fetching from ${URL}`);
-  const response = await fetch(URL, {
-    headers: {
-      "X-Api-Key": process.env.API_NINJAS_KEY as string,
-    },
-  });
-
-  if (response.ok) {
-    const metadata = pick(await response.json(), ["name", "ticker"]) as TickerMetadata;
-    await redis.set(getTickerMetadataRedisKey(stockSymbol), JSON.stringify(metadata));
-    return metadata;
-  } else {
-    const URL = `https://api.api-ninjas.com/v1/etf?ticker=${stockSymbol}`;
-    console.log(`Fetching from ${URL}`);
-    const response = await fetch(URL, {
-      headers: {
-        "X-Api-Key": process.env.API_NINJAS_KEY as string,
-      },
-    });
-    if (response.ok) {
-      const responseData = pick(await response.json(), ["etf_name", "etf_ticker"]);
-      const metadata = {
-        name: responseData.etf_name,
-        ticker: responseData.etf_ticker,
-      };
-      await redis.set(getTickerMetadataRedisKey(stockSymbol), JSON.stringify(metadata));
-      return metadata;
-    }
-  }
-  return null;
-};
-
-async function getStocksMetadata(stockSymbols: Set<string>): Promise<StocksMetadata> {
-  const result = await Promise.allSettled(
-    Array.from(stockSymbols)
-      .map(async (symbol) => {
-        return {
-          symbol,
-          fullName: (await getTickerMetadata(getStockAPISymbol(symbol)))?.name,
-        };
-      })
-      .concat(
-        Object.values(BenchmarkIndex).map((value) =>
-          Promise.resolve({
-            symbol: value,
-            fullName: BenchmarkIndexToName[value],
-          }),
-        ),
-      ),
-  );
-
-  return result
-    .filter((res) => res.status === "fulfilled")
-    .reduce((acc, res) => ({ ...acc, [res.value.symbol]: res.value }), {});
 }
 
 export async function getPortfolioData(user: User): Promise<PortfolioData | null> {
@@ -557,36 +493,11 @@ export async function getPortfolioData(user: User): Promise<PortfolioData | null
 
   const startDate = new Date(2022, 0, 0);
 
-  const [pricesResult, stocksMetadataResult] = await Promise.allSettled([
-    getPricesForStocks(stockSymbols, startDate),
-    getStocksMetadata(stockSymbols),
-  ]);
-
-  const prices =
-    pricesResult.status === "fulfilled"
-      ? (pricesResult.value as StocksHistoricalPrices)
-      : ({} as StocksHistoricalPrices);
-  const stocksMetadata =
-    stocksMetadataResult.status === "fulfilled"
-      ? (stocksMetadataResult.value as StocksMetadata)
-      : ({} as StocksMetadata);
-
-  const currencies = new Set(
-    Object.values(prices)
-      .map(({ currency }) => currency)
-      .filter(Boolean),
-  );
-
-  // fetchExchangeRates relies on prices -> run after prices resolved
-  const exchangeRates = await fetchExchangeRates(currencies, startDate).catch(
-    () => ({}) as Record<string, Record<string, number>>,
-  );
-
-  const pricesInUSD = convertPricesToUSD(prices, exchangeRates);
+  // Use new getStockMarketData function
+  const stockMarketData = await getStockMarketData(stockSymbols, startDate);
 
   return {
     portfolioEvents: events,
-    stockPrices: pricesInUSD,
-    stocksMetadata: stocksMetadata,
+    stockMarketData,
   };
 }

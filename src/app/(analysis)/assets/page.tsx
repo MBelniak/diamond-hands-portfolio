@@ -37,7 +37,7 @@ export default function AssetsPage() {
   // compute totals and keep separate from data (rendered in dedicated footer)
   const totalsRow = {
     assetSymbol: "Total",
-    fullName: "",
+    longName: "",
     volume: sumBy(assetsBreakdown, "volume"),
     marketValue: sumBy(assetsBreakdown, "marketValue"),
     accProfitOrLoss: sumBy(assetsBreakdown, "accProfitOrLoss"),

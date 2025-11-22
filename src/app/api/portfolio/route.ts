@@ -8,7 +8,6 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Example: fetch user-specific data
   const data = await getPortfolioData(user);
 
   return NextResponse.json(data);

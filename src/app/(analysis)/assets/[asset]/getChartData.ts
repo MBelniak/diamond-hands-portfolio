@@ -15,7 +15,7 @@ export const getChartData = (portfolioAnalysis: PortfolioAnalysis, asset: string
     if (!dataOnDate) {
       return {
         date: dateStr,
-        price: portfolioAnalysis.stockPrices[asset as string].splitAdjustedPrice[dateStr],
+        price: portfolioAnalysis.stockMarketData[asset as string].splitAdjustedPrice[dateStr],
         openMarker: undefined,
         closeMarker: undefined,
         volumeMarker: undefined,

@@ -25,7 +25,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
   const { asset } = use(params);
   const assetSymbol = decodeURIComponent(asset);
   const { data: portfolioAnalysis, error, isLoading } = usePortfolioAnalysis();
-  const assetFullName = portfolioAnalysis?.stocksMetadata[assetSymbol]?.fullName ?? assetSymbol;
+  const assetFullName = portfolioAnalysis?.stockMarketData[assetSymbol]?.longName ?? assetSymbol;
   const router = useRouter();
 
   useEffect(() => {
