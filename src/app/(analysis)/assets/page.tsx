@@ -7,6 +7,7 @@ import { useAssetsBreakdown } from "@/app/(analysis)/assets/_hooks/useAssetsBrea
 import { sortBy, sumBy } from "lodash-es";
 import { AssetsTable } from "./_components/AssetsTable";
 import { columns } from "./_components/columns";
+import { AssetsDonut } from "./_components/AssetsDonut";
 
 export default function AssetsPage() {
   const { data: portfolioAnalysis, error, isLoading } = usePortfolioAnalysis();
@@ -47,6 +48,26 @@ export default function AssetsPage() {
     profitScale: maxAbsProfit,
   } as (typeof tableDataScaled)[number] & { profitScale?: number };
 
+  const instrumentTypeBreakdownMap = assetsBreakdown.reduce<Record<string, number>>((acc, a) => {
+    const t = a.instrumentType ?? "Unknown";
+    acc[t] = (acc[t] || 0) + (a.marketValue ?? 0);
+    return acc;
+  }, {});
+
+  const instrumentTypeBreakdown = Object.entries(instrumentTypeBreakdownMap)
+    .map(([label, value]) => ({ label, value }))
+    .filter((d) => d.value > 0);
+
+  const allocationBreakdownMap = assetsBreakdown.reduce<Record<string, number>>((acc, a) => {
+    const t = a.assetSymbol ?? "Unknown";
+    acc[t] = (acc[t] || 0) + (a.marketValue ?? 0);
+    return acc;
+  }, {});
+
+  const allocationTypeBreakdown = Object.entries(allocationBreakdownMap)
+    .map(([label, value]) => ({ label, value }))
+    .filter((d) => d.value > 0);
+
   if (isLoading || error) {
     return (
       <>
@@ -57,9 +78,18 @@ export default function AssetsPage() {
   }
 
   return (
-    <div className="bg-white/80 dark:bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-3  w-full mx-4">
-      <div className="overflow-x-auto">
-        <AssetsTable columns={columns} data={tableDataScaled} totals={totalsRow} />
+    <div className="w-full flex flex-col gap-16">
+      <div className="bg-white/80 dark:bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-3 w-full mx-4">
+        <div className="overflow-x-auto">
+          <AssetsTable columns={columns} data={tableDataScaled} totals={totalsRow} />
+        </div>
+      </div>
+      <div>
+        <h3 className={"text-lg ml-8"}>Currently owned assets allocation</h3>
+        <div className={"w-full grid grid-cols-[repeat(auto-fit,minmax(500px,1fr))]"}>
+          <AssetsDonut data={allocationTypeBreakdown} />
+          <AssetsDonut data={instrumentTypeBreakdown} />
+        </div>
       </div>
     </div>
   );

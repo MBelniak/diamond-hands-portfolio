@@ -6,12 +6,16 @@ import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   useReactTable,
   SortingState,
+  PaginationState,
 } from "@tanstack/react-table";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { getProfitLossTextClass } from "./columns";
+import { Button } from "@/components/ui/button";
+import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -21,14 +25,18 @@ interface DataTableProps<TData, TValue> {
 
 export function AssetsTable<TData, TValue>({ columns, data, totals }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  // Add pagination state with fixed pageSize = 20
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 15 });
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting },
+    state: { sorting, pagination },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   return (
@@ -126,6 +134,53 @@ export function AssetsTable<TData, TValue>({ columns, data, totals }: DataTableP
           </TableFooter>
         ) : null}
       </Table>
+
+      {/* Pagination controls (20 rows per page) */}
+      <div className="flex items-center justify-between p-2">
+        <div className="flex items-center space-x-2">
+          <Button
+            className="px-2 py-1 border rounded disabled:opacity-50"
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+            aria-label="First page"
+            variant={"secondary"}
+          >
+            <ChevronFirst />
+          </Button>
+          <Button
+            className="px-2 py-1 border rounded disabled:opacity-50"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            aria-label="Previous page"
+            variant={"secondary"}
+          >
+            <ChevronLeft />
+          </Button>
+          <Button
+            className="px-2 py-1 border rounded disabled:opacity-50"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            aria-label="Next page"
+            variant={"secondary"}
+          >
+            <ChevronRight />
+          </Button>
+          <Button
+            className="px-2 py-1 border rounded disabled:opacity-50"
+            onClick={() => table.setPageIndex(Math.max(0, table.getPageCount() - 1))}
+            disabled={!table.getCanNextPage()}
+            aria-label="Last page"
+            variant={"secondary"}
+          >
+            <ChevronLast />
+          </Button>
+        </div>
+
+        <div className="text-sm">
+          Page {table.getState().pagination.pageIndex + 1} of {Math.max(1, table.getPageCount())} • Showing up to 15
+          rows per page
+        </div>
+      </div>
     </div>
   );
 }

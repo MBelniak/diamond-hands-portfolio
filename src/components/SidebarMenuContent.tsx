@@ -29,8 +29,8 @@ const items = [
 
 export const SidebarMenuContent = () => {
   // Theme switcher logic
-  const { getCurrentTheme, setCurrentTheme } = useCurrentTheme();
-  const [isDark, setIsDark] = useState(() => getCurrentTheme() === "dark");
+  const { theme, setCurrentTheme } = useCurrentTheme();
+  const [isDark, setIsDark] = useState(theme === "dark");
 
   // When toggled, update theme and localStorage
   const handleThemeToggle = () => {
