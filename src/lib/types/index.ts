@@ -9,14 +9,17 @@ export type Stock = {
 };
 
 export type ISODateString = string;
+export type ISODateTimeString = string;
 export type StockSymbol = string;
+export type Currency = string;
+export type ExchangeRates = Record<ISODateString, Record<Currency, number>>;
 
 export type PortfolioValue = {
   date: ISODateString;
   cash: number;
   balance: number;
   totalCapitalInvested: number;
-  stocks: Record<string, Stock>;
+  stocks: Record<StockSymbol, Stock>;
   portfolioValue: number;
   profitOrLoss: number;
   profitOrLossIfNotSelling?: number;
@@ -38,10 +41,10 @@ export type TWRValueTimeline = {
   totalCapitalInvested: number;
 }[];
 
-export type Split = { effective_date: ISODateString; split_factor: string };
+export type Split = { effective_date: ISODateString; split_factor: number };
 
 export type PortfolioEvent = {
-  date: ISODateString;
+  date: ISODateTimeString;
   type: typeof CASH | typeof STOCK_OPEN_POSITION | typeof STOCK_OPEN_EVENT | typeof STOCK_CLOSE_EVENT;
 } & (
   | {
@@ -54,11 +57,18 @@ export type PortfolioEvent = {
       stockSymbol: string | null;
     } & (
       | {
-          type: typeof STOCK_CLOSE_EVENT | typeof STOCK_OPEN_POSITION;
+          type: typeof STOCK_OPEN_POSITION;
           profitOrLoss: number;
+          openPrice: number;
+        }
+      | {
+          type: typeof STOCK_CLOSE_EVENT;
+          profitOrLoss: number;
+          closePrice: number;
         }
       | {
           type: typeof STOCK_OPEN_EVENT;
+          openPrice: number;
         }
     ))
 );
@@ -66,7 +76,7 @@ export type PortfolioEvent = {
 export type CashEvent = PortfolioEvent & { type: typeof CASH };
 
 export type AssetsHistoricalData = {
-  [stockSymbol: string]: {
+  [stockSymbol: StockSymbol]: {
     openPositions: { volume: number; stockPriceOnBuy: number; date: ISODateString }[];
     openEvents: { volume: number; stockPriceOnBuy: number; date: ISODateString }[];
     closeEvents: { volume: number; stockPriceOnSell: number; profitOrLoss: number; date: ISODateString }[];
@@ -79,6 +89,7 @@ export type TickerMarketData = {
   splitAdjustedPrice: Record<ISODateString, number>; // date -> split adjusted price
   longName: string;
   instrumentType?: string;
+  splits: Split[];
 };
 
 export type StockMarketData = Record<StockSymbol, TickerMarketData>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>, longName: string}

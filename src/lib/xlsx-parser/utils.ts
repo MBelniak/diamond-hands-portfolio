@@ -1,4 +1,5 @@
 import { isBefore, isSameDay } from "date-fns";
+import { Currency } from "@/lib/types";
 
 export function symbolToYahooSuffix(symbol: string): string {
   if (symbol.endsWith(".UK")) {
@@ -19,6 +20,9 @@ export function getStockAPISymbol(symbol: string) {
   }
   if (symbol === "GOLD") {
     return "GC=F"; // Gold Futures
+  }
+  if (symbol === "DE40") {
+    return "^GDAXI"; //DAX index
   }
   if (symbol === "US100") {
     return "^NDX"; // us 100 index
@@ -48,7 +52,7 @@ export function getDateRange(start: Date, end: Date): Date[] {
 export function convertToUSD(
   price: number | undefined,
   currency: string,
-  rates: Record<string, number>,
+  rates: Record<Currency, number>,
 ): number | undefined {
   if (!currency || currency === "USD" || price === undefined) {
     return price;

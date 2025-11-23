@@ -90,6 +90,9 @@ export const CFDIndices: Record<string, { lotSize: number }> = {
   OIL: {
     lotSize: 1000,
   },
+  DE40: {
+    lotSize: 20,
+  },
 };
 
 /**

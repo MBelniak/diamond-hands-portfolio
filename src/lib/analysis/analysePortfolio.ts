@@ -116,17 +116,13 @@ function getAssetsAnalysis(
   stockOpenPositions: PortfolioEvent[],
   stockClosedPositionsOpenEvents: PortfolioEvent[],
   stockCloseEvents: PortfolioEvent[],
-  stockMarketData: StockMarketData,
 ): AssetsHistoricalData {
   return stockOpenPositions
     .concat(stockClosedPositionsOpenEvents)
     .concat(stockCloseEvents)
     .reduce((acc, stockEvent) => {
-      const dateKey = formatDate(new Date(stockEvent.date));
       const stockSymbol = "stockSymbol" in stockEvent ? stockEvent["stockSymbol"] : null;
       if (!stockSymbol) return acc;
-
-      const eventStockPrice = stockMarketData[stockSymbol]?.splitAdjustedPrice[dateKey];
 
       if (!acc[stockSymbol]) {
         acc[stockSymbol] = {
@@ -144,7 +140,7 @@ function getAssetsAnalysis(
               {
                 date: formatDate(new Date(stockEvent.date)),
                 volume: stockEvent.stocksVolumeChange,
-                stockPriceOnBuy: eventStockPrice,
+                stockPriceOnBuy: stockEvent.openPrice,
               },
             ],
           },
@@ -160,7 +156,7 @@ function getAssetsAnalysis(
               {
                 date: formatDate(new Date(stockEvent.date)),
                 volume: stockEvent.stocksVolumeChange,
-                stockPriceOnBuy: eventStockPrice,
+                stockPriceOnBuy: stockEvent.openPrice,
               },
             ],
           },
@@ -176,7 +172,7 @@ function getAssetsAnalysis(
               {
                 date: formatDate(new Date(stockEvent.date)),
                 volume: stockEvent.stocksVolumeChange,
-                stockPriceOnSell: eventStockPrice,
+                stockPriceOnSell: stockEvent.closePrice,
                 profitOrLoss: stockEvent.profitOrLoss,
               },
             ],
@@ -320,12 +316,7 @@ export const analysePortfolio = (
   );
   const portfolioTimeline = getPortfolioValueData(allEvents, portfolioData.stockMarketData, selectedBenchmark);
 
-  const assetsAnalysis = getAssetsAnalysis(
-    openPositions,
-    closedStocksOpenEvents,
-    closedStocksCloseEvents,
-    portfolioData.stockMarketData,
-  );
+  const assetsAnalysis = getAssetsAnalysis(openPositions, closedStocksOpenEvents, closedStocksCloseEvents);
   const cashFlow = getCashFlow(cashEvents);
 
   return {

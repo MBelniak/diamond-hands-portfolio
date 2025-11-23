@@ -22,8 +22,11 @@ export const usePortfolioAnalysis = (): UseQueryResult<PortfolioAnalysis | null>
         await portfolioDataDB.setPortfolioData(data);
         return analysePortfolio(data, selectedBenchmark);
       }
-      return null;
+      throw new Error("Portfolio does not exists for this user");
     },
     staleTime: Infinity,
+    retry: false,
+    refetchOnMount: false,
+    retryOnMount: false,
   });
 };
