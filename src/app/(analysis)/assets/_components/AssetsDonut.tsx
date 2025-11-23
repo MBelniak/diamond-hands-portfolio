@@ -30,8 +30,8 @@ export function AssetsDonut({ data }: { data: Slice[] }) {
             nameKey="label"
             cx="50%"
             cy="50%"
-            innerRadius="50%"
-            outerRadius="80%"
+            innerRadius="40%"
+            outerRadius="65%"
             paddingAngle={2}
             label={({ percent, name }) => `${name} ${Math.round(((percent || 0) as number) * 100)}%`}
             labelLine={true}
