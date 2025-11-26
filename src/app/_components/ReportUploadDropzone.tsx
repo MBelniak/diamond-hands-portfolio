@@ -4,8 +4,9 @@ import React from "react";
 import { useDropzone } from "react-dropzone";
 import { useUploadXlsxAnalysisFiles } from "@/hooks/useUploadXlsxAnalysisFiles";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
+import { portfolioDataDB } from "@/lib/utils";
 
-export const LandingPage = () => {
+export const ReportUploadDropzone = () => {
   const { refetch: refetchPortfolio } = usePortfolioAnalysis();
 
   const {
@@ -13,7 +14,7 @@ export const LandingPage = () => {
     isPending: isUploading,
     error: uploadError,
   } = useUploadXlsxAnalysisFiles(() => {
-    refetchPortfolio().then();
+    portfolioDataDB.removePortfolioData().then(() => refetchPortfolio());
   });
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

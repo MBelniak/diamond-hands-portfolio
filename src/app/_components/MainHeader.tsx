@@ -1,10 +1,15 @@
+"use client";
+
+import React from "react";
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { SettingsDropdownMenu } from "./SettingsDropdownMenu";
+import { FileUploadButton } from "./FileUploadButton";
 
 export const MainHeader = () => {
   return (
     <header className="flex justify-end items-center p-4 gap-4 h-16">
       <SettingsDropdownMenu />
+      <FileUploadButton />
       <SignedOut>
         <SignInButton />
         <SignUpButton>

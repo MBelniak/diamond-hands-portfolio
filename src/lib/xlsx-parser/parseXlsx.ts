@@ -11,6 +11,7 @@ import {
   type Split,
   StockMarketData,
   TickerMarketData,
+  XlsxColumn,
 } from "../types";
 import { createClient } from "redis";
 import {
@@ -33,6 +34,7 @@ import { formatDate } from "@/lib/utils";
 import { UserEventsRepository } from "@/database/UserEventsRepository";
 import { User } from "@clerk/nextjs/server";
 import { BenchmarkIndex } from "@/lib/benchmarks";
+import { uniqBy } from "lodash-es";
 
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 
@@ -87,17 +89,23 @@ function getCashEvents(workbook: any): CashEvent[] {
   const cashSheet = workbook.Sheets[CASH_OPERATION_HISTORY];
   const cashData: Record<string, string>[] = XLSX.utils.sheet_to_json(cashSheet);
 
-  const { headerIdx, headerKeys } = extractHeaderAndKeys(cashData, ["Time", "Amount", "Type"] as const);
+  const { headerIdx, headerKeys } = extractHeaderAndKeys(cashData, [
+    XlsxColumn.CASH_OPERATION_ID,
+    XlsxColumn.TIME,
+    XlsxColumn.AMOUNT,
+    XlsxColumn.TYPE,
+  ] as const);
 
   return cashData
     .slice(headerIdx + 1)
-    .filter((row) => row[headerKeys["Time"]])
+    .filter((row) => row[headerKeys[XlsxColumn.TIME]])
     .map((row) => ({
-      date: parseXLSXDate(row[headerKeys["Time"]]).toISOString(),
-      cashChange: parseFloat(row[headerKeys["Amount"]]) || 0,
+      id: row[headerKeys[XlsxColumn.CASH_OPERATION_ID]] || "",
+      date: parseXLSXDate(row[headerKeys[XlsxColumn.TIME]]).toISOString(),
+      cashChange: parseFloat(row[headerKeys[XlsxColumn.AMOUNT]]) || 0,
       type: CASH,
-      cashWithdrawalOrDeposit: ["deposit", "withdrawal", "transfer"].includes(row[headerKeys["Type"]])
-        ? parseFloat(row[headerKeys["Amount"]]) || 0
+      cashWithdrawalOrDeposit: ["deposit", "withdrawal", "transfer"].includes(row[headerKeys[XlsxColumn.TYPE]])
+        ? parseFloat(row[headerKeys[XlsxColumn.AMOUNT]]) || 0
         : null,
     }));
 }
@@ -108,23 +116,25 @@ function getStockOpenPositions(workbook: any): PortfolioEvent[] {
   const openData: Record<string, string>[] = XLSX.utils.sheet_to_json(openSheet);
 
   const { headerIdx, headerKeys } = extractHeaderAndKeys(openData, [
-    "Open time",
-    "Volume",
-    "Symbol",
-    "Gross P/L",
-    "Open price",
+    XlsxColumn.OPEN_TIME,
+    XlsxColumn.VOLUME,
+    XlsxColumn.SYMBOL,
+    XlsxColumn.GROSS_PL,
+    XlsxColumn.OPEN_PRICE,
+    XlsxColumn.POSITION_ID,
   ]);
 
   return openData
     .slice(headerIdx + 1)
-    .filter((row) => row[headerKeys["Open time"]])
+    .filter((row) => row[headerKeys[XlsxColumn.OPEN_TIME]])
     .map((row) => ({
-      date: parseXLSXDate(row[headerKeys["Open time"]]).toISOString(),
-      stocksVolumeChange: parseFloat(row[headerKeys["Volume"]]) || 0,
+      id: row[headerKeys[XlsxColumn.POSITION_ID]] ?? "",
+      date: parseXLSXDate(row[headerKeys[XlsxColumn.OPEN_TIME]]).toISOString(),
+      stocksVolumeChange: parseFloat(row[headerKeys[XlsxColumn.VOLUME]]) || 0,
       type: STOCK_OPEN_POSITION,
-      stockSymbol: row[headerKeys["Symbol"]] || null,
-      profitOrLoss: parseFloat(row[headerKeys["Gross P/L"]]) || 0,
-      openPrice: parseFloat(row[headerKeys["Open price"]]) || 0,
+      stockSymbol: row[headerKeys[XlsxColumn.SYMBOL]] || null,
+      profitOrLoss: parseFloat(row[headerKeys[XlsxColumn.GROSS_PL]]) || 0,
+      openPrice: parseFloat(row[headerKeys[XlsxColumn.OPEN_PRICE]]) || 0,
     }));
 }
 
@@ -135,13 +145,14 @@ function getClosedOperations(workbook: any) {
   const closedData: Record<string, string>[] = XLSX.utils.sheet_to_json(closedSheet);
 
   const { headerIdx, headerKeys } = extractHeaderAndKeys(closedData, [
-    "Close time",
-    "Open time",
-    "Volume",
-    "Symbol",
-    "Gross P/L",
-    "Open price",
-    "Close price",
+    XlsxColumn.CLOSE_TIME,
+    XlsxColumn.OPEN_TIME,
+    XlsxColumn.VOLUME,
+    XlsxColumn.SYMBOL,
+    XlsxColumn.GROSS_PL,
+    XlsxColumn.OPEN_PRICE,
+    XlsxColumn.POSITION_ID,
+    XlsxColumn.CLOSE_PRICE,
   ] as const);
 
   return { closedData, headerIdx, headerKeys };
@@ -153,13 +164,14 @@ function getClosedStocksOpenEvents(workbook: any): PortfolioEvent[] {
 
   return closedData
     .slice(headerIdx + 1)
-    .filter((row) => row[headerKeys["Open time"]])
+    .filter((row) => row[headerKeys[XlsxColumn.OPEN_TIME]])
     .map((row) => ({
-      date: parseXLSXDate(row[headerKeys["Open time"]]).toISOString(),
-      stocksVolumeChange: parseFloat(row[headerKeys["Volume"]]) || 0,
+      id: row[headerKeys[XlsxColumn.POSITION_ID]] ?? "",
+      date: parseXLSXDate(row[headerKeys[XlsxColumn.OPEN_TIME]]).toISOString(),
+      stocksVolumeChange: parseFloat(row[headerKeys[XlsxColumn.VOLUME]]) || 0,
       type: STOCK_OPEN_EVENT,
-      stockSymbol: row[headerKeys["Symbol"]] || null,
-      openPrice: parseFloat(row[headerKeys["Open price"]]) || 0,
+      stockSymbol: row[headerKeys[XlsxColumn.SYMBOL]] || null,
+      openPrice: parseFloat(row[headerKeys[XlsxColumn.OPEN_PRICE]]) || 0,
     }));
 }
 
@@ -169,14 +181,15 @@ function getClosedStocksCloseEvents(workbook: any): PortfolioEvent[] {
 
   return closedData
     .slice(headerIdx + 1)
-    .filter((row) => row[headerKeys["Close time"]])
+    .filter((row) => row[headerKeys[XlsxColumn.CLOSE_TIME]])
     .map((row) => ({
-      date: parseXLSXDate(row[headerKeys["Close time"]]).toISOString(),
-      stocksVolumeChange: parseFloat(row[headerKeys["Volume"]]) || 0,
+      id: row[headerKeys[XlsxColumn.POSITION_ID]] ?? "",
+      date: parseXLSXDate(row[headerKeys[XlsxColumn.CLOSE_TIME]]).toISOString(),
+      stocksVolumeChange: parseFloat(row[headerKeys[XlsxColumn.VOLUME]]) || 0,
       type: STOCK_CLOSE_EVENT,
-      stockSymbol: row[headerKeys["Symbol"]] || null,
-      profitOrLoss: parseFloat(row[headerKeys["Gross P/L"]] || "0"),
-      closePrice: parseFloat(row[headerKeys["Close price"]]) || 0,
+      stockSymbol: row[headerKeys[XlsxColumn.SYMBOL]] || null,
+      profitOrLoss: parseFloat(row[headerKeys[XlsxColumn.GROSS_PL]] || "0"),
+      closePrice: parseFloat(row[headerKeys[XlsxColumn.CLOSE_PRICE]]) || 0,
     }));
 }
 
@@ -528,9 +541,57 @@ const adjustEventPrices = (
   });
 };
 
+const filterById =
+  <T extends { id: string }>(events: T[]) =>
+  (event: PortfolioEvent) =>
+    !events.some((e) => e.id === event.id);
+
+const filterOutClosedPositions =
+  (closedPositions: PortfolioData["portfolioEvents"]["closedStocksCloseEvents"]) => (event: PortfolioEvent) =>
+    !closedPositions.some((closedEvent) => closedEvent.id === event.id);
+
+const mergeEvents = (
+  existingEvents: PortfolioData["portfolioEvents"],
+  events: PortfolioData["portfolioEvents"],
+): PortfolioData["portfolioEvents"] => {
+  return {
+    cashEvents: uniqBy(
+      events.cashEvents.concat(...existingEvents.cashEvents.filter(filterById(events.cashEvents))),
+      "id",
+    ),
+    openPositions: uniqBy(
+      events.openPositions.concat(
+        ...existingEvents.openPositions
+          .filter(filterById(events.openPositions))
+          .filter(filterOutClosedPositions(events.closedStocksCloseEvents)),
+      ),
+      "id",
+    ),
+    closedStocksOpenEvents: uniqBy(
+      events.closedStocksOpenEvents.concat(
+        ...existingEvents.closedStocksOpenEvents.filter(filterById(events.closedStocksOpenEvents)),
+      ),
+      "id",
+    ),
+    closedStocksCloseEvents: uniqBy(
+      events.closedStocksCloseEvents.concat(
+        ...existingEvents.closedStocksCloseEvents.filter(filterById(events.closedStocksCloseEvents)),
+      ),
+      "id",
+    ),
+  };
+};
+
 export async function uploadPortfolioData(user: User, xlsxArrayBuffer: ArrayBuffer): Promise<void> {
   const events = parsePortfolioEvents(xlsxArrayBuffer);
-  await UserEventsRepository.saveEventsToDB(events, user);
+  const existingEvents = await getPortfolioEvents(user);
+
+  if (existingEvents) {
+    const mergedEvents = mergeEvents(existingEvents, events);
+    await UserEventsRepository.saveEventsToDB(mergedEvents, user);
+  } else {
+    await UserEventsRepository.saveEventsToDB(events, user);
+  }
 }
 
 export async function getPortfolioData(user: User): Promise<PortfolioData | null> {

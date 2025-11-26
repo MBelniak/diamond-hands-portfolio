@@ -43,9 +43,25 @@ export type TWRValueTimeline = {
 
 export type Split = { effective_date: ISODateString; split_factor: number };
 
+export enum XlsxColumn {
+  TIME = "Time",
+  AMOUNT = "Amount",
+  TYPE = "Type",
+  POSITION_ID = "Position",
+  CASH_OPERATION_ID = "ID",
+  OPEN_TIME = "Open time",
+  CLOSE_TIME = "Close time",
+  VOLUME = "Volume",
+  SYMBOL = "Symbol",
+  GROSS_PL = "Gross P/L",
+  OPEN_PRICE = "Open price",
+  CLOSE_PRICE = "Close price",
+}
+
 export type PortfolioEvent = {
   date: ISODateTimeString;
   type: typeof CASH | typeof STOCK_OPEN_POSITION | typeof STOCK_OPEN_EVENT | typeof STOCK_CLOSE_EVENT;
+  id: string;
 } & (
   | {
       type: typeof CASH;

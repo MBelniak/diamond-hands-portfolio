@@ -1,7 +1,7 @@
 import { CashEvent, PortfolioData, type PortfolioEvent } from "@/lib/types";
 import container from "@/iocContainer";
 import { AbstractDatabaseClient } from "@/database/index";
-import { Models, Query } from "node-appwrite";
+import { Models, Query, TablesDB } from "node-appwrite";
 import { User } from "@clerk/nextjs/server";
 import { STORAGE_FILE_ID, USER_FILES_TABLE, USER_ID_COLUMN } from "@/database/consts";
 import { v4 } from "uuid";
@@ -10,17 +10,21 @@ import Row = Models.Row;
 export class UserEventsRepository {
   static async saveEventsToDB(events: PortfolioData["portfolioEvents"], user: User) {
     const db = container.get(AbstractDatabaseClient);
+    const dbClient = db.getDBClient();
     console.log("Storing portfolio in DB");
 
     const storage = db.getStorage();
+    const eventsAsFile = new File([JSON.stringify(events)], "data.json", { type: "application/json" });
+
+    const newestUserFileRecord = await UserEventsRepository.getNewestUserFileRecord(user, dbClient, db.getDatabaseId());
+
     const result = await storage.createFile({
       bucketId: process.env.APPWRITE_BUCKET_ID!,
       fileId: v4(),
-      file: new File([JSON.stringify(events)], "data.json", { type: "application/json" }),
+      file: eventsAsFile,
     });
 
     const userId = user.id;
-    const dbClient = db.getDBClient();
     await dbClient.createRow({
       databaseId: db.getDatabaseId(),
       tableId: USER_FILES_TABLE,
@@ -30,6 +34,18 @@ export class UserEventsRepository {
         [STORAGE_FILE_ID]: result.$id,
       },
     });
+
+    if (newestUserFileRecord != null) {
+      // Remove stale file from storage
+      try {
+        await storage.deleteFile({
+          bucketId: db.getBucketId(),
+          fileId: newestUserFileRecord[STORAGE_FILE_ID],
+        });
+      } catch (error) {
+        console.error("Error deleting old file from storage:", error);
+      }
+    }
   }
 
   static async getEventsFromDB(user: User) {
@@ -38,18 +54,8 @@ export class UserEventsRepository {
     const dbClient = db.getDBClient();
 
     console.log("Fetching portfolio from DB");
-    const rows = await dbClient.listRows<
-      Row & {
-        [USER_ID_COLUMN]: string;
-        [STORAGE_FILE_ID]: string;
-      }
-    >({
-      databaseId: db.getDatabaseId(),
-      tableId: USER_FILES_TABLE,
-      queries: [Query.equal(USER_ID_COLUMN, [user.id]), Query.orderDesc("$createdAt"), Query.limit(1)],
-    });
 
-    const newestRow = rows.rows.at(0);
+    const newestRow = await UserEventsRepository.getNewestUserFileRecord(user, dbClient, db.getDatabaseId());
 
     if (!newestRow) {
       return null;
@@ -69,5 +75,36 @@ export class UserEventsRepository {
       closedStocksOpenEvents: PortfolioEvent[];
       closedStocksCloseEvents: PortfolioEvent[];
     };
+  }
+
+  private static async getNewestUserFileRecord(
+    user: User,
+    dbClient: TablesDB,
+    databaseId: string,
+  ): Promise<
+    | (Models.Row & {
+        user_id: string;
+        storage_file_id: string;
+      })
+    | null
+  > {
+    const rows = await dbClient.listRows<
+      Row & {
+        [USER_ID_COLUMN]: string;
+        [STORAGE_FILE_ID]: string;
+      }
+    >({
+      databaseId,
+      tableId: USER_FILES_TABLE,
+      queries: [Query.equal(USER_ID_COLUMN, [user.id]), Query.orderDesc("$createdAt"), Query.limit(1)],
+    });
+
+    const newestRow = rows.rows.at(0);
+
+    if (!newestRow) {
+      return null;
+    }
+
+    return newestRow;
   }
 }
