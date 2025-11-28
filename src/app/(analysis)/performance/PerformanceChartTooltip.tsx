@@ -1,14 +1,6 @@
 import { useMemo } from "react";
 import { TooltipContentProps } from "recharts";
 
-const orderMap: Record<string, number> = {
-  portfolioValue: -1,
-  profit: 0,
-  realizedProfitOrLoss: 1,
-  cash: 2,
-  benchmarkStockValue: 3,
-};
-
 const formatValue = (value: number) => (typeof value === "number" ? value.toFixed(2) : value);
 const formatLabel = (l: unknown) => `Date: ${l}`;
 
@@ -27,7 +19,7 @@ export const CustomTooltip = ({ active, payload, label }: Partial<TooltipContent
     () =>
       payload
         ?.filter((p) => p.dataKey !== "profitPositive" && p.dataKey !== "profitNegative")
-        .sort((a, b) => (orderMap[a.dataKey as string] ?? 3) - (orderMap[b.dataKey as string] ?? 3)),
+        .sort((a, b) => b.value - a.value),
     [payload],
   );
 
