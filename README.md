@@ -6,19 +6,25 @@ Presents assets breakdown with potential profits if positions were never closed.
 
 It's just a playground to see what's possible with public yahoo API (historical stock prices, split events).
 
-### Third party APIs:
+### Third party APIs
 📈 query1.finance.yahoo.com for fetching historical stock prices and split events.\
 💱 Currency Exchange API for fetching historical currency exchange rates.\
 📇 Redis Cloud for caching stock prices and exchange rates, updated daily.\
 📇 Appwrite for storing users' stock events data.\
 🔑 Clerk for authentication
 
+### Key features
+✅ Track portfolio value, accumulated profit, cash balance\
+✅ Compare performance with established indexes, like S&P 500 or NASDAQ\
+✅ Analyze profits with Simple-Return, Time-Weighted-Return and Money-Weighted-Return metrics\
+✅ Upload new report - data will be merged accordingly\
+✅ See an overview of all owned assets, with a breakdown of their performance and allocation\
+✅ Look into open or close position events on a specific assets in a historical context
 
 ![Performance](performance.png)
 ![Assets](assets.png)
+![AssetsAllocation](assets allocation.png)
 ![Asset](asset.png)
-
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
