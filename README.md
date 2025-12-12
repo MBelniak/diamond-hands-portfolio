@@ -23,7 +23,7 @@ It's just a playground to see what's possible with public yahoo API (historical 
 
 ![Performance](performance.png)
 ![Assets](assets.png)
-![AssetsAllocation](assets allocation.png)
+![AssetsAllocation](assets_allocation.png)
 ![Asset](asset.png)
 
 ## Getting Started
