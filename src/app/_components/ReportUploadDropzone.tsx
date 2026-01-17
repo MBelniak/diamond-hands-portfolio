@@ -16,7 +16,7 @@ export const ReportUploadDropzone = () => {
     isPending: isUploading,
     error: uploadError,
   } = useUploadXlsxAnalysisFiles(() => {
-    portfolioDataDB.removePortfolioData().then(() => refetchPortfolio());
+    portfolioDataDB.removePortfolioData(selectedPortfolio).then(() => refetchPortfolio());
   });
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
