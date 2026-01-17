@@ -16,14 +16,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { getProfitLossTextClass } from "./columns";
 import { Button } from "@/components/ui/button";
 import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Asset } from "@/app/(analysis)/assets/_types";
 
-interface DataTableProps<TData, TValue> {
+interface AssetsDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  totals?: Partial<TData> | null;
+  totals: Partial<TData> | null;
 }
 
-export function AssetsTable<TData, TValue>({ columns, data, totals }: DataTableProps<TData, TValue>) {
+export type AssetTableRecord = Asset & { profitScale: number };
+
+export function AssetsTable<TValue>({ columns, data, totals }: AssetsDataTableProps<AssetTableRecord, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   // Add pagination state with fixed pageSize = 20
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 15 });
@@ -101,8 +105,8 @@ export function AssetsTable<TData, TValue>({ columns, data, totals }: DataTableP
             <TableRow className="bg-gray-100 dark:bg-slate-700/80 font-bold">
               {columns.map((col, i) => {
                 const colAny = col as unknown as { accessorKey?: string; id?: string };
-                const key = colAny.accessorKey ?? colAny.id ?? String(i);
-                const totalsTyped = totals as Record<string, unknown>;
+                const key = colAny.accessorKey as keyof AssetTableRecord;
+                const totalsTyped = totals as AssetTableRecord;
                 const value = totalsTyped[key];
 
                 if (typeof value === "number") {
@@ -118,7 +122,20 @@ export function AssetsTable<TData, TValue>({ columns, data, totals }: DataTableP
                   }
 
                   if (key === "marketValue") {
-                    return <TableCell key={key}>{value.toFixed(2)}</TableCell>;
+                    const profit = totals.unrealizedProfitOrLoss ?? 0;
+                    const profitAsPercentage = (profit / ((totals.marketValue ?? 1) - profit)) * 100;
+                    const cls = getProfitLossTextClass(profit, totals.profitScale ?? 1);
+
+                    return (
+                      <TableCell key={key}>
+                        <div className={"flex flex-col"}>
+                          {value.toFixed(2)}
+                          <div className={cn(cls, "text-xs")}>
+                            {profit.toFixed(2) + (totals.marketValue ? ` (${profitAsPercentage.toFixed(2)}%)` : "")}
+                          </div>
+                        </div>
+                      </TableCell>
+                    );
                   }
 
                   return <TableCell key={key}>{value.toFixed(2)}</TableCell>;

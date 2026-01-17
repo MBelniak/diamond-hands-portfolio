@@ -36,6 +36,9 @@ export const useAssetsBreakdown = (portfolioAnalysis: PortfolioAnalysis | undefi
               return acc + openPosition.volume * openPosition.stockPriceOnBuy * lotSize;
             }, 0);
 
+          const unrealizedProfitOrLossPercentage =
+            (unrealizedProfitOrLoss / (marketValue - unrealizedProfitOrLoss) || 0) * 100;
+
           const realizedProfitOrLoss = assetEvents.closeEvents.reduce(
             (acc: number, closedPosition: { profitOrLoss: number }) => {
               return acc + closedPosition.profitOrLoss;
@@ -61,6 +64,7 @@ export const useAssetsBreakdown = (portfolioAnalysis: PortfolioAnalysis | undefi
             accProfitOrLoss,
             potentialValue,
             unrealizedProfitOrLoss,
+            unrealizedProfitOrLossPercentage,
             volume,
             allocation: summedMarketValue ? marketValue / summedMarketValue : 0,
             marketValue,

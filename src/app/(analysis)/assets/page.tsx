@@ -5,7 +5,7 @@ import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
 import { useAssetsBreakdown } from "@/app/(analysis)/assets/_hooks/useAssetsBreakdown";
 import { sortBy, sumBy } from "lodash-es";
-import { AssetsTable } from "./_components/AssetsTable";
+import { AssetsTable, AssetTableRecord } from "./_components/AssetsTable";
 import { columns } from "./_components/columns";
 import { AssetsDonut } from "./_components/AssetsDonut";
 import { Asset } from "./_types";
@@ -47,7 +47,7 @@ export default function AssetsPage() {
     potentialValue: sumBy(assetsBreakdown, "potentialValue"),
     allocation: 0,
     profitScale: maxAbsProfit,
-  } as (typeof tableDataScaled)[number] & { profitScale?: number };
+  } as AssetTableRecord;
 
   const preparePieChartDataByKey = (key: keyof Asset) => {
     const pieChartDataMap = assetsBreakdown.reduce<Record<string, number>>((acc, a) => {

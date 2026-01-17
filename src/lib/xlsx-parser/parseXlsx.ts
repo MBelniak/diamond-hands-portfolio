@@ -36,6 +36,12 @@ import { User } from "@clerk/nextjs/server";
 import { BenchmarkIndex } from "@/lib/benchmarks";
 import { uniqBy } from "lodash-es";
 
+if (!process.env.REDIS_URL) {
+  throw new Error(
+    "Please set the REDIS_URL environment variable in the .env file. Example: REDIS_URL=redis://localhost:6379",
+  );
+}
+
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 
 if (!process.env.EXCHANGE_RATES_API_KEY) {

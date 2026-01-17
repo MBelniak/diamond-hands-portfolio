@@ -4,6 +4,7 @@ export type Asset = {
   accProfitOrLoss: number;
   potentialValue: number;
   unrealizedProfitOrLoss: number;
+  unrealizedProfitOrLossPercentage: number;
   volume: number;
   allocation: number;
   marketValue: number;

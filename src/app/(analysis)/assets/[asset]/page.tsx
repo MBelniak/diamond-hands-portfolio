@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { Bar, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import React, { use, useEffect, useMemo } from "react";
+import React, { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DualRangeSlider } from "@/components/ui/dual-range-slider";
@@ -9,6 +9,7 @@ import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
 import { getChartData } from "@/app/(analysis)/assets/[asset]/getChartData";
 import { MIN_WINDOW_SIZE, useDateRange } from "@/hooks/useDateRange";
+import { Spinner } from "@/components/ui/spinner";
 
 const chartKeys = {
   stockPrice: "Price",
@@ -27,6 +28,8 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
   const { data: portfolioAnalysis, error, isLoading } = usePortfolioAnalysis();
   const assetFullName = portfolioAnalysis?.stockMarketData[assetSymbol]?.longName ?? assetSymbol;
   const router = useRouter();
+
+  const [isNavigatingBack, setIsNavigatingBack] = useState(false);
 
   useEffect(() => {
     if (error || (!isLoading && !portfolioAnalysis)) {
@@ -58,8 +61,15 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
     <div className={"flex flex-col w-full items-center gap-8 mb-16 mt-8"}>
       <div className={"w-full max-w-3xl flex"}>
         <Button onClick={() => router.push("/assets")} variant="ghost">
-          <Link href="/assets" className="text-md hover:underline inline-block py-6">
-            &larr; Back to Assets Overview
+          <Link
+            href="/assets"
+            className="text-md hover:underline inline-block py-6"
+            onClick={() => {
+              setIsNavigatingBack(true);
+            }}
+            aria-disabled={isNavigatingBack}
+          >
+            &larr; Back to Assets Overview {isNavigatingBack ? <Spinner className={"inline"} /> : ""}
           </Link>
         </Button>
       </div>
