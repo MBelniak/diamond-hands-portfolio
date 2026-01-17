@@ -5,7 +5,7 @@ import { clsx } from "clsx";
 import { profitOrLossTextColor } from "@/lib/utils";
 import React from "react";
 import { useStore } from "@/lib/store";
-import { PortfolioAnalysis } from "@/lib/types";
+import { PortfolioAnalysis, PortfolioCurrencyToSymbol } from "@/lib/types";
 import { ProfitMetrics } from "@/app/(analysis)/performance/ProfitMetrics";
 import { calculateMWR, calculateTWR, getCashFlowForBenchmarkComparison } from "@/lib/returnMetrics";
 import { BenchmarkIndexToName } from "@/lib/benchmarks";
@@ -14,7 +14,7 @@ import Link from "next/link";
 export const PerformanceSP500Summary: React.FC<{
   portfolioAnalysis: PortfolioAnalysis;
 }> = ({ portfolioAnalysis }) => {
-  const { selectedReturnMetric, selectedBenchmark } = useStore();
+  const { selectedReturnMetric, selectedBenchmark, selectedPortfolio } = useStore();
 
   const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
   const last = portfolioTimeline.at(-1)!;
@@ -50,11 +50,15 @@ export const PerformanceSP500Summary: React.FC<{
           </TooltipContent>
         </Tooltip>
       </strong>
-      <p className={"text-2xl font-bold"}>${last.benchmarkStockValue.toFixed(2)}</p>
+      <p className={"text-2xl font-bold"}>
+        {PortfolioCurrencyToSymbol[selectedPortfolio]}
+        {last.benchmarkStockValue.toFixed(2)}
+      </p>
       <p className={"text-sm text-gray-800 dark:text-gray-200 mt-2 w-full flex justify-between"}>
         {sp500ProfitOrLoss >= 0 ? "Potential profit: " : "Potential loss: "}
         <span className={clsx("text-sm", profitOrLossTextColor(sp500ProfitOrLoss))}>
-          ${sp500ProfitOrLoss.toFixed(2)} ({sp500Percentage[selectedReturnMetric].toFixed(2)}%)
+          {PortfolioCurrencyToSymbol[selectedPortfolio]}
+          {sp500ProfitOrLoss.toFixed(2)} ({sp500Percentage[selectedReturnMetric].toFixed(2)}%)
         </span>
       </p>
       <ProfitMetrics

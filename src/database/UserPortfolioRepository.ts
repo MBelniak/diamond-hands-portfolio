@@ -1,22 +1,31 @@
-import { CashEvent, PortfolioData, type PortfolioEvent } from "@/lib/types";
+import { CashEvent, PortfolioCurrency, PortfolioData, type PortfolioEvent } from "@/lib/types";
 import container from "@/iocContainer";
 import { AbstractDatabaseClient } from "@/database/index";
 import { Models, Query, TablesDB } from "node-appwrite";
 import { User } from "@clerk/nextjs/server";
-import { STORAGE_FILE_ID, USER_FILES_TABLE, USER_ID_COLUMN } from "@/database/consts";
+import { CURRENCY_COLUMN, STORAGE_FILE_ID, USER_FILES_TABLE, USER_ID_COLUMN } from "@/database/consts";
 import { v4 } from "uuid";
 import Row = Models.Row;
 
-export class UserEventsRepository {
-  static async saveEventsToDB(events: PortfolioData["portfolioEvents"], user: User) {
+export class UserPortfolioRepository {
+  static async savePortfolioToDB(
+    portfolio: PortfolioData["portfolioEvents"],
+    user: User,
+    currency: PortfolioCurrency,
+  ): Promise<void> {
     const db = container.get(AbstractDatabaseClient);
     const dbClient = db.getDBClient();
     console.log("Storing portfolio in DB");
 
     const storage = db.getStorage();
-    const eventsAsFile = new File([JSON.stringify(events)], "data.json", { type: "application/json" });
+    const eventsAsFile = new File([JSON.stringify(portfolio)], "data.json", { type: "application/json" });
 
-    const newestUserFileRecord = await UserEventsRepository.getNewestUserFileRecord(user, dbClient, db.getDatabaseId());
+    const newestUserFileRecord = await UserPortfolioRepository.getNewestUserFileRecord(
+      user,
+      dbClient,
+      db.getDatabaseId(),
+      currency,
+    );
 
     const result = await storage.createFile({
       bucketId: process.env.APPWRITE_BUCKET_ID!,
@@ -32,6 +41,7 @@ export class UserEventsRepository {
       data: {
         [USER_ID_COLUMN]: userId,
         [STORAGE_FILE_ID]: result.$id,
+        [CURRENCY_COLUMN]: currency,
       },
     });
 
@@ -48,14 +58,22 @@ export class UserEventsRepository {
     }
   }
 
-  static async getEventsFromDB(user: User) {
+  static async getPortfolioFromDB(
+    user: User,
+    currency: PortfolioCurrency,
+  ): Promise<PortfolioData["portfolioEvents"] | null> {
     const db = container.get(AbstractDatabaseClient);
     const storage = db.getStorage();
     const dbClient = db.getDBClient();
 
     console.log("Fetching portfolio from DB");
 
-    const newestRow = await UserEventsRepository.getNewestUserFileRecord(user, dbClient, db.getDatabaseId());
+    const newestRow = await UserPortfolioRepository.getNewestUserFileRecord(
+      user,
+      dbClient,
+      db.getDatabaseId(),
+      currency,
+    );
 
     if (!newestRow) {
       return null;
@@ -81,6 +99,7 @@ export class UserEventsRepository {
     user: User,
     dbClient: TablesDB,
     databaseId: string,
+    currency: PortfolioCurrency,
   ): Promise<
     | (Models.Row & {
         user_id: string;
@@ -96,7 +115,12 @@ export class UserEventsRepository {
     >({
       databaseId,
       tableId: USER_FILES_TABLE,
-      queries: [Query.equal(USER_ID_COLUMN, [user.id]), Query.orderDesc("$createdAt"), Query.limit(1)],
+      queries: [
+        Query.equal(USER_ID_COLUMN, [user.id]),
+        Query.equal(CURRENCY_COLUMN, [currency]),
+        Query.orderDesc("$createdAt"),
+        Query.limit(1),
+      ],
     });
 
     const newestRow = rows.rows.at(0);

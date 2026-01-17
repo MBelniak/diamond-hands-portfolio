@@ -128,3 +128,13 @@ export type PortfolioData = {
     closedStocksCloseEvents: PortfolioEvent[];
   };
 };
+
+export enum PortfolioCurrency {
+  USD = "USD",
+  EUR = "EUR",
+}
+
+export const PortfolioCurrencyToSymbol: Record<PortfolioCurrency, string> = {
+  [PortfolioCurrency.USD]: "$",
+  [PortfolioCurrency.EUR]: "€",
+};

@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
+import { PortfolioCurrency, PortfolioCurrencyToSymbol } from "@/lib/types";
+import { useStore } from "@/lib/store";
 
 export function getProfitLossTextClass(value: number, maxAbs: number): string {
   if (maxAbs > 0) {
@@ -48,7 +50,7 @@ const ShowAssetDetailsCell: React.FC<{ symbol: string }> = ({ symbol }) => {
   );
 };
 
-export const columns: ColumnDef<Asset & { profitScale: number }>[] = [
+export const getColumns = (currency: PortfolioCurrency): ColumnDef<Asset & { profitScale: number }>[] => [
   {
     accessorKey: "assetSymbol",
     header: "Asset",
@@ -71,7 +73,7 @@ export const columns: ColumnDef<Asset & { profitScale: number }>[] = [
   },
   {
     accessorKey: "marketValue",
-    header: "Market Value ($)",
+    header: `Market Value (${PortfolioCurrencyToSymbol[currency]})`,
     cell: (info) => {
       const marketValue = info.getValue() as number;
       const profit = info.row.original.unrealizedProfitOrLoss;
@@ -103,7 +105,7 @@ export const columns: ColumnDef<Asset & { profitScale: number }>[] = [
   },
   {
     accessorKey: "accProfitOrLoss",
-    header: "Acc. profit/loss ($)",
+    header: `Acc. profit/loss (${PortfolioCurrencyToSymbol[currency]})`,
     cell: (info) => {
       const v = info.getValue() as number;
       const cls = getProfitLossTextClass(v, info.row.original.profitScale);
@@ -113,7 +115,7 @@ export const columns: ColumnDef<Asset & { profitScale: number }>[] = [
   },
   {
     accessorKey: "potentialValue",
-    header: "Potential Profit/Loss ($)",
+    header: `Potential Profit/Loss (${PortfolioCurrencyToSymbol[currency]})`,
     cell: (info) => {
       const v = info.getValue() as number;
       const cls = getProfitLossTextClass(v, info.row.original.profitScale);

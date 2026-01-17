@@ -1,4 +1,4 @@
-import { CashFlow, TWRValueTimeline } from "@/lib/types";
+import { CashFlow, PortfolioCurrencyToSymbol, TWRValueTimeline } from "@/lib/types";
 import {
   calculateMWR,
   calculateSimpleReturn,
@@ -9,6 +9,7 @@ import {
 import { profitOrLossTextColor } from "@/lib/utils";
 import React from "react";
 import { addDays } from "date-fns/addDays";
+import { useStore } from "@/lib/store";
 
 export function ProfitMetrics({
   cashFlow,
@@ -23,7 +24,9 @@ export function ProfitMetrics({
   windowSizes: { label: string; daysAgo: number }[];
   returnMetric: ReturnMetric;
 }) {
+  const { selectedPortfolio } = useStore();
   const last = timeline.at(-1);
+
   if (!last) return null;
 
   return (
@@ -41,7 +44,8 @@ export function ProfitMetrics({
           <div key={label} className={"flex gap-3 justify-between w-full"}>
             <span>{label}:</span>
             <span className={profitOrLossTextColor(totalProfit)}>
-              ${totalProfit.toFixed(2)} ({percentage.toFixed(2)}%)
+              {PortfolioCurrencyToSymbol[selectedPortfolio]}
+              {totalProfit.toFixed(2)} ({percentage.toFixed(2)}%)
             </span>
           </div>
         );

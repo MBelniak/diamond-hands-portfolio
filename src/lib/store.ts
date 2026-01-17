@@ -3,6 +3,8 @@ import { create } from "zustand";
 import { ReturnMetric } from "@/lib/returnMetrics";
 import { BenchmarkIndex, SELECTED_BENCHMARK_STORAGE_KEY } from "@/lib/benchmarks";
 import { getCurrentTheme, LocalTheme } from "@/hooks/useCurrentTheme";
+import { PortfolioCurrency } from "@/lib/types";
+import { SELECTED_CURRENCY_STORAGE_KEY } from "@/app/consts";
 
 interface Store {
   selectedReturnMetric: ReturnMetric;
@@ -11,6 +13,8 @@ interface Store {
   setUseWithdrawnCash: (data: boolean) => void;
   selectedBenchmark: BenchmarkIndex;
   setSelectedBenchmark: (data: BenchmarkIndex) => void;
+  selectedPortfolio: PortfolioCurrency;
+  setSelectedPortfolio: (data: PortfolioCurrency) => void;
   theme: LocalTheme;
   setTheme: (data: LocalTheme) => void;
 }
@@ -32,6 +36,11 @@ export const useStore = create<Store>((set) => ({
   setSelectedBenchmark: (data: BenchmarkIndex) => {
     localStorage.setItem(SELECTED_BENCHMARK_STORAGE_KEY, data);
     set({ selectedBenchmark: data });
+  },
+  selectedPortfolio: ((isBrowser && localStorage.getItem(SELECTED_CURRENCY_STORAGE_KEY)) as PortfolioCurrency) || "USD",
+  setSelectedPortfolio: (data: PortfolioCurrency) => {
+    localStorage.setItem(SELECTED_CURRENCY_STORAGE_KEY, data);
+    set({ selectedPortfolio: data });
   },
   theme: getCurrentTheme(),
   setTheme: (newTheme: LocalTheme) => {

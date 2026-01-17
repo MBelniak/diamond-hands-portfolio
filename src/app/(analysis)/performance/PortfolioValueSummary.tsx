@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { clsx } from "clsx";
 import { calculateMWR, calculateTWR, getProfitOrLossForPeriod, ReturnMetric } from "@/lib/returnMetrics";
 import React, { type PropsWithChildren } from "react";
-import { PortfolioAnalysis } from "@/lib/types";
+import { PortfolioAnalysis, PortfolioCurrencyToSymbol } from "@/lib/types";
 import { ProfitMetrics } from "./ProfitMetrics";
 import { useStore } from "@/lib/store";
 
@@ -14,7 +14,7 @@ const MainFigureValue: React.FC<PropsWithChildren> = ({ children }) => {
 export const PortfolioValueSummary: React.FC<{
   portfolioAnalysis: PortfolioAnalysis;
 }> = ({ portfolioAnalysis }) => {
-  const { selectedReturnMetric, setSelectedReturnMetric, useWithdrawnCash } = useStore();
+  const { selectedReturnMetric, setSelectedReturnMetric, useWithdrawnCash, selectedPortfolio } = useStore();
   const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
   if (!portfolioTimeline.length) {
     return null;
@@ -49,19 +49,24 @@ export const PortfolioValueSummary: React.FC<{
   return (
     <div className="p-8 flex flex-col items-start">
       <strong className=" text-lg mb-2">Total portfolio value</strong>
-      <MainFigureValue>${totalPortfolioValue.toFixed(2)}</MainFigureValue>
+      <MainFigureValue>
+        {PortfolioCurrencyToSymbol[selectedPortfolio]}
+        {totalPortfolioValue.toFixed(2)}
+      </MainFigureValue>
       <div className={"grid grid-cols-[auto_1fr] gap-x-4 mt-3"}>
         <p className="text-sm text-gray-800 dark:text-gray-200">
           {totalProfitOrLoss > 0 ? "Total profit: " : "Total loss: "}
         </p>
         <span className={clsx(profitOrLossTextColor(totalProfitOrLoss), "text-end")}>
-          ${totalProfitOrLoss.toFixed(2)} ({totalProfitPercentage[selectedReturnMetric].toFixed(2)}%)
+          {PortfolioCurrencyToSymbol[selectedPortfolio]}
+          {totalProfitOrLoss.toFixed(2)} ({totalProfitPercentage[selectedReturnMetric].toFixed(2)}%)
         </span>
         <p className="text-sm  text-gray-800 dark:text-gray-200">
           {realizedProfitOrLoss > 0 ? "Cashed in: " : "Lost: "}
         </p>
         <span className={clsx(profitOrLossTextColor(realizedProfitOrLoss), "text-end")}>
-          ${realizedProfitOrLoss.toFixed(2)} ({realizedPercentage.toFixed(2)}%)
+          {PortfolioCurrencyToSymbol[selectedPortfolio]}
+          {realizedProfitOrLoss.toFixed(2)} ({realizedPercentage.toFixed(2)}%)
         </span>
         <p className="text-sm  text-gray-800 dark:text-gray-200">Open:</p>
         <ProfitMetrics

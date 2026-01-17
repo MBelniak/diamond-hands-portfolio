@@ -1,5 +1,5 @@
 import { isBefore, isSameDay } from "date-fns";
-import { Currency } from "@/lib/types";
+import { Currency, PortfolioCurrency } from "@/lib/types";
 
 export function symbolToYahooSuffix(symbol: string): string {
   if (symbol.endsWith(".UK")) {
@@ -46,24 +46,26 @@ export function getDateRange(start: Date, end: Date): Date[] {
 /**
  * Converts a price in a given currency to USD using provided rates.
  * @param price - price in original currency
- * @param currency - currency code (e.g. "EUR", "GBP", "USD", "GBp")
  * @param rates - records of currency rates { EUR: 1.08, GBP: 1.25, ... }
+ * @param fromCurrency
+ * @param toCurrency
  */
-export function convertToUSD(
+export function convertToCurrency(
   price: number | undefined,
-  currency: string,
   rates: Record<Currency, number>,
+  fromCurrency: string,
+  toCurrency: PortfolioCurrency,
 ): number | undefined {
-  if (!currency || currency === "USD" || price === undefined) {
+  if (!fromCurrency || fromCurrency === toCurrency || price === undefined) {
     return price;
   }
-  if (currency === "GBp") {
+  if (fromCurrency === "GBp") {
     // 100 GBp = 1 GBP
     const gbpPrice = price / 100;
-    return rates["USDGBP"] ? gbpPrice * (1 / rates["USDGBP"]) : gbpPrice;
+    return rates[`${toCurrency}GBP`] ? gbpPrice * (1 / rates[`${toCurrency}GBP`]) : gbpPrice;
   }
-  if (rates["USD" + currency]) {
-    return price * (1 / rates["USD" + currency]);
+  if (rates[toCurrency + fromCurrency]) {
+    return price * (1 / rates[toCurrency + fromCurrency]);
   }
   return price;
 }

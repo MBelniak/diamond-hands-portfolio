@@ -1,7 +1,7 @@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CogIcon } from "lucide-react";
 import React from "react";
-import { SettingsPopover } from "@/app/_components/SettingsPopover";
+import { SettingsPopover } from "@/app/_components/settings/SettingsPopover";
 
 export const SettingsDropdownMenu: React.FC = () => {
   return (

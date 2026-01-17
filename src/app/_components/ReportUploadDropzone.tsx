@@ -4,10 +4,12 @@ import React from "react";
 import { useDropzone } from "react-dropzone";
 import { useUploadXlsxAnalysisFiles } from "@/hooks/useUploadXlsxAnalysisFiles";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
-import { portfolioDataDB } from "@/lib/utils";
+import { useStore } from "@/lib/store";
+import { portfolioDataDB } from "@/app/indexedDB/portfolioDataDB";
 
 export const ReportUploadDropzone = () => {
   const { refetch: refetchPortfolio } = usePortfolioAnalysis();
+  const { selectedPortfolio } = useStore();
 
   const {
     mutate: onDrop,
@@ -18,7 +20,7 @@ export const ReportUploadDropzone = () => {
   });
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: (files) => onDrop(files),
+    onDrop: (files) => onDrop({ acceptedFiles: files, selectedPortfolio }),
     accept: {
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
     },

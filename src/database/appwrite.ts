@@ -1,7 +1,13 @@
 import { Client, TablesDB } from "node-appwrite";
 import container from "../iocContainer";
 import { AbstractDatabaseClient } from "@/database/index";
-import { STORAGE_FILE_ID, USER_FILES_TABLE, USER_FILES_TABLE_NAME, USER_ID_COLUMN } from "@/database/consts";
+import {
+  CURRENCY_COLUMN,
+  STORAGE_FILE_ID,
+  USER_FILES_TABLE,
+  USER_FILES_TABLE_NAME,
+  USER_ID_COLUMN,
+} from "@/database/consts";
 
 export const client = new Client();
 
@@ -42,6 +48,14 @@ const initializeCollections = async (client: TablesDB, databaseId: string) => {
     databaseId: database.$id,
     tableId: userFilesCollection.$id,
     key: STORAGE_FILE_ID,
+    size: 255,
+    required: true,
+  });
+
+  await client.createStringColumn({
+    databaseId: database.$id,
+    tableId: userFilesCollection.$id,
+    key: CURRENCY_COLUMN,
     size: 255,
     required: true,
   });

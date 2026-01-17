@@ -4,12 +4,11 @@ import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { MIN_WINDOW_SIZE, useDateRange } from "@/hooks/useDateRange";
 import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
 import { useStore } from "@/lib/store";
-import { PortfolioAnalysis } from "@/lib/types";
+import { PortfolioAnalysis, PortfolioCurrencyToSymbol } from "@/lib/types";
 import { useState } from "react";
 import { Area, AreaChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CustomTooltip } from "./PerformanceChartTooltip";
 
-const currency = "$";
 const chartKeys = {
   portfolioValue: "Portfolio value",
   realizedProfitOrLoss: "Realized profit/loss",
@@ -46,7 +45,7 @@ const getChartLineConfig = (selectedBenchmark: BenchmarkIndex) => [
 ];
 
 export function PerformanceChart() {
-  const { useWithdrawnCash, selectedBenchmark } = useStore();
+  const { useWithdrawnCash, selectedBenchmark, selectedPortfolio } = useStore();
   const { data } = usePortfolioAnalysis();
   const portfolioAnalysis = data as PortfolioAnalysis;
 
@@ -95,7 +94,9 @@ export function PerformanceChart() {
 
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl w-full p-6">
-      <h2 className="text-2xl font-bold mb-6 text-center">Portfolio value over time ({currency})</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">
+        Portfolio value over time ({PortfolioCurrencyToSymbol[selectedPortfolio]})
+      </h2>
       <div style={{ width: "100%", padding: "0 24px", boxSizing: "border-box", height: 350 }}>
         <ResponsiveContainer width="100%" height="100%">
           {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}

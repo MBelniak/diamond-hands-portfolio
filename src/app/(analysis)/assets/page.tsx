@@ -1,18 +1,20 @@
 "use client";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
 import { useAssetsBreakdown } from "@/app/(analysis)/assets/_hooks/useAssetsBreakdown";
 import { sortBy, sumBy } from "lodash-es";
 import { AssetsTable, AssetTableRecord } from "./_components/AssetsTable";
-import { columns } from "./_components/columns";
+import { getColumns } from "./_components/columns";
 import { AssetsDonut } from "./_components/AssetsDonut";
 import { Asset } from "./_types";
+import { useStore } from "@/lib/store";
 
 export default function AssetsPage() {
   const { data: portfolioAnalysis, error, isLoading } = usePortfolioAnalysis();
   const router = useRouter();
+  const { selectedPortfolio } = useStore();
 
   useEffect(() => {
     if (error) {
@@ -82,7 +84,7 @@ export default function AssetsPage() {
     <div className="w-full flex flex-col gap-16">
       <div className="bg-white/80 dark:bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-3 w-full mx-4">
         <div className="overflow-x-auto">
-          <AssetsTable columns={columns} data={tableDataScaled} totals={totalsRow} />
+          <AssetsTable columns={getColumns(selectedPortfolio)} data={tableDataScaled} totals={totalsRow} />
         </div>
       </div>
       <div>

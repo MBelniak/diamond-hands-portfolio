@@ -6,6 +6,7 @@ import { isBefore } from "date-fns/isBefore";
 import {
   CashEvent,
   ExchangeRates,
+  PortfolioCurrency,
   PortfolioData,
   type PortfolioEvent,
   type Split,
@@ -28,10 +29,10 @@ import {
   STOCK_OPEN_EVENT,
   STOCK_OPEN_POSITION,
 } from "@/lib/xlsx-parser/consts";
-import { convertToUSD, getDateRange, getStockAPISymbol } from "@/lib/xlsx-parser/utils";
+import { convertToCurrency, getDateRange, getStockAPISymbol } from "@/lib/xlsx-parser/utils";
 import { setTimeout } from "node:timers/promises";
 import { formatDate } from "@/lib/utils";
-import { UserEventsRepository } from "@/database/UserEventsRepository";
+import { UserPortfolioRepository } from "@/database/UserPortfolioRepository";
 import { User } from "@clerk/nextjs/server";
 import { BenchmarkIndex } from "@/lib/benchmarks";
 import { uniqBy } from "lodash-es";
@@ -393,10 +394,14 @@ async function getTickerMarketData(symbol: string, startDate: Date, endDate: Dat
   return { currency: "USD", price: {}, splitAdjustedPrice: {}, longName: symbol, splits: [] };
 }
 
-async function fetchExchangeRates(currencies: Set<string>, startDate: Date): Promise<ExchangeRates> {
+async function fetchExchangeRates(
+  currencies: Set<string>,
+  baseCurrency: PortfolioCurrency,
+  startDate: Date,
+): Promise<ExchangeRates> {
   const today = new Date();
-  if (await redis.exists(getExchangeRatesRedisKey(today))) {
-    return JSON.parse((await redis.get(getExchangeRatesRedisKey(today))) as string);
+  if (await redis.exists(getExchangeRatesRedisKey(today, baseCurrency))) {
+    return JSON.parse((await redis.get(getExchangeRatesRedisKey(today, baseCurrency))) as string);
   }
 
   if (currencies.has("GBp")) {
@@ -414,9 +419,10 @@ async function fetchExchangeRates(currencies: Set<string>, startDate: Date): Pro
     searchParams.set(
       "currencies",
       Array.from(currencies)
-        .filter((c) => c !== "USD")
+        .filter((c) => c !== baseCurrency)
         .join(","),
     );
+    searchParams.set("source", baseCurrency);
 
     const finalURL = `https://apilayer.net/timeframe?${searchParams.toString()}`;
     console.log("Fetching from " + finalURL);
@@ -433,7 +439,7 @@ async function fetchExchangeRates(currencies: Set<string>, startDate: Date): Pro
     await setTimeout(1000); // To avoid hitting rate limits
   }
 
-  await redis.set(getExchangeRatesRedisKey(today), JSON.stringify(exchangeRates), REDIS_EXPIRE_IN_DAY);
+  await redis.set(getExchangeRatesRedisKey(today, baseCurrency), JSON.stringify(exchangeRates), REDIS_EXPIRE_IN_DAY);
   return exchangeRates;
 }
 
@@ -491,20 +497,33 @@ const parsePortfolioEvents = (xlsxArrayBuffer: ArrayBuffer): PortfolioData["port
   return getCashAndStocksEvents(workbook);
 };
 
-const getPortfolioEvents = async (user: User): Promise<PortfolioData["portfolioEvents"] | null> => {
-  return await UserEventsRepository.getEventsFromDB(user);
+const getPortfolioEvents = async (
+  user: User,
+  selectedPortfolio: PortfolioCurrency,
+): Promise<PortfolioData["portfolioEvents"] | null> => {
+  return await UserPortfolioRepository.getPortfolioFromDB(user, selectedPortfolio);
 };
 
-const convertMarketDataToUSD = async (stockMarketData: StockMarketData, exchangeRates: ExchangeRates) => {
+const convertMarketDataToCurrency = async (
+  stockMarketData: StockMarketData,
+  exchangeRates: ExchangeRates,
+  portfolioCurrency: PortfolioCurrency,
+) => {
   for (const [symbol, priceRecord] of Object.entries(stockMarketData)) {
     for (const [date, price] of Object.entries(priceRecord.price)) {
-      stockMarketData[symbol].price[date] = convertToUSD(price, priceRecord.currency, exchangeRates[date] || {})!;
+      stockMarketData[symbol].price[date] = convertToCurrency(
+        price,
+        exchangeRates[date] || {},
+        priceRecord.currency,
+        portfolioCurrency,
+      )!;
     }
     for (const [date, price] of Object.entries(priceRecord.splitAdjustedPrice)) {
-      stockMarketData[symbol].splitAdjustedPrice[date] = convertToUSD(
+      stockMarketData[symbol].splitAdjustedPrice[date] = convertToCurrency(
         price,
-        priceRecord.currency,
         exchangeRates[date] || {},
+        priceRecord.currency,
+        portfolioCurrency,
       )!;
     }
   }
@@ -514,6 +533,7 @@ const adjustEventPrices = (
   events: PortfolioData["portfolioEvents"],
   exchangeRates: ExchangeRates,
   stockMarketData: StockMarketData,
+  toCurrency: PortfolioCurrency,
 ) => {
   const { openPositions, closedStocksOpenEvents, closedStocksCloseEvents } = events;
   [...openPositions, ...closedStocksOpenEvents, ...closedStocksCloseEvents].forEach((event) => {
@@ -522,8 +542,12 @@ const adjustEventPrices = (
       const stockSymbol = event.stockSymbol!;
 
       event.openPrice =
-        convertToUSD(event.openPrice, stockMarketData[stockSymbol].currency, exchangeRates[date] || {}) ??
-        event.openPrice;
+        convertToCurrency(
+          event.openPrice,
+          exchangeRates[date] || {},
+          stockMarketData[stockSymbol].currency,
+          toCurrency,
+        ) ?? event.openPrice;
 
       event.openPrice = applyReciprocalSplits(
         event.openPrice,
@@ -535,8 +559,12 @@ const adjustEventPrices = (
     if (event.type === STOCK_CLOSE_EVENT) {
       const stockSymbol = event.stockSymbol!;
       event.closePrice =
-        convertToUSD(event.closePrice, stockMarketData[stockSymbol].currency, exchangeRates[date] || {}) ??
-        event.closePrice;
+        convertToCurrency(
+          event.closePrice,
+          exchangeRates[date] || {},
+          stockMarketData[stockSymbol].currency,
+          toCurrency,
+        ) ?? event.closePrice;
 
       event.closePrice = applyReciprocalSplits(
         event.closePrice,
@@ -588,20 +616,27 @@ const mergeEvents = (
   };
 };
 
-export async function uploadPortfolioData(user: User, xlsxArrayBuffer: ArrayBuffer): Promise<void> {
+export async function uploadPortfolioData(
+  user: User,
+  selectedPortfolio: PortfolioCurrency,
+  xlsxArrayBuffer: ArrayBuffer,
+): Promise<void> {
   const events = parsePortfolioEvents(xlsxArrayBuffer);
-  const existingEvents = await getPortfolioEvents(user);
+  const existingEvents = await getPortfolioEvents(user, selectedPortfolio);
 
   if (existingEvents) {
     const mergedEvents = mergeEvents(existingEvents, events);
-    await UserEventsRepository.saveEventsToDB(mergedEvents, user);
+    await UserPortfolioRepository.savePortfolioToDB(mergedEvents, user, selectedPortfolio);
   } else {
-    await UserEventsRepository.saveEventsToDB(events, user);
+    await UserPortfolioRepository.savePortfolioToDB(events, user, selectedPortfolio);
   }
 }
 
-export async function getPortfolioData(user: User): Promise<PortfolioData | null> {
-  const events = await getPortfolioEvents(user);
+export async function getPortfolioData(
+  user: User,
+  portfolioCurrency: PortfolioCurrency,
+): Promise<PortfolioData | null> {
+  const events = await getPortfolioEvents(user, portfolioCurrency);
   if (!events) {
     return null;
   }
@@ -630,10 +665,12 @@ export async function getPortfolioData(user: User): Promise<PortfolioData | null
       .filter(Boolean),
   );
 
-  const exchangeRates = await fetchExchangeRates(currencies, startDate).catch(() => ({}) as ExchangeRates);
+  const exchangeRates = await fetchExchangeRates(currencies, portfolioCurrency, startDate).catch(
+    () => ({}) as ExchangeRates,
+  );
 
-  await convertMarketDataToUSD(stockMarketData, exchangeRates);
-  adjustEventPrices(events, exchangeRates, stockMarketData);
+  await convertMarketDataToCurrency(stockMarketData, exchangeRates, portfolioCurrency);
+  adjustEventPrices(events, exchangeRates, stockMarketData, portfolioCurrency);
 
   return {
     portfolioEvents: events,

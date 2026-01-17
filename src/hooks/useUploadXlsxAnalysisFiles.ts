@@ -1,8 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
+import { PortfolioCurrency } from "@/lib/types";
 
 export const useUploadXlsxAnalysisFiles = (onSuccess: () => void) => {
-  return useMutation<void, Error, File[]>({
-    mutationFn: async (acceptedFiles: File[]) => {
+  return useMutation<void, Error, { acceptedFiles: File[]; selectedPortfolio: PortfolioCurrency }>({
+    mutationFn: async ({ acceptedFiles, selectedPortfolio }) => {
       if (!acceptedFiles.length) {
         throw new Error("No files have been uploaded.");
       }
@@ -12,6 +13,7 @@ export const useUploadXlsxAnalysisFiles = (onSuccess: () => void) => {
       }
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("selectedPortfolio", selectedPortfolio);
       const res = await fetch("/api/upload", {
         method: "POST",
         body: formData,
