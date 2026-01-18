@@ -2,47 +2,18 @@
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { MIN_WINDOW_SIZE, useDateRange } from "@/hooks/useDateRange";
-import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
 import { useStore } from "@/lib/store";
 import { PortfolioAnalysis, PortfolioCurrencyToSymbol } from "@/lib/types";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Area, AreaChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CustomTooltip } from "./PerformanceChartTooltip";
-
-const chartKeys = {
-  portfolioValue: "Portfolio value",
-  realizedProfitOrLoss: "Realized profit/loss",
-  cash: "Cash",
-  profit: "Profit/Loss",
-};
-
-const getChartLineConfig = (selectedBenchmark: BenchmarkIndex) => [
-  {
-    key: "portfolioValue",
-    label: chartKeys.portfolioValue,
-    color: "#a5b4fc",
-  },
-  {
-    key: "profit",
-    label: chartKeys.profit,
-    color: "#38bdf8",
-  },
-  {
-    key: "realizedProfitOrLoss",
-    label: chartKeys.realizedProfitOrLoss,
-    color: "#059669",
-  },
-  {
-    key: "cash",
-    label: chartKeys.cash,
-    color: "#8884d8aa",
-  },
-  {
-    key: "benchmarkStockValue",
-    label: BenchmarkIndexToName[selectedBenchmark],
-    color: "#f472b6",
-  },
-];
+import { TimePeriodZoom } from "@/app/(analysis)/performance/_components/PerformanceChart/TimePeriodZoom";
+import { useTimePeriodChange } from "@/app/(analysis)/performance/_components/PerformanceChart/hooks/useTimePeriodChange";
+import { ChartLegend } from "@/app/(analysis)/performance/_components/PerformanceChart/ChartLegend";
+import {
+  ChartLineKey,
+  useChartLines,
+} from "@/app/(analysis)/performance/_components/PerformanceChart/hooks/useChartLines";
 
 export function PerformanceChart() {
   const { useWithdrawnCash, selectedBenchmark, selectedPortfolio } = useStore();
@@ -51,29 +22,37 @@ export function PerformanceChart() {
 
   const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
 
-  const validTimeline = portfolioTimeline
-    .map((item) => {
-      const adjPortfolioValue = item.portfolioValue + (useWithdrawnCash ? item.totalCapitalInvested - item.balance : 0);
-      const profit = item.portfolioValue - item.balance;
-      return {
-        ...item,
-        date: item.date.slice(0, 10),
-        portfolioValue: adjPortfolioValue,
-        realizedProfitOrLoss: item.profitOrLoss,
-        profit,
-        profitPositive: profit > 0 ? profit : 0,
-        profitNegative: profit < 0 ? profit : 0,
-      };
-    })
-    .slice(
-      portfolioTimeline.findIndex((record) => Object.entries(record.stocks).length || record.cash),
-      -1,
-    );
+  const chartLines = useChartLines(selectedBenchmark);
+
+  const validTimeline = useMemo(
+    () =>
+      portfolioTimeline
+        .map((item) => {
+          const adjPortfolioValue =
+            item.portfolioValue + (useWithdrawnCash ? item.totalCapitalInvested - item.balance : 0);
+          const profit = item.portfolioValue - item.balance;
+          return {
+            ...item,
+            benchmarkStockValue: item.benchmarkStockValue[selectedBenchmark],
+            date: item.date.slice(0, 10),
+            portfolioValue: adjPortfolioValue,
+            realizedProfitOrLoss: item.profitOrLoss,
+            profit,
+            profitPositive: profit > 0 ? profit : 0,
+            profitNegative: profit < 0 ? profit : 0,
+          };
+        })
+        .slice(
+          portfolioTimeline.findIndex((record) => Object.entries(record.stocks).length || record.cash),
+          -1,
+        ),
+    [portfolioTimeline, selectedBenchmark, useWithdrawnCash],
+  );
 
   const [range, handleRangeChange] = useDateRange(validTimeline.length - 1);
 
   // Track which lines are enabled
-  const [enabledLines, setEnabledLines] = useState<Record<string, boolean>>({
+  const [enabledLines, setEnabledLines] = useState<Record<ChartLineKey, boolean>>({
     portfolioValue: true,
     profit: true,
     realizedProfitOrLoss: false,
@@ -81,23 +60,21 @@ export function PerformanceChart() {
     benchmarkStockValue: false,
   });
 
-  const toggleLine = (key: string) => {
-    setEnabledLines((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
+  const [period, handlePeriodChange] = useTimePeriodChange(validTimeline, handleRangeChange);
 
   const windowStart = Math.max(0, Math.min(range[0], validTimeline.length - MIN_WINDOW_SIZE));
   const windowEnd = Math.max(windowStart + MIN_WINDOW_SIZE - 1, Math.min(range[1], validTimeline.length - 1));
   const windowedData = validTimeline.slice(windowStart, windowEnd + 1);
 
   return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl w-full p-6">
-      <h2 className="text-2xl font-bold mb-6 text-center">
+    <div className="flex flex-col bg-white/10 backdrop-blur-lg rounded-sm shadow-xl w-full p-6 gap-4">
+      <h2 className="text-2xl font-bold mb-2 text-center">
         Portfolio value over time ({PortfolioCurrencyToSymbol[selectedPortfolio]})
       </h2>
-      <div style={{ width: "100%", padding: "0 24px", boxSizing: "border-box", height: 350 }}>
+      <div className={"ml-8"}>
+        <TimePeriodZoom selectedPeriod={period} handlePeriodChange={handlePeriodChange} />
+      </div>
+      <div className={"w-full pr-4 h-[350px]"}>
         <ResponsiveContainer width="100%" height="100%">
           {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
           {/*@ts-ignore*/}
@@ -130,7 +107,7 @@ export function PerformanceChart() {
             )}
 
             {/* Render only enabled lines */}
-            {getChartLineConfig(selectedBenchmark).map(
+            {chartLines.map(
               (line) =>
                 enabledLines[line.key] && (
                   <Line
@@ -148,32 +125,7 @@ export function PerformanceChart() {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-      {/* Legend below chart */}
-      <div className="flex flex-wrap gap-4 justify-center mt-4">
-        {getChartLineConfig(selectedBenchmark).map((line) => (
-          <button
-            key={line.key}
-            onClick={() => toggleLine(line.key)}
-            className={`flex items-center gap-2 px-3 py-1 rounded-full font-medium transition cursor-pointer
-              ${enabledLines[line.key] ? "bg-white/5 " : "bg-gray-700/20 text-gray-400"}
-              border border-white/30 hover:bg-white/30`}
-            style={{ borderColor: line.color }}
-            type="button"
-          >
-            <span
-              style={{
-                display: "inline-block",
-                width: 16,
-                height: 4,
-                background: line.color,
-                borderRadius: 2,
-                opacity: enabledLines[line.key] ? 1 : 0.4,
-              }}
-            />
-            {line.label}
-          </button>
-        ))}
-      </div>
+      <ChartLegend chartLines={chartLines} enabledLines={enabledLines} handleLinesChange={setEnabledLines} />
       <div className={"w-full mt-4 flex flex-col gap-8 px-8"}>
         <label className=" font-semibold">
           Date range: {validTimeline[windowStart].date} - {validTimeline[windowEnd].date}

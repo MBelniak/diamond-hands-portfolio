@@ -73,7 +73,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
           </Link>
         </Button>
       </div>
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 w-full max-w-3xl">
+      <div className="bg-white/10 backdrop-blur-lg rounded-sm shadow-2xl p-8 w-full max-w-3xl">
         <h2 className="text-2xl font-bold  mb-6 text-center drop-shadow-lg">{assetFullName}</h2>
         <div style={{ width: "100%", padding: "0 24px", boxSizing: "border-box", height: 350 }}>
           <ResponsiveContainer width="100%" height="100%">

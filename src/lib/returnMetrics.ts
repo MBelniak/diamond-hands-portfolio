@@ -5,7 +5,11 @@ import { xirr } from "node-irr";
 import { isAfter, isSameDay, startOfDay } from "date-fns";
 import { isBefore } from "date-fns/isBefore";
 
-export type ReturnMetric = "SR" | "MWR" | "TWR";
+export enum ReturnMetric {
+  SIMPLE_RETURN = "SR",
+  MONEY_WEIGHTED_RETURN = "MWR",
+  TIME_WEIGHTED_RETURN = "TWR",
+}
 
 const getCashFlowForPeriod = (cashFlow: CashFlow, windowStartDate: Date, windowEndDate: Date) => {
   return cashFlow

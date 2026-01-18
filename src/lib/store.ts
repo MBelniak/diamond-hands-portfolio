@@ -22,7 +22,7 @@ interface Store {
 const isBrowser = typeof window !== "undefined";
 
 export const useStore = create<Store>((set) => ({
-  selectedReturnMetric: "SR",
+  selectedReturnMetric: ReturnMetric.SIMPLE_RETURN,
   setSelectedReturnMetric: (data: ReturnMetric) => {
     set({ selectedReturnMetric: data });
   },

@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function profitOrLossTextColor(profitOrLoss: number) {
+export function getProfitLossClass(profitOrLoss: number) {
   if (profitOrLoss > 0) return "text-green-600 dark:text-green-500";
   if (profitOrLoss < 0) return "text-red-600 dark:text-red-500";
   return "text-gray-900 dark:text-gray-200";

@@ -48,7 +48,7 @@ export const SidebarMenuContent = () => {
             {items.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
-                  <Link href={item.url}>
+                  <Link className={"rounded-sm"} href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
                   </Link>

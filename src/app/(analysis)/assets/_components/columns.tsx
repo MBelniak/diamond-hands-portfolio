@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { PortfolioCurrency, PortfolioCurrencyToSymbol } from "@/lib/types";
-import { useStore } from "@/lib/store";
 
 export function getProfitLossTextClass(value: number, maxAbs: number): string {
   if (maxAbs > 0) {

@@ -44,7 +44,7 @@ export function AssetsTable<TValue>({ columns, data, totals }: AssetsDataTablePr
   });
 
   return (
-    <div className="overflow-hidden rounded-md border">
+    <div className="overflow-hidden rounded-xs border">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -103,7 +103,7 @@ export function AssetsTable<TValue>({ columns, data, totals }: AssetsDataTablePr
         {totals ? (
           <TableFooter>
             <TableRow className="bg-gray-100 dark:bg-slate-700/80 font-bold">
-              {columns.map((col, i) => {
+              {columns.map((col) => {
                 const colAny = col as unknown as { accessorKey?: string; id?: string };
                 const key = colAny.accessorKey as keyof AssetTableRecord;
                 const totalsTyped = totals as AssetTableRecord;

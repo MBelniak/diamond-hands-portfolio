@@ -1,4 +1,5 @@
 import { CASH, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT, STOCK_OPEN_POSITION } from "../xlsx-parser/consts";
+import { BenchmarkIndex } from "@/lib/benchmarks";
 
 export type Stock = {
   volume: number;
@@ -24,9 +25,9 @@ export type PortfolioValue = {
   profitOrLoss: number;
   profitOrLossIfNotSelling?: number;
   oneDayProfit: number;
-  benchmarkOneDayProfit: number;
-  benchmarkStock: Stock;
-  benchmarkStockValue: number;
+  benchmarkOneDayProfit: Record<BenchmarkIndex, number>;
+  benchmarkStock: Record<BenchmarkIndex, Stock>;
+  benchmarkStockValue: Record<BenchmarkIndex, number>;
 };
 
 export type ValueTimeline = {

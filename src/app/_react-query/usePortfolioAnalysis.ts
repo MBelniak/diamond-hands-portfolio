@@ -7,13 +7,13 @@ import { useStore } from "@/lib/store";
 import { portfolioDataDB } from "@/app/indexedDB/portfolioDataDB";
 
 export const usePortfolioAnalysis = (): UseQueryResult<PortfolioAnalysis | null> => {
-  const { selectedBenchmark, selectedPortfolio } = useStore();
+  const { selectedPortfolio } = useStore();
   return useQuery({
-    queryKey: [QueryKeys.PORTFOLIO_ANALYSIS_QUERY_KEY, selectedBenchmark, selectedPortfolio],
+    queryKey: [QueryKeys.PORTFOLIO_ANALYSIS_QUERY_KEY, selectedPortfolio],
     queryFn: async () => {
       const cachedData = await portfolioDataDB.getPortfolioData(selectedPortfolio);
       if (cachedData) {
-        return analysePortfolio(cachedData, selectedBenchmark);
+        return analysePortfolio(cachedData);
       }
       const res = await fetch("/api/portfolio?selectedPortfolio=" + selectedPortfolio);
       if (!res.ok) throw new Error("Failed to fetch portfolio");
@@ -21,7 +21,7 @@ export const usePortfolioAnalysis = (): UseQueryResult<PortfolioAnalysis | null>
       if (data) {
         // Ignore if save to DB fails
         portfolioDataDB.setPortfolioData(data, selectedPortfolio).then();
-        return analysePortfolio(data, selectedBenchmark);
+        return analysePortfolio(data);
       }
       throw new Error("Portfolio does not exists for this user");
     },

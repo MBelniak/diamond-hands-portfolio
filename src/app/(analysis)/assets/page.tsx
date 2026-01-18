@@ -82,7 +82,7 @@ export default function AssetsPage() {
 
   return (
     <div className="w-full flex flex-col gap-16">
-      <div className="bg-white/80 dark:bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-3 w-full mx-4">
+      <div className="bg-white/80 dark:bg-white/10 backdrop-blur-lg rounded-sm shadow-2xl p-3 w-full mx-4">
         <div className="overflow-x-auto">
           <AssetsTable columns={getColumns(selectedPortfolio)} data={tableDataScaled} totals={totalsRow} />
         </div>

@@ -17,6 +17,26 @@ import { merge } from "lodash-es";
 import { getDateRange } from "../xlsx-parser/utils";
 import { BenchmarkIndex } from "@/lib/benchmarks";
 
+function getInitialBenchmarkStockRecord(): Record<BenchmarkIndex, Stock> {
+  return Object.values(BenchmarkIndex).reduce(
+    (all, index) => ({
+      ...all,
+      [index]: { volume: 0 },
+    }),
+    {} as Record<BenchmarkIndex, Stock>,
+  );
+}
+
+function getInitialBenchmarkValueRecord(): Record<BenchmarkIndex, number> {
+  return Object.values(BenchmarkIndex).reduce(
+    (all, index) => ({
+      ...all,
+      [index]: 0,
+    }),
+    {} as Record<BenchmarkIndex, number>,
+  );
+}
+
 function getStocksValueCached(stocks: Record<string, Stock>, date: Date, stockMarketData: StockMarketData): number {
   let stocksValue = 0;
   const dateKey = date.toISOString().slice(0, 10);
@@ -33,10 +53,8 @@ function getNextDayPortfolioValue(
   previousState: PortfolioValue,
   date: Date,
   stockMarketData: StockMarketData,
-  selectedBenchmark: BenchmarkIndex,
 ): PortfolioValue {
   const dateKey = formatDate(date);
-  const benchmarkStock = { [selectedBenchmark]: { volume: previousState.benchmarkStock?.volume || 0 } };
 
   return {
     date: formatDate(date),
@@ -45,9 +63,6 @@ function getNextDayPortfolioValue(
     oneDayProfit:
       getStocksValueCached(previousState.stocks, date, stockMarketData) -
       getStocksValueCached(previousState.stocks, addDays(date, -1), stockMarketData),
-    benchmarkOneDayProfit:
-      getStocksValueCached(benchmarkStock!, date, stockMarketData) -
-      getStocksValueCached(benchmarkStock!, addDays(date, -1), stockMarketData),
     totalCapitalInvested: previousState.totalCapitalInvested,
     stocks: Object.fromEntries(
       Object.entries(previousState.stocks).map(([symbol, stock]) => [
@@ -61,11 +76,42 @@ function getNextDayPortfolioValue(
     ),
     portfolioValue: previousState.cash + getStocksValueCached(previousState.stocks, date, stockMarketData),
     profitOrLoss: previousState.profitOrLoss,
-    benchmarkStock: {
-      volume: previousState.benchmarkStock?.volume || 0,
-      price: stockMarketData[selectedBenchmark]?.price[dateKey],
-    },
-    benchmarkStockValue: getStocksValueCached(benchmarkStock!, date, stockMarketData),
+    benchmarkOneDayProfit: Object.values(BenchmarkIndex).reduce(
+      (all, index) => {
+        const benchmarkStock = { [index]: { volume: previousState.benchmarkStock?.[index].volume || 0 } };
+
+        return {
+          ...all,
+          [index]:
+            getStocksValueCached(benchmarkStock, date, stockMarketData) -
+            getStocksValueCached(benchmarkStock, addDays(date, -1), stockMarketData),
+        };
+      },
+      {} as Record<BenchmarkIndex, number>,
+    ),
+    benchmarkStockValue: Object.values(BenchmarkIndex).reduce(
+      (all, index) => {
+        const benchmarkStock = { [index]: { volume: previousState.benchmarkStock?.[index].volume || 0 } };
+
+        return {
+          ...all,
+          [index]: getStocksValueCached(benchmarkStock!, date, stockMarketData),
+        };
+      },
+      {} as Record<BenchmarkIndex, number>,
+    ),
+    benchmarkStock: Object.values(BenchmarkIndex).reduce(
+      (all, index) => {
+        return {
+          ...all,
+          [index]: {
+            volume: previousState.benchmarkStock?.[index].volume || 0,
+            price: stockMarketData[index]?.price[dateKey],
+          },
+        };
+      },
+      {} as Record<BenchmarkIndex, Stock>,
+    ),
   };
 }
 
@@ -75,14 +121,12 @@ function getPortfolioValueOnEventDay(
   totalCapitalInvested: number,
   stocks: Record<string, Stock>,
   profitOrLoss: number,
-  benchmarkVolume: number,
+  benchmarkVolume: Record<BenchmarkIndex, Stock>,
   date: Date,
   stockMarketData: StockMarketData,
   previousState: PortfolioValue,
-  selectedBenchmark: BenchmarkIndex,
 ): PortfolioValue {
   const dateKey = formatDate(date);
-  const benchmarkStock = { [selectedBenchmark]: { volume: benchmarkVolume } };
 
   return {
     cash: cash >= 0 ? cash : 0,
@@ -92,9 +136,6 @@ function getPortfolioValueOnEventDay(
     oneDayProfit:
       getStocksValueCached(previousState.stocks, date, stockMarketData) -
       getStocksValueCached(previousState.stocks, addDays(date, -1), stockMarketData),
-    benchmarkOneDayProfit:
-      getStocksValueCached(benchmarkStock!, date, stockMarketData) -
-      getStocksValueCached(benchmarkStock!, addDays(date, -1), stockMarketData),
     date: formatDate(date),
     stocks: Object.fromEntries(
       Object.entries(stocks).map(([symbol, stock]) => [
@@ -107,8 +148,41 @@ function getPortfolioValueOnEventDay(
       ]),
     ),
     portfolioValue: cash + getStocksValueCached(stocks, date, stockMarketData),
-    benchmarkStock: { volume: benchmarkVolume, price: stockMarketData[selectedBenchmark]?.price[dateKey] ?? undefined },
-    benchmarkStockValue: getStocksValueCached(benchmarkStock!, date, stockMarketData),
+    benchmarkOneDayProfit: Object.values(BenchmarkIndex).reduce(
+      (all, index) => {
+        const benchmarkStock = { [index]: { volume: benchmarkVolume[index]?.volume || 0 } };
+
+        return {
+          ...all,
+          [index]:
+            getStocksValueCached(benchmarkStock, date, stockMarketData) -
+            getStocksValueCached(benchmarkStock, addDays(date, -1), stockMarketData),
+        };
+      },
+      {} as Record<BenchmarkIndex, number>,
+    ),
+    benchmarkStock: Object.values(BenchmarkIndex).reduce(
+      (all, index) => {
+        return {
+          ...all,
+          [index]: {
+            volume: previousState.benchmarkStock?.[index].volume || 0,
+            price: stockMarketData[index]?.price[dateKey] ?? undefined,
+          },
+        };
+      },
+      {} as Record<BenchmarkIndex, Stock>,
+    ),
+    benchmarkStockValue: Object.values(BenchmarkIndex).reduce(
+      (all, index) => {
+        const benchmarkStock = { [index]: { volume: benchmarkVolume[index]?.volume || 0 } };
+        return {
+          ...all,
+          [index]: getStocksValueCached(benchmarkStock!, date, stockMarketData),
+        };
+      },
+      {} as Record<BenchmarkIndex, number>,
+    ),
   };
 }
 
@@ -187,11 +261,7 @@ function getAssetsAnalysis(
 /**
  * Main function: for each day fetches the close price and calculates the portfolio value
  */
-function getPortfolioValueData(
-  portfolioEvents: PortfolioEvent[],
-  stockMarketData: StockMarketData,
-  selectedBenchmark: BenchmarkIndex,
-): PortfolioValue[] {
+function getPortfolioValueData(portfolioEvents: PortfolioEvent[], stockMarketData: StockMarketData): PortfolioValue[] {
   let cash = 0;
   let balance = 0;
   let totalCapitalInvested = 0;
@@ -217,17 +287,17 @@ function getPortfolioValueData(
           balance: 0,
           totalCapitalInvested: 0,
           oneDayProfit: 0,
-          benchmarkOneDayProfit: 0,
+          benchmarkOneDayProfit: getInitialBenchmarkValueRecord(),
           stocks: {},
           portfolioValue: 0,
           profitOrLoss: 0,
-          benchmarkStock: { volume: 0 },
-          benchmarkStockValue: 0,
+          benchmarkStock: getInitialBenchmarkStockRecord(),
+          benchmarkStockValue: getInitialBenchmarkValueRecord(),
         });
         continue;
       }
 
-      result.push(getNextDayPortfolioValue(previousState, day, stockMarketData, selectedBenchmark));
+      result.push(getNextDayPortfolioValue(previousState, day, stockMarketData));
     } else {
       for (const event of dayEvents) {
         if (event.type === CASH) {
@@ -260,20 +330,30 @@ function getPortfolioValueData(
         }
       }
 
-      let benchmarkStockVolume = result.at(-1)?.benchmarkStock?.volume || 0;
+      const benchmarkStockVolume = result.at(-1)?.benchmarkStock ?? getInitialBenchmarkStockRecord();
       if (dayEvents.some((e) => e.type === CASH)) {
-        const benchmarkStockPrice = stockMarketData[selectedBenchmark]?.price[formatDate(day)] || null;
-        if (benchmarkStockPrice === null) {
-          console.warn(`No ${selectedBenchmark} price for date: `, formatDate(day));
+        const benchmarkPricesNotAvailable = Object.keys(benchmarkStockVolume).every(
+          (index) => !stockMarketData[index]?.price[formatDate(day)],
+        );
+        if (benchmarkPricesNotAvailable) {
           continue;
         }
-        const depositBalance = dayEvents
-          .filter(
-            (e): e is PortfolioEvent & { type: typeof CASH } =>
-              e.type === CASH && !!e.cashWithdrawalOrDeposit && e.cashWithdrawalOrDeposit > 0,
-          )
-          .reduce((acc, e) => acc + e.cashWithdrawalOrDeposit!, 0);
-        benchmarkStockVolume += depositBalance / benchmarkStockPrice;
+
+        Object.keys(benchmarkStockVolume).forEach((index) => {
+          const benchmarkStockPrice = stockMarketData[index]?.price[formatDate(day)] || null;
+          if (benchmarkStockPrice === null) {
+            console.warn(`No ${index} price for date: `, formatDate(day));
+            return;
+          }
+          const depositBalance = dayEvents
+            .filter(
+              (e): e is PortfolioEvent & { type: typeof CASH } =>
+                e.type === CASH && !!e.cashWithdrawalOrDeposit && e.cashWithdrawalOrDeposit > 0,
+            )
+            .reduce((acc, e) => acc + e.cashWithdrawalOrDeposit!, 0);
+
+          benchmarkStockVolume[index as BenchmarkIndex].volume += depositBalance / benchmarkStockPrice;
+        });
       }
 
       result.push(
@@ -287,7 +367,6 @@ function getPortfolioValueData(
           day,
           stockMarketData,
           result.at(-1)!,
-          selectedBenchmark,
         ),
       );
     }
@@ -305,16 +384,13 @@ const getCashFlow = (cashEvents: CashEvent[]): CashFlow => {
   }, [] as CashFlow);
 };
 
-export const analysePortfolio = (
-  portfolioData: PortfolioData,
-  selectedBenchmark: BenchmarkIndex,
-): PortfolioAnalysis => {
+export const analysePortfolio = (portfolioData: PortfolioData): PortfolioAnalysis => {
   const { cashEvents, openPositions, closedStocksOpenEvents, closedStocksCloseEvents } = portfolioData.portfolioEvents;
 
   const allEvents = [...cashEvents, ...openPositions, ...closedStocksOpenEvents, ...closedStocksCloseEvents].toSorted(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
-  const portfolioTimeline = getPortfolioValueData(allEvents, portfolioData.stockMarketData, selectedBenchmark);
+  const portfolioTimeline = getPortfolioValueData(allEvents, portfolioData.stockMarketData);
 
   const assetsAnalysis = getAssetsAnalysis(openPositions, closedStocksOpenEvents, closedStocksCloseEvents);
   const cashFlow = getCashFlow(cashEvents);
