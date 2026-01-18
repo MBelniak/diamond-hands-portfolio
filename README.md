@@ -16,12 +16,14 @@ It's just a playground to see what's possible with public yahoo API (historical 
 ### Key features
 ✅ Track portfolio value, accumulated profit, cash balance\
 ✅ Compare performance with established indexes, like S&P 500 or NASDAQ\
+✅ Manage portfolios in different currencies (currently supporting USD and EUR)\
 ✅ Analyze profits with Simple-Return, Time-Weighted-Return and Money-Weighted-Return metrics\
 ✅ Upload new report - data will be merged accordingly\
 ✅ See an overview of all owned assets, with a breakdown of their performance and allocation\
 ✅ Look into open or close position events on a specific assets in a historical context
 
 ![Performance](performance.png)
+![PerformanceBottom](performance-bottom.png)
 ![Assets](assets.png)
 ![AssetsAllocation](assets_allocation.png)
 ![Asset](asset.png)
