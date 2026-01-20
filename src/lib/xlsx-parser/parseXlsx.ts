@@ -398,29 +398,11 @@ async function fetchStockClosePriceRange(
   return pricesRecord;
 }
 
-// Fetches stock prices and fills in empty dates by carrying forward the most recent price
+// Fetches stock prices
 async function getTickerMarketData(symbol: string, startDate: Date, endDate: Date): Promise<TickerMarketData> {
   const tickerMarketData = await fetchStockClosePriceRange(symbol, startDate, endDate);
 
   if (tickerMarketData) {
-    getDateRange(startDate, endDate).forEach((date) => {
-      const dateKey = formatDate(date);
-      if (!(dateKey in tickerMarketData.tickerQuoteByDateString)) {
-        let recentDate = addDays(date, -1);
-        while (recentDate >= startDate) {
-          if (formatDate(recentDate) in tickerMarketData.tickerQuoteByDateString) {
-            tickerMarketData.tickerQuoteByDateString[dateKey] = JSON.parse(
-              JSON.stringify(tickerMarketData.tickerQuoteByDateString[formatDate(recentDate)]),
-            );
-            tickerMarketData.splitAdjustedTickerQuoteByDateString[dateKey] = JSON.parse(
-              JSON.stringify(tickerMarketData.splitAdjustedTickerQuoteByDateString[formatDate(recentDate)]),
-            );
-            break;
-          }
-          recentDate = addDays(recentDate, -1);
-        }
-      }
-    });
     await redis.set(
       getTickerMarketDataRedisKey(symbol, startDate, endDate),
       JSON.stringify(tickerMarketData),

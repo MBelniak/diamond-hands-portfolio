@@ -1,55 +1,50 @@
-import { PortfolioAnalysis } from "@/lib/types";
+import { PortfolioAnalysis, TickerQuote } from "@/lib/types";
 import { getDateRange } from "@/lib/xlsx-parser/utils";
 import { addYears } from "date-fns";
+import { formatDate } from "@/lib/utils";
 
 export type ChartData = {
-  price: number | undefined;
+  tickerQuote: TickerQuote;
   date: string;
   openMarker?: number | null;
   closeMarker?: number | null;
+  volumeMarker?: number | null;
 };
 
 export const getChartData = (portfolioAnalysis: PortfolioAnalysis, asset: string): ChartData[] => {
   const assetData = portfolioAnalysis.assetsAnalysis[asset];
 
-  return getDateRange(addYears(new Date(), -3), new Date()).map((date) => {
-    const dateStr = date.toISOString().slice(0, 10);
+  return getDateRange(addYears(new Date(), -3), new Date())
+    .map((date) => {
+      const dateStr = formatDate(date);
 
-    const dataOnDate = portfolioAnalysis.portfolioTimeline
-      .filter((data) => data.stocks[asset] != null)
-      .find((data) => data.date.slice(0, 10) === dateStr);
+      if (
+        !Object.keys(portfolioAnalysis.stockMarketData[asset].splitAdjustedTickerQuoteByDateString).includes(dateStr)
+      ) {
+        return null;
+      }
 
-    if (!dataOnDate) {
-      return {
-        date: dateStr,
-        price:
-          portfolioAnalysis.stockMarketData[asset as string].splitAdjustedTickerQuoteByDateString[dateStr].close ||
-          undefined,
-        openMarker: undefined,
-        closeMarker: undefined,
-        volumeMarker: undefined,
-      };
-    }
+      const tickerQuote = portfolioAnalysis.stockMarketData[asset].splitAdjustedTickerQuoteByDateString[dateStr] || {};
 
-    const price = dataOnDate.stocks[asset].splitAdjustedTickerQuote?.close || undefined;
-    const openEvent = assetData.openEvents.find((e) => e.date === dateStr);
-    let openMarker;
-    let volumeMarker;
+      const openEvent = assetData.openEvents.find((e) => e.date === dateStr);
+      let openMarker;
+      let volumeMarker;
 
-    if (openEvent) {
-      openMarker = openEvent ? openEvent.stockPriceOnBuy : undefined;
-      volumeMarker = openEvent ? openEvent.volume : undefined;
-    } else {
-      const openPosition = assetData.openPositions.find((e) => e.date === dateStr);
-      openMarker = openPosition ? openPosition.stockPriceOnBuy : undefined;
-      volumeMarker = openPosition ? openPosition.volume : undefined;
-    }
+      if (openEvent) {
+        openMarker = openEvent ? openEvent.stockPriceOnBuy : undefined;
+        volumeMarker = openEvent ? openEvent.volume : undefined;
+      } else {
+        const openPosition = assetData.openPositions.find((e) => e.date === dateStr);
+        openMarker = openPosition ? openPosition.stockPriceOnBuy : undefined;
+        volumeMarker = openPosition ? openPosition.volume : undefined;
+      }
 
-    const closeEvent = assetData.closeEvents.find((e) => e.date === dateStr);
-    const closeMarker = closeEvent ? closeEvent.stockPriceOnSell : undefined;
-    if (closeMarker) {
-      volumeMarker = closeEvent!.volume + (volumeMarker ?? 0);
-    }
-    return { price, date: dateStr, openMarker, closeMarker, volumeMarker };
-  });
+      const closeEvent = assetData.closeEvents.find((e) => e.date === dateStr);
+      const closeMarker = closeEvent ? closeEvent.stockPriceOnSell : undefined;
+      if (closeMarker) {
+        volumeMarker = closeEvent!.volume + (volumeMarker ?? 0);
+      }
+      return { tickerQuote, date: dateStr, openMarker, closeMarker, volumeMarker };
+    })
+    .filter((data) => data != null);
 };

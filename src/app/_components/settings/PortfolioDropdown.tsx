@@ -9,7 +9,7 @@ export const PortfolioDropdown = () => {
   const { selectedPortfolio, setSelectedPortfolio } = useStore();
 
   return (
-    <div className={"flex gap-2 p-2 items-center justify-between w-full"}>
+    <div className={"grid grid-cols-2 gap-2 p-2 items-center w-full"}>
       <span className={"text-nowrap"}>Portfolio account:</span>
       <Select defaultValue={selectedPortfolio} onValueChange={setSelectedPortfolio}>
         <SelectTrigger className="w-[180px]">

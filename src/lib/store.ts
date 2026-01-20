@@ -5,6 +5,9 @@ import { BenchmarkIndex, SELECTED_BENCHMARK_STORAGE_KEY } from "@/lib/benchmarks
 import { getCurrentTheme, LocalTheme } from "@/hooks/useCurrentTheme";
 import { PortfolioCurrency } from "@/lib/types";
 import { SELECTED_CURRENCY_STORAGE_KEY } from "@/app/consts";
+import { getCurrentChartType } from "@/hooks/useCurrentChartType";
+
+export type ChartType = "line" | "candle";
 
 interface Store {
   selectedReturnMetric: ReturnMetric;
@@ -17,6 +20,8 @@ interface Store {
   setSelectedPortfolio: (data: PortfolioCurrency) => void;
   theme: LocalTheme;
   setTheme: (data: LocalTheme) => void;
+  chartType: ChartType;
+  setChartType: (chartType: ChartType) => void;
 }
 
 const isBrowser = typeof window !== "undefined";
@@ -45,5 +50,9 @@ export const useStore = create<Store>((set) => ({
   theme: getCurrentTheme(),
   setTheme: (newTheme: LocalTheme) => {
     set({ theme: newTheme });
+  },
+  chartType: getCurrentChartType(),
+  setChartType: (chartType: ChartType) => {
+    set({ chartType });
   },
 }));

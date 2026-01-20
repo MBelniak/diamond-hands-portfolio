@@ -12,11 +12,7 @@ export const TimePeriodZoom: React.FC<{
           key={period}
           onClick={() => handlePeriodChange(period)}
           className={`px-2 py-[0.1rem] rounded-lg font-medium transition cursor-pointer
-                ${
-                  selectedPeriod === period
-                    ? "bg-slate-800 text-white"
-                    : "bg-gray-600/60 text-gray-300  hover:bg-gray-700"
-                }`}
+                ${selectedPeriod === period ? "button-selected" : "button-unselected"}`}
           type="button"
         >
           {period}

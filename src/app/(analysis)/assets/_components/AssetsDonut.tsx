@@ -1,12 +1,12 @@
 "use client";
-import { useCurrentTheme } from "@/hooks/useCurrentTheme";
 import React from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { useStore } from "@/lib/store";
 
 type Slice = { label: string; value: number };
 
 export function AssetsDonut({ data }: { data: Slice[] }) {
-  const { theme } = useCurrentTheme();
+  const { theme } = useStore();
 
   const total = data.reduce((s, d) => s + d.value, 0);
 

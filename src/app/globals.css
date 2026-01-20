@@ -41,7 +41,10 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-}
+    --muted: oklch(0.80 0 0);
+    --muted-foreground: oklch(0.5 0 0);
+    --active: var(--color-slate-100);
+    --active-foreground: var(--foreground);}
 
 :root {
   --radius: 0.625rem;
@@ -55,9 +58,11 @@
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --muted: oklch(0.9 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+    --active: var(--color-slate-600);
+    --active-foreground: var(--color-gray-100);
+    --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
@@ -90,8 +95,10 @@
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
+  --muted: color-mix(in oklab, var(--color-gray-800) 60%, transparent);
+  --muted-foreground: var(--color-gray-300);
+    --active: var(--color-slate-700);
+    --active-foreground: white;
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
@@ -141,4 +148,17 @@
   --tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) 0%, var(--tw-gradient-via) 50%, var(--tw-gradient-to) 100%;
   --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) 0%, var(--tw-gradient-to) 100%);
   background-image: linear-gradient(var(--tw-gradient-stops));
+}
+
+@utility button-selected {
+    background: var(--active);
+    color: var(--active-foreground);
+}
+
+@utility button-unselected {
+    background: var(--muted);
+    color: var(--muted-foreground);
+    &:hover {
+        background: var(--active);
+    }
 }

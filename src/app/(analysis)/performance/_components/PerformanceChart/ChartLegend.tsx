@@ -20,11 +20,7 @@ export const ChartLegend: React.FC<{
           key={line.key}
           onClick={() => toggleLine(line.key)}
           className={`flex items-center gap-2 px-3 py-1 rounded-md font-medium transition cursor-pointer
-              ${
-                enabledLines[line.key]
-                  ? "bg-slate-800 text-white hover:bg-slate-700/60"
-                  : "bg-gray-800/60 text-gray-300  hover:bg-gray-700"
-              }
+              ${enabledLines[line.key] ? "button-selected" : "button-unselected"}
                `}
           style={{ borderColor: line.color }}
           type="button"

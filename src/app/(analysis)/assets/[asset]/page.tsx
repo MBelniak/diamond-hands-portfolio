@@ -1,22 +1,19 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { Bar, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import React, { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
 import { ChartData, getChartData } from "@/app/(analysis)/assets/[asset]/getChartData";
-import { MIN_WINDOW_SIZE, useDateRange } from "@/hooks/useDateRange";
 import { Spinner } from "@/components/ui/spinner";
-
-const chartKeys = {
-  stockPrice: "Price",
-};
+import { CandlestickSeries, createChart, LineSeries } from "lightweight-charts";
+import { getChartOptions } from "@/app/globals";
+import { useStore } from "@/lib/store";
 
 export default function AssetChartPage({ params }: { params: Promise<{ asset: string }> }) {
   const { asset } = use(params);
+  const { theme, chartType } = useStore();
   const assetSymbol = decodeURIComponent(asset);
   const { data: portfolioAnalysis, error, isLoading } = usePortfolioAnalysis();
   const assetFullName = portfolioAnalysis?.stockMarketData[assetSymbol]?.longName ?? assetSymbol;
@@ -35,7 +32,32 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
     [assetSymbol, portfolioAnalysis],
   );
 
-  const [range, handleRangeChange] = useDateRange(portfolioAnalysis ? priceHistory.length - 1 : 0);
+  console.dir(priceHistory);
+
+  useEffect(() => {
+    const assetChartContainer = document.getElementById("asset-chart");
+    if (!assetChartContainer) return;
+    const chart = createChart(assetChartContainer, getChartOptions(theme));
+
+    if (chartType === "line") {
+      const lineSeries = chart.addSeries(LineSeries, {
+        lineWidth: 1,
+      });
+      lineSeries.setData(priceHistory.map((data) => ({ time: data.date, value: data.tickerQuote.close })));
+    } else {
+      const candleSeries = chart.addSeries(CandlestickSeries);
+      candleSeries.setData(
+        priceHistory.map((data) => ({
+          time: data.date,
+          ...data.tickerQuote,
+        })),
+      );
+    }
+
+    return () => {
+      chart.remove();
+    };
+  }, [chartType, priceHistory, theme]);
 
   if (isLoading || error || (!isLoading && !portfolioAnalysis)) {
     return (
@@ -46,13 +68,9 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
     );
   }
 
-  const windowStart = Math.max(0, Math.min(range[0], priceHistory.length - MIN_WINDOW_SIZE));
-  const windowEnd = Math.max(windowStart + MIN_WINDOW_SIZE - 1, Math.min(range[1], priceHistory.length - 1));
-  const windowedData = priceHistory.slice(windowStart, windowEnd + 1);
-
   return (
     <div className={"flex flex-col w-full items-center gap-8 mb-16 mt-8"}>
-      <div className={"w-full max-w-3xl flex"}>
+      <div className={"w-full flex"}>
         <Button onClick={() => router.push("/assets")} variant="ghost">
           <Link
             href="/assets"
@@ -66,86 +84,9 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
           </Link>
         </Button>
       </div>
-      <div className="bg-white/10 backdrop-blur-lg rounded-sm shadow-2xl p-8 w-full max-w-3xl">
+      <div className="bg-white/10 backdrop-blur-lg rounded-sm shadow-2xl p-8 w-full">
         <h2 className="text-2xl font-bold  mb-6 text-center drop-shadow-lg">{assetFullName}</h2>
-        <div style={{ width: "100%", padding: "0 24px", boxSizing: "border-box", height: 350 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={windowedData}>
-              <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--foreground)" }} />
-              <YAxis
-                tick={{ fontSize: 12, fill: "var(--foreground)" }}
-                domain={[
-                  (dataMin: number) => Math.floor(dataMin - 0.03 * dataMin),
-                  (dataMax: number) => Math.ceil(dataMax + 0.03 * dataMax),
-                ]}
-              />
-              <YAxis
-                yAxisId="right"
-                orientation="right"
-                tick={{ fontSize: 12, fill: "var(--foreground)" }}
-                domain={[
-                  (dataMin: number) => Math.floor(dataMin - 0.03 * dataMin),
-                  (dataMax: number) => Math.ceil(dataMax + 0.03 * dataMax),
-                ]}
-              />
-              <Tooltip
-                formatter={(value: number) => value?.toFixed(2)}
-                labelFormatter={(label) => `Date: ${label}`}
-                contentStyle={{
-                  background: "var(--tooltip-background)",
-                  borderRadius: "0.75rem",
-                  color: "var(--foreground)",
-                  border: "1px solid #a5b4fc",
-                }}
-                labelStyle={{ color: "var(--foreground)" }}
-              />
-              <Line
-                isAnimationActive={false}
-                type="monotone"
-                dataKey="price"
-                stroke="#85a4dc"
-                strokeWidth={2}
-                dot={false}
-                name={chartKeys.stockPrice}
-              />
-              <Line
-                isAnimationActive={false}
-                type="monotone"
-                dataKey="openMarker"
-                stroke="#22c55e"
-                strokeWidth={0}
-                dot={{ stroke: "#22c55e", strokeWidth: 2, r: 5 }}
-                name="Open"
-                legendType="circle"
-              />
-              <Line
-                isAnimationActive={false}
-                type="monotone"
-                dataKey="closeMarker"
-                stroke="#ef4444"
-                strokeWidth={0}
-                dot={{ stroke: "#ef4444", strokeWidth: 2, r: 5 }}
-                name="Close"
-                legendType="circle"
-              />
-              <Bar yAxisId="right" dataKey="volumeMarker" fill="#38bdf8" name="Volume" barSize={12} opacity={0.7} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        <div className={"w-full mt-4 flex flex-col gap-8 px-8"}>
-          <label className=" font-semibold">
-            Date range: {priceHistory[windowStart].date} - {priceHistory[windowEnd].date}
-          </label>
-          <DualRangeSlider
-            min={0}
-            max={priceHistory.length - 1}
-            value={[windowStart, windowEnd]}
-            step={1}
-            minStepsBetweenThumbs={MIN_WINDOW_SIZE - 1}
-            onValueChange={handleRangeChange}
-            style={{ width: "100%" }}
-          />
-        </div>
+        <div id={"asset-chart"} className={"w-full px-[1.5rem] h-[60svh]"} />
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ export const ReturnMetricsSelector: React.FC = () => {
   const { selectedReturnMetric, setSelectedReturnMetric } = useStore();
 
   return (
-    <div className={"flex gap-1 p-2 items-center justify-between w-full"}>
+    <div className={"grid grid-cols-2  gap-1 p-2 items-center w-full"}>
       <span className={"whitespace-nowrap"}>Return Metric:</span>
       <div className={"flex gap-1"}>
         {["SR", "MWR", "TWR"].map((metric) => (

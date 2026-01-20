@@ -3,6 +3,7 @@ import React from "react";
 import { PortfolioDropdown } from "@/app/_components/settings/PortfolioDropdown";
 import { BenchmarkDropdown } from "@/app/_components/settings/BenchmarkDropdown";
 import { ReturnMetricsSelector } from "@/app/_components/settings/ReturnMetricsSelector";
+import { ChartTypeSelector } from "@/app/_components/settings/ChartTypeSelector";
 
 export const SettingsPopover: React.FC = () => {
   return (
@@ -10,6 +11,7 @@ export const SettingsPopover: React.FC = () => {
       <BenchmarkDropdown />
       <PortfolioDropdown />
       <ReturnMetricsSelector />
+      <ChartTypeSelector />
     </div>
   );
 };

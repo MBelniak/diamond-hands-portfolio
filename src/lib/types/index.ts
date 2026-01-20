@@ -2,11 +2,11 @@ import { CASH, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT, STOCK_OPEN_POSITION } from "
 import { BenchmarkIndex } from "@/lib/benchmarks";
 
 export type TickerQuote = {
-  open: number;
-  high: number;
-  close: number;
-  low: number;
-  volume: number;
+  open?: number;
+  high?: number;
+  close?: number;
+  low?: number;
+  volume?: number;
 };
 
 export type Stock = {

@@ -9,7 +9,7 @@ export const BenchmarkDropdown = () => {
   const { selectedBenchmark, setSelectedBenchmark } = useStore();
 
   return (
-    <div className={"flex p-2 items-center gap-2 justify-between w-full"}>
+    <div className={"grid grid-cols-2 p-2 items-center gap-2 w-full"}>
       <span className={"text-nowrap"}>Comparison index:</span>
       <Select defaultValue={selectedBenchmark} onValueChange={setSelectedBenchmark}>
         <SelectTrigger className="w-[180px]">

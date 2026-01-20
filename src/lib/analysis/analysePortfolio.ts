@@ -39,8 +39,21 @@ function getInitialBenchmarkValueRecord(): Record<BenchmarkIndex, number> {
 
 function getStocksValueCached(stocks: Record<string, Stock>, date: Date, stockMarketData: StockMarketData): number {
   let stocksValue = 0;
-  const dateKey = date.toISOString().slice(0, 10);
+  const dateKey = formatDate(date);
   for (const symbol in stocks) {
+    const tickerMarketData = stockMarketData[symbol]?.tickerQuoteByDateString;
+    if (!(dateKey in tickerMarketData)) {
+      let recentDate = addDays(date, -1);
+      while (recentDate >= addDays(date, -30)) {
+        if (formatDate(recentDate) in stockMarketData[symbol]?.tickerQuoteByDateString) {
+          tickerMarketData[dateKey] = JSON.parse(JSON.stringify(tickerMarketData[formatDate(recentDate)]));
+          tickerMarketData[dateKey] = JSON.parse(JSON.stringify(tickerMarketData[formatDate(recentDate)]));
+          break;
+        }
+        recentDate = addDays(recentDate, -1);
+      }
+    }
+
     const closePrice = stockMarketData[symbol]?.tickerQuoteByDateString[dateKey]?.close ?? null;
     if (closePrice !== null) {
       stocksValue += closePrice * stocks[symbol].volume;
@@ -341,7 +354,7 @@ function getPortfolioValueData(portfolioEvents: PortfolioEvent[], stockMarketDat
 
         Object.keys(benchmarkStockVolume).forEach((index) => {
           const benchmarkStockPrice = stockMarketData[index]?.tickerQuoteByDateString[formatDate(day)] || null;
-          if (benchmarkStockPrice === null) {
+          if (benchmarkStockPrice === null || benchmarkStockPrice.close == null) {
             console.warn(`No ${index} price for date: `, formatDate(day));
             return;
           }
