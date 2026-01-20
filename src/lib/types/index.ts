@@ -1,12 +1,20 @@
 import { CASH, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT, STOCK_OPEN_POSITION } from "../xlsx-parser/consts";
 import { BenchmarkIndex } from "@/lib/benchmarks";
 
+export type TickerQuote = {
+  open: number;
+  high: number;
+  close: number;
+  low: number;
+  volume: number;
+};
+
 export type Stock = {
   volume: number;
   stockVolumeSold?: number;
   takenProfitOrLoss?: number;
-  price?: number;
-  splitAdjustedPrice?: number;
+  tickerQuote?: TickerQuote;
+  splitAdjustedTickerQuote?: TickerQuote;
 };
 
 export type ISODateString = string;
@@ -100,10 +108,38 @@ export type AssetsHistoricalData = {
   };
 };
 
+export type TickerYahooResponse = {
+  chart?: {
+    result?: {
+      timestamp?: number[];
+      meta?: {
+        currency: string;
+        regularMarketPrice: number;
+        longName: string;
+        instrumentType?: string;
+        currentTradingPeriod: { regular: { end: number } };
+      };
+      indicators?: {
+        quote?: {
+          open: number[];
+          high: number[];
+          close: number[];
+          low: number[];
+          volume: number[];
+        }[];
+      };
+      events?: {
+        splits?: Record<string, { date: number; numerator: number; denominator: number }>;
+      };
+    }[];
+  };
+};
+
 export type TickerMarketData = {
   currency: string;
-  price: Record<ISODateString, number>; // date -> price
-  splitAdjustedPrice: Record<ISODateString, number>; // date -> split adjusted price
+  tickerQuoteByDateString: Record<ISODateString, TickerQuote>; // date -> price
+  splitAdjustedTickerQuoteByDateString: Record<ISODateString, TickerQuote>; // date -> split adjusted price
+  regularMarketPrice: number;
   longName: string;
   instrumentType?: string;
   splits: Split[];

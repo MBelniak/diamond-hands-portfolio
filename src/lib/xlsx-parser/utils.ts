@@ -1,5 +1,6 @@
 import { isBefore, isSameDay } from "date-fns";
-import { Currency, PortfolioCurrency } from "@/lib/types";
+import { Currency, PortfolioCurrency, TickerQuote } from "@/lib/types";
+import { omit } from "lodash-es";
 
 export function symbolToYahooSuffix(symbol: string): string {
   if (symbol.endsWith(".UK")) {
@@ -69,3 +70,7 @@ export function convertToCurrency(
   }
   return price;
 }
+
+export const getPricesFromTickerQuote = (tickerQuote: TickerQuote): Exclude<TickerQuote, "volume"> => {
+  return omit(tickerQuote, ["volume"]) as Exclude<TickerQuote, "volume">;
+};

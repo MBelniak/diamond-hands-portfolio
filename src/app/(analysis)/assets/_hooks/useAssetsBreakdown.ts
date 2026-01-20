@@ -1,5 +1,5 @@
 import { AssetsHistoricalData, PortfolioAnalysis } from "@/lib/types";
-import { CFDIndices, formatDate, getStockMarketValue } from "@/lib/utils";
+import { CFDIndices, getStockMarketValue } from "@/lib/utils";
 import { useMemo } from "react";
 import { Asset } from "../_types";
 
@@ -51,7 +51,7 @@ export const useAssetsBreakdown = (portfolioAnalysis: PortfolioAnalysis | undefi
           const potentialValue = assetEvents?.openEvents
             ?.concat(assetEvents.openPositions)
             .reduce((acc: number, event) => {
-              const currentPrice = portfolioAnalysis?.stockMarketData[assetSymbol]?.price[formatDate(new Date())];
+              const currentPrice = portfolioAnalysis?.stockMarketData[assetSymbol]?.regularMarketPrice;
               const lotSize = assetSymbol in CFDIndices ? CFDIndices[assetSymbol].lotSize : 1;
               const volume = event.volume * lotSize;
               return acc + (currentPrice ? volume * currentPrice - event.volume * event.stockPriceOnBuy * lotSize : 0);

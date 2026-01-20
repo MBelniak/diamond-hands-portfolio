@@ -7,19 +7,12 @@ import { Button } from "@/components/ui/button";
 import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
-import { getChartData } from "@/app/(analysis)/assets/[asset]/getChartData";
+import { ChartData, getChartData } from "@/app/(analysis)/assets/[asset]/getChartData";
 import { MIN_WINDOW_SIZE, useDateRange } from "@/hooks/useDateRange";
 import { Spinner } from "@/components/ui/spinner";
 
 const chartKeys = {
   stockPrice: "Price",
-};
-
-type ChartData = {
-  price: number | undefined;
-  date: string;
-  openMarker?: number | null;
-  closeMarker?: number | null;
 };
 
 export default function AssetChartPage({ params }: { params: Promise<{ asset: string }> }) {

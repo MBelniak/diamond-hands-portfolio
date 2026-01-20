@@ -41,7 +41,7 @@ function getStocksValueCached(stocks: Record<string, Stock>, date: Date, stockMa
   let stocksValue = 0;
   const dateKey = date.toISOString().slice(0, 10);
   for (const symbol in stocks) {
-    const closePrice = stockMarketData[symbol]?.price[dateKey] ?? null;
+    const closePrice = stockMarketData[symbol]?.tickerQuoteByDateString[dateKey]?.close ?? null;
     if (closePrice !== null) {
       stocksValue += closePrice * stocks[symbol].volume;
     }
@@ -69,8 +69,8 @@ function getNextDayPortfolioValue(
         symbol,
         {
           ...stock,
-          splitAdjustedPrice: stockMarketData[symbol]?.splitAdjustedPrice[dateKey],
-          price: stockMarketData[symbol]?.price[dateKey],
+          splitAdjustedTickerQuote: stockMarketData[symbol]?.splitAdjustedTickerQuoteByDateString[dateKey],
+          tickerQuote: stockMarketData[symbol]?.tickerQuoteByDateString[dateKey],
         },
       ]),
     ),
@@ -106,7 +106,7 @@ function getNextDayPortfolioValue(
           ...all,
           [index]: {
             volume: previousState.benchmarkStock?.[index].volume || 0,
-            price: stockMarketData[index]?.price[dateKey],
+            price: stockMarketData[index]?.tickerQuoteByDateString[dateKey],
           },
         };
       },
@@ -142,8 +142,8 @@ function getPortfolioValueOnEventDay(
         symbol,
         {
           ...stock,
-          splitAdjustedPrice: stockMarketData[symbol]?.splitAdjustedPrice[dateKey],
-          price: stockMarketData[symbol]?.price[dateKey],
+          splitAdjustedTickerQuote: stockMarketData[symbol]?.splitAdjustedTickerQuoteByDateString[dateKey],
+          tickerQuote: stockMarketData[symbol]?.tickerQuoteByDateString[dateKey],
         },
       ]),
     ),
@@ -167,7 +167,7 @@ function getPortfolioValueOnEventDay(
           ...all,
           [index]: {
             volume: previousState.benchmarkStock?.[index].volume || 0,
-            price: stockMarketData[index]?.price[dateKey] ?? undefined,
+            price: stockMarketData[index]?.tickerQuoteByDateString[dateKey] ?? undefined,
           },
         };
       },
@@ -333,14 +333,14 @@ function getPortfolioValueData(portfolioEvents: PortfolioEvent[], stockMarketDat
       const benchmarkStockVolume = result.at(-1)?.benchmarkStock ?? getInitialBenchmarkStockRecord();
       if (dayEvents.some((e) => e.type === CASH)) {
         const benchmarkPricesNotAvailable = Object.keys(benchmarkStockVolume).every(
-          (index) => !stockMarketData[index]?.price[formatDate(day)],
+          (index) => !stockMarketData[index]?.tickerQuoteByDateString[formatDate(day)],
         );
         if (benchmarkPricesNotAvailable) {
           continue;
         }
 
         Object.keys(benchmarkStockVolume).forEach((index) => {
-          const benchmarkStockPrice = stockMarketData[index]?.price[formatDate(day)] || null;
+          const benchmarkStockPrice = stockMarketData[index]?.tickerQuoteByDateString[formatDate(day)] || null;
           if (benchmarkStockPrice === null) {
             console.warn(`No ${index} price for date: `, formatDate(day));
             return;
@@ -352,7 +352,7 @@ function getPortfolioValueData(portfolioEvents: PortfolioEvent[], stockMarketDat
             )
             .reduce((acc, e) => acc + e.cashWithdrawalOrDeposit!, 0);
 
-          benchmarkStockVolume[index as BenchmarkIndex].volume += depositBalance / benchmarkStockPrice;
+          benchmarkStockVolume[index as BenchmarkIndex].volume += depositBalance / benchmarkStockPrice.close;
         });
       }
 

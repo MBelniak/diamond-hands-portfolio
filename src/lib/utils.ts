@@ -45,13 +45,11 @@ export function getStockMarketValue(
   stock: string,
   assetsAnalysis?: AssetsHistoricalData,
   stockMarketData?: StockMarketData,
-  date: Date = new Date(),
 ): { marketValue: number; volume: number; currentPrice: number | undefined } {
   const assetEvents = assetsAnalysis?.[stock];
   const openPositions = assetEvents?.openPositions ?? [];
   const lotSize = stock in CFDIndices ? CFDIndices[stock].lotSize : 1;
-  const dateStr = formatDate(date);
-  const currentPrice = stockMarketData?.[stock]?.price?.[dateStr];
+  const currentPrice = stockMarketData?.[stock]?.regularMarketPrice;
 
   const volume = openPositions.reduce((s: number, pos) => s + (pos.volume ?? 0) * lotSize, 0);
   const marketValue = openPositions.reduce(

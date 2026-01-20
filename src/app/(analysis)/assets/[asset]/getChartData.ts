@@ -2,7 +2,14 @@ import { PortfolioAnalysis } from "@/lib/types";
 import { getDateRange } from "@/lib/xlsx-parser/utils";
 import { addYears } from "date-fns";
 
-export const getChartData = (portfolioAnalysis: PortfolioAnalysis, asset: string) => {
+export type ChartData = {
+  price: number | undefined;
+  date: string;
+  openMarker?: number | null;
+  closeMarker?: number | null;
+};
+
+export const getChartData = (portfolioAnalysis: PortfolioAnalysis, asset: string): ChartData[] => {
   const assetData = portfolioAnalysis.assetsAnalysis[asset];
 
   return getDateRange(addYears(new Date(), -3), new Date()).map((date) => {
@@ -15,14 +22,16 @@ export const getChartData = (portfolioAnalysis: PortfolioAnalysis, asset: string
     if (!dataOnDate) {
       return {
         date: dateStr,
-        price: portfolioAnalysis.stockMarketData[asset as string].splitAdjustedPrice[dateStr],
+        price:
+          portfolioAnalysis.stockMarketData[asset as string].splitAdjustedTickerQuoteByDateString[dateStr].close ||
+          undefined,
         openMarker: undefined,
         closeMarker: undefined,
         volumeMarker: undefined,
       };
     }
 
-    const price = dataOnDate.stocks[asset].splitAdjustedPrice;
+    const price = dataOnDate.stocks[asset].splitAdjustedTickerQuote?.close || undefined;
     const openEvent = assetData.openEvents.find((e) => e.date === dateStr);
     let openMarker;
     let volumeMarker;

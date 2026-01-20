@@ -6,12 +6,15 @@ import { isBefore } from "date-fns/isBefore";
 import {
   CashEvent,
   ExchangeRates,
+  ISODateString,
   PortfolioCurrency,
   PortfolioData,
   type PortfolioEvent,
   type Split,
   StockMarketData,
   TickerMarketData,
+  TickerQuote,
+  TickerYahooResponse,
   XlsxColumn,
 } from "../types";
 import { createClient } from "redis";
@@ -29,7 +32,7 @@ import {
   STOCK_OPEN_EVENT,
   STOCK_OPEN_POSITION,
 } from "@/lib/xlsx-parser/consts";
-import { convertToCurrency, getDateRange, getStockAPISymbol } from "@/lib/xlsx-parser/utils";
+import { convertToCurrency, getDateRange, getPricesFromTickerQuote, getStockAPISymbol } from "@/lib/xlsx-parser/utils";
 import { setTimeout } from "node:timers/promises";
 import { formatDate } from "@/lib/utils";
 import { UserPortfolioRepository } from "@/database/UserPortfolioRepository";
@@ -227,28 +230,7 @@ async function fetchHistoricalTickerMarketData(
   symbol: string,
   startDate: Date,
   endDate: Date,
-): Promise<{
-  chart?: {
-    result?: {
-      timestamp?: number[];
-      meta?: {
-        currency: string;
-        regularMarketPrice: number;
-        longName: string;
-        instrumentType?: string;
-        currentTradingPeriod: { regular: { end: number } };
-      };
-      indicators?: {
-        quote?: {
-          close: number[];
-        }[];
-      };
-      events?: {
-        splits?: Record<string, { date: number; numerator: number; denominator: number }>;
-      };
-    }[];
-  };
-} | null> {
+): Promise<TickerYahooResponse | null> {
   const searchParams = new URLSearchParams();
   searchParams.set("period1", Math.floor(startOfDay(startDate).getTime() / 1000).toString());
   searchParams.set("period2", Math.floor(startOfDay(endDate).getTime() / 1000).toString());
@@ -256,7 +238,7 @@ async function fetchHistoricalTickerMarketData(
   searchParams.set("events", "splits");
 
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${getStockAPISymbol(symbol)}?${searchParams.toString()}`;
-  console.log("Fetching stock close prices for: ", symbol, " from URL: ", url);
+  console.log("Fetching stock data for: ", symbol, " from URL: ", url);
   try {
     const res = await fetch(url, {
       headers: {
@@ -266,7 +248,7 @@ async function fetchHistoricalTickerMarketData(
     });
     return await res.json();
   } catch (e) {
-    console.warn("Failed to fetch stock close prices for symbol:", symbol, "Error:", e);
+    console.warn("Failed to fetch stock data for symbol:", symbol, "Error:", e);
     return null;
   }
 }
@@ -284,32 +266,45 @@ function parseSplits(splits?: Record<string, { date: number; numerator: number; 
 const isSplitApplicable = (split: Split, date: Date): boolean =>
   isBefore(date, new Date(split.effective_date)) || isSameDay(date, new Date(split.effective_date));
 
-const applySplits = (price: number, splits: Split[], date: Date) => {
-  let result = price;
+const applySplits = <PTickerQuote extends Partial<TickerQuote>>(
+  tickerQuote: PTickerQuote,
+  splits: Split[],
+  date: Date,
+): PTickerQuote => {
+  const result = { ...tickerQuote };
   splits
     ?.filter((split: Split) => isSplitApplicable(split, date))
     .forEach((split) => {
       if (split.split_factor) {
-        result *= split.split_factor;
+        Object.keys(result).forEach((key) => {
+          (result[key as keyof typeof result] as number) *= split.split_factor;
+        });
       }
     });
 
   return result;
 };
 
-const applyReciprocalSplits = (price: number, splits: Split[], date: Date) => {
+const applyReciprocalSplits = <PTickerQuote extends Partial<TickerQuote>>(
+  tickerQuote: PTickerQuote,
+  splits: Split[],
+  date: Date,
+): PTickerQuote => {
   return applySplits(
-    price,
+    tickerQuote,
     splits.map((split) => ({ ...split, split_factor: 1 / (split.split_factor || 1) })),
     date,
   );
 };
 
-function populatePriceMapForDate(date: Date, closePrice: number, splits: Split[], prices: TickerMarketData) {
+function populatePriceMapForDate(date: Date, tickerQuote: TickerQuote, splits: Split[], prices: TickerMarketData) {
   const dateKey = formatDate(date);
   // yahoo API already returns converted values
-  prices.splitAdjustedPrice[dateKey] = closePrice;
-  prices.price[dateKey] = applySplits(closePrice, splits, date);
+  prices.splitAdjustedTickerQuoteByDateString[dateKey] = tickerQuote;
+  prices.tickerQuoteByDateString[dateKey] = {
+    ...applySplits(getPricesFromTickerQuote(tickerQuote), splits, date),
+    volume: tickerQuote.volume,
+  };
 }
 
 /**
@@ -322,46 +317,85 @@ async function fetchStockClosePriceRange(
   endDate: Date,
 ): Promise<TickerMarketData | null> {
   const data = await fetchHistoricalTickerMarketData(symbol, startDate, endDate);
-  if (data) {
-    const timestamp = data.chart?.result?.[0]?.timestamp;
-    const currency = data.chart?.result?.[0]?.meta?.currency ?? "USD";
-    const close = data.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
-    const splits = parseSplits(data.chart?.result?.[0]?.events?.splits);
-    const regularMarketPrice = data.chart?.result?.[0]?.meta?.regularMarketPrice;
-    const tradingPeriodRegularEndTimestamp = data.chart?.result?.[0]?.meta?.currentTradingPeriod?.regular?.end;
-    const tradingPeriodRegularEndDate = tradingPeriodRegularEndTimestamp
-      ? new Date(tradingPeriodRegularEndTimestamp * 1000)
-      : null;
-    const longName = data.chart?.result?.[0]?.meta?.longName ?? symbol;
-    const instrumentType = data.chart?.result?.[0]?.meta?.instrumentType;
-
-    if (timestamp && close) {
-      const pricesRecord = { currency, price: {}, splitAdjustedPrice: {}, longName, instrumentType, splits };
-
-      for (let i = 0; i < timestamp.length; i++) {
-        const date = new Date(timestamp[i] * 1000);
-        if (date >= startDate && date <= endDate) {
-          if (!close[i] && close[i - 1]) {
-            close[i] = close[i - 1];
-          }
-          if (
-            tradingPeriodRegularEndDate &&
-            (isSameDay(date, tradingPeriodRegularEndDate) || isAfter(date, tradingPeriodRegularEndDate)) &&
-            isBefore(new Date(), tradingPeriodRegularEndDate) &&
-            regularMarketPrice
-          ) {
-            // If market is still open and we ask for today's or future date, return current price
-            populatePriceMapForDate(date, regularMarketPrice, splits, pricesRecord);
-          } else {
-            populatePriceMapForDate(date, close[i], splits, pricesRecord);
-          }
-        }
-      }
-      return pricesRecord;
-    }
+  if (!data) {
     return null;
   }
-  return null;
+  const result = data.chart?.result;
+  if (!result || result.length === 0) {
+    return null;
+  }
+
+  const quote = result[0].indicators?.quote?.[0];
+  if (!quote) {
+    return null;
+  }
+
+  const timestamp = result[0].timestamp;
+
+  if (!timestamp) {
+    return null;
+  }
+
+  const currency = result[0].meta?.currency ?? "USD";
+  const splits = parseSplits(result[0].events?.splits);
+  const regularMarketPrice = result[0].meta?.regularMarketPrice;
+  const tradingPeriodRegularEndTimestamp = result[0].meta?.currentTradingPeriod?.regular?.end;
+  const tradingPeriodRegularEndDate = tradingPeriodRegularEndTimestamp
+    ? new Date(tradingPeriodRegularEndTimestamp * 1000)
+    : null;
+  const longName = result[0].meta?.longName ?? symbol;
+  const instrumentType = result[0].meta?.instrumentType;
+
+  const pricesRecord: TickerMarketData = {
+    currency,
+    tickerQuoteByDateString: {},
+    splitAdjustedTickerQuoteByDateString: {},
+    regularMarketPrice: result[0].meta?.regularMarketPrice ?? 0,
+    longName,
+    instrumentType,
+    splits,
+  };
+
+  for (let i = 0; i < timestamp.length; i++) {
+    const date = new Date(timestamp[i] * 1000);
+
+    if (date < startDate || date > endDate) {
+      continue;
+    }
+
+    // Push missing data points forward
+    Object.keys(quote).forEach((key) => {
+      const _key = key as keyof typeof quote;
+      if (quote[_key].length === i) {
+        quote[_key].push(quote[_key][i - 1]);
+      }
+      if (quote[_key][i] === null || quote[_key][i] === undefined) {
+        quote[_key][i] = quote[_key][i - 1];
+      }
+    });
+
+    const tickerQuote: TickerQuote = {
+      open: quote.open[i],
+      close: quote.close[i],
+      high: quote.high[i],
+      low: quote.low[i],
+      volume: quote.volume[i],
+    };
+
+    if (
+      tradingPeriodRegularEndDate &&
+      (isSameDay(date, tradingPeriodRegularEndDate) || isAfter(date, tradingPeriodRegularEndDate)) &&
+      isBefore(new Date(), tradingPeriodRegularEndDate) &&
+      regularMarketPrice
+    ) {
+      // If market is still open and we ask for today's or future date, return current price
+      populatePriceMapForDate(date, tickerQuote, splits, pricesRecord);
+    } else {
+      populatePriceMapForDate(date, tickerQuote, splits, pricesRecord);
+    }
+  }
+
+  return pricesRecord;
 }
 
 // Fetches stock prices and fills in empty dates by carrying forward the most recent price
@@ -371,12 +405,16 @@ async function getTickerMarketData(symbol: string, startDate: Date, endDate: Dat
   if (tickerMarketData) {
     getDateRange(startDate, endDate).forEach((date) => {
       const dateKey = formatDate(date);
-      if (!(dateKey in tickerMarketData.price)) {
+      if (!(dateKey in tickerMarketData.tickerQuoteByDateString)) {
         let recentDate = addDays(date, -1);
         while (recentDate >= startDate) {
-          if (formatDate(recentDate) in tickerMarketData.price) {
-            tickerMarketData.price[dateKey] = tickerMarketData.price[formatDate(recentDate)];
-            tickerMarketData.splitAdjustedPrice[dateKey] = tickerMarketData.splitAdjustedPrice[formatDate(recentDate)];
+          if (formatDate(recentDate) in tickerMarketData.tickerQuoteByDateString) {
+            tickerMarketData.tickerQuoteByDateString[dateKey] = JSON.parse(
+              JSON.stringify(tickerMarketData.tickerQuoteByDateString[formatDate(recentDate)]),
+            );
+            tickerMarketData.splitAdjustedTickerQuoteByDateString[dateKey] = JSON.parse(
+              JSON.stringify(tickerMarketData.splitAdjustedTickerQuoteByDateString[formatDate(recentDate)]),
+            );
             break;
           }
           recentDate = addDays(recentDate, -1);
@@ -391,7 +429,14 @@ async function getTickerMarketData(symbol: string, startDate: Date, endDate: Dat
     return tickerMarketData;
   }
 
-  return { currency: "USD", price: {}, splitAdjustedPrice: {}, longName: symbol, splits: [] };
+  return {
+    currency: "USD",
+    tickerQuoteByDateString: {},
+    splitAdjustedTickerQuoteByDateString: {},
+    regularMarketPrice: 0,
+    longName: symbol,
+    splits: [],
+  };
 }
 
 async function fetchExchangeRates(
@@ -444,17 +489,19 @@ async function fetchExchangeRates(
 }
 
 const getRawMarketData = async (stocks: Set<string>, startDate: Date, endDate: Date) => {
-  return await Promise.all(
-    Array.from(stocks).map(async (symbol) => {
-      let marketData: TickerMarketData;
-      if (await redis.exists(getTickerMarketDataRedisKey(symbol, startDate, endDate))) {
-        marketData = JSON.parse((await redis.get(getTickerMarketDataRedisKey(symbol, startDate, endDate))) as string);
-      } else {
-        marketData = await getTickerMarketData(symbol, startDate, endDate);
-      }
-      return { symbol, marketData };
-    }),
-  );
+  return (
+    await Promise.all(
+      Array.from(stocks).map(async (symbol) => {
+        let marketData: TickerMarketData;
+        if (await redis.exists(getTickerMarketDataRedisKey(symbol, startDate, endDate))) {
+          marketData = JSON.parse((await redis.get(getTickerMarketDataRedisKey(symbol, startDate, endDate))) as string);
+        } else {
+          marketData = await getTickerMarketData(symbol, startDate, endDate);
+        }
+        return { symbol, marketData };
+      }),
+    )
+  ).filter(({ marketData }) => !!marketData);
 };
 
 /**
@@ -504,27 +551,39 @@ const getPortfolioEvents = async (
   return await UserPortfolioRepository.getPortfolioFromDB(user, selectedPortfolio);
 };
 
-const convertMarketDataToCurrency = async (
+const convertMarketDataToCurrency = (
   stockMarketData: StockMarketData,
   exchangeRates: ExchangeRates,
   portfolioCurrency: PortfolioCurrency,
 ) => {
   for (const [symbol, priceRecord] of Object.entries(stockMarketData)) {
-    for (const [date, price] of Object.entries(priceRecord.price)) {
-      stockMarketData[symbol].price[date] = convertToCurrency(
-        price,
-        exchangeRates[date] || {},
-        priceRecord.currency,
-        portfolioCurrency,
-      )!;
+    stockMarketData[symbol].regularMarketPrice = convertToCurrency(
+      priceRecord.regularMarketPrice,
+      exchangeRates[formatDate(new Date())] || {},
+      priceRecord.currency,
+      portfolioCurrency,
+    )!;
+    for (const [date, tickerQuote] of Object.entries(priceRecord.tickerQuoteByDateString)) {
+      Object.keys(getPricesFromTickerQuote(tickerQuote)).forEach((key) => {
+        const _key = key as keyof TickerQuote;
+        stockMarketData[symbol].tickerQuoteByDateString[date][_key] = convertToCurrency(
+          tickerQuote[_key],
+          exchangeRates[date] || {},
+          priceRecord.currency,
+          portfolioCurrency,
+        )!;
+      });
     }
-    for (const [date, price] of Object.entries(priceRecord.splitAdjustedPrice)) {
-      stockMarketData[symbol].splitAdjustedPrice[date] = convertToCurrency(
-        price,
-        exchangeRates[date] || {},
-        priceRecord.currency,
-        portfolioCurrency,
-      )!;
+    for (const [date, tickerQuote] of Object.entries(priceRecord.splitAdjustedTickerQuoteByDateString)) {
+      Object.keys(getPricesFromTickerQuote(tickerQuote)).forEach((key) => {
+        const _key = key as keyof TickerQuote;
+        stockMarketData[symbol].splitAdjustedTickerQuoteByDateString[date][_key] = convertToCurrency(
+          tickerQuote[_key],
+          exchangeRates[date] || {},
+          priceRecord.currency,
+          portfolioCurrency,
+        )!;
+      });
     }
   }
 };
@@ -550,10 +609,10 @@ const adjustEventPrices = (
         ) ?? event.openPrice;
 
       event.openPrice = applyReciprocalSplits(
-        event.openPrice,
+        { open: event.openPrice },
         stockMarketData[stockSymbol].splits,
         new Date(event.date),
-      );
+      ).open;
     }
 
     if (event.type === STOCK_CLOSE_EVENT) {
@@ -567,10 +626,10 @@ const adjustEventPrices = (
         ) ?? event.closePrice;
 
       event.closePrice = applyReciprocalSplits(
-        event.closePrice,
+        { close: event.closePrice },
         stockMarketData[stockSymbol].splits,
         new Date(event.date),
-      );
+      ).close;
     }
   });
 };
@@ -661,6 +720,7 @@ export async function getPortfolioData(
 
   const currencies = new Set(
     Object.values(stockMarketData)
+      .filter((priceData) => priceData)
       .map(({ currency }) => currency)
       .filter(Boolean),
   );
@@ -669,7 +729,7 @@ export async function getPortfolioData(
     () => ({}) as ExchangeRates,
   );
 
-  await convertMarketDataToCurrency(stockMarketData, exchangeRates, portfolioCurrency);
+  convertMarketDataToCurrency(stockMarketData, exchangeRates, portfolioCurrency);
   adjustEventPrices(events, exchangeRates, stockMarketData, portfolioCurrency);
 
   return {

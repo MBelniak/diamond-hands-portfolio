@@ -68,9 +68,7 @@ export const PortfolioValueSummary: React.FC<{
           {PortfolioCurrencyToSymbol[selectedPortfolio]}
           {totalProfit.toFixed(2)} ({returnOnPortfolio[TimePeriod.All].return.toFixed(2)}%)
         </span>
-        <p className="text-sm  text-gray-800 dark:text-gray-200">
-          {realizedProfitOrLoss > 0 ? "Cashed in: " : "Lost: "}
-        </p>
+        <p className="text-sm  text-gray-800 dark:text-gray-200">{"Cashed in: "}</p>
         <span className={clsx(getProfitLossClass(realizedProfitOrLoss), "text-end")}>
           {PortfolioCurrencyToSymbol[selectedPortfolio]}
           {realizedProfitOrLoss.toFixed(2)} ({realizedPercentage.toFixed(2)}%)
