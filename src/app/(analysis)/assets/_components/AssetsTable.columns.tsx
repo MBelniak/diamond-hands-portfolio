@@ -2,13 +2,9 @@
 
 import React from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Asset } from "../_types";
-import { Button } from "@/components/ui/button";
-import { TrendingUp } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Asset, AssetTableData } from "../_types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Spinner } from "@/components/ui/spinner";
 import { PortfolioCurrency, PortfolioCurrencyToSymbol } from "@/lib/types";
 
 export function getProfitLossTextClass(value: number, maxAbs: number): string {
@@ -31,25 +27,7 @@ export function getProfitLossTextClass(value: number, maxAbs: number): string {
   return "text-gray-500 dark:text-gray-300";
 }
 
-const ShowAssetDetailsCell: React.FC<{ symbol: string }> = ({ symbol }) => {
-  const [isLoading, setIsLoading] = React.useState(false);
-  const router = useRouter();
-  return (
-    <Button
-      variant={"secondary"}
-      onClick={() => {
-        setIsLoading(true);
-        router.push("/assets/" + symbol);
-      }}
-      size="icon"
-      disabled={isLoading}
-    >
-      {isLoading ? <Spinner /> : <TrendingUp />}
-    </Button>
-  );
-};
-
-export const getColumns = (currency: PortfolioCurrency): ColumnDef<Asset & { profitScale: number }>[] => [
+export const getColumns = (currency: PortfolioCurrency): ColumnDef<AssetTableData>[] => [
   {
     accessorKey: "assetSymbol",
     header: "Asset",
@@ -121,10 +99,5 @@ export const getColumns = (currency: PortfolioCurrency): ColumnDef<Asset & { pro
       return <div className={cls}>{v.toFixed(2)}</div>;
     },
     enableSorting: true,
-  },
-  {
-    id: "actions",
-    header: "",
-    cell: (info) => <ShowAssetDetailsCell symbol={info.row.original.assetSymbol} />,
   },
 ];

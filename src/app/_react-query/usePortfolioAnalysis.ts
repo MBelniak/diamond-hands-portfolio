@@ -5,10 +5,11 @@ import { PortfolioAnalysis, PortfolioData } from "@/lib/types";
 import { analysePortfolio } from "@/lib/analysis/analysePortfolio";
 import { useStore } from "@/lib/store";
 import { portfolioDataDB } from "@/app/indexedDB/portfolioDataDB";
+import { useDeferredValue } from "react";
 
-export const usePortfolioAnalysis = (): UseQueryResult<PortfolioAnalysis | null> => {
+export const usePortfolioAnalysis = (): UseQueryResult<PortfolioAnalysis> & { isDataStale: boolean } => {
   const { selectedPortfolio } = useStore();
-  return useQuery({
+  const { data, ...useQueryResult } = useQuery({
     queryKey: [QueryKeys.PORTFOLIO_ANALYSIS_QUERY_KEY, selectedPortfolio],
     queryFn: async () => {
       const cachedData = await portfolioDataDB.getPortfolioData(selectedPortfolio);
@@ -30,4 +31,12 @@ export const usePortfolioAnalysis = (): UseQueryResult<PortfolioAnalysis | null>
     refetchOnMount: false,
     retryOnMount: false,
   });
+
+  const deferredData = useDeferredValue(data);
+
+  return {
+    data: deferredData,
+    isDataStale: data !== deferredData,
+    ...useQueryResult,
+  } as UseQueryResult<PortfolioAnalysis> & { isDataStale: boolean };
 };

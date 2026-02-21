@@ -1,12 +1,15 @@
+"use client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CogIcon } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { SettingsPopover } from "@/app/_components/settings/SettingsPopover";
 
 export const SettingsDropdownMenu: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <Popover>
-      <PopoverTrigger title={"Settings"}>
+    <Popover open={isOpen}>
+      <PopoverTrigger title={"Settings"} asChild onClick={() => setIsOpen(true)}>
         <div
           className={
             "rounded-[50%] aspect-square w-9 flex items-center justify-center bg-white/10 hover:bg-white/20 cursor-pointer"
@@ -16,7 +19,7 @@ export const SettingsDropdownMenu: React.FC = () => {
         </div>
       </PopoverTrigger>
       <PopoverContent>
-        <SettingsPopover />
+        <SettingsPopover onRequestCloseAction={() => setIsOpen(false)} />
       </PopoverContent>
     </Popover>
   );

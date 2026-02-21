@@ -6,7 +6,6 @@ import { isBefore } from "date-fns/isBefore";
 import {
   CashEvent,
   ExchangeRates,
-  ISODateString,
   PortfolioCurrency,
   PortfolioData,
   type PortfolioEvent,
@@ -32,7 +31,7 @@ import {
   STOCK_OPEN_EVENT,
   STOCK_OPEN_POSITION,
 } from "@/lib/xlsx-parser/consts";
-import { convertToCurrency, getDateRange, getPricesFromTickerQuote, getStockAPISymbol } from "@/lib/xlsx-parser/utils";
+import { convertToCurrency, getPricesFromTickerQuote, getStockAPISymbol } from "@/lib/xlsx-parser/utils";
 import { setTimeout } from "node:timers/promises";
 import { formatDate } from "@/lib/utils";
 import { UserPortfolioRepository } from "@/database/UserPortfolioRepository";

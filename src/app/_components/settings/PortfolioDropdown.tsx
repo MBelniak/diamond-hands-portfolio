@@ -5,13 +5,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useStore } from "@/lib/store";
 import { PortfolioCurrency } from "@/lib/types";
 
-export const PortfolioDropdown = () => {
+export const PortfolioDropdown: React.FC<{ onRequestCloseAction: () => void }> = ({ onRequestCloseAction }) => {
   const { selectedPortfolio, setSelectedPortfolio } = useStore();
 
   return (
     <div className={"grid grid-cols-2 gap-2 p-2 items-center w-full"}>
       <span className={"text-nowrap"}>Portfolio account:</span>
-      <Select defaultValue={selectedPortfolio} onValueChange={setSelectedPortfolio}>
+      <Select
+        defaultValue={selectedPortfolio}
+        onValueChange={(portfolio: PortfolioCurrency) => {
+          setSelectedPortfolio(portfolio);
+          onRequestCloseAction();
+        }}
+      >
         <SelectTrigger className="w-[180px]">
           <SelectValue />
         </SelectTrigger>

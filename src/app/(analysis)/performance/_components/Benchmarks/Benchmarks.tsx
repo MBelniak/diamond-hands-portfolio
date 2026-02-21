@@ -2,43 +2,19 @@
 
 import React, { useMemo } from "react";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
-import { ColumnDef, ColumnDefBase, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
-import { cn, getProfitLossClass } from "@/lib/utils";
 import { TimePeriod } from "@/app/(analysis)/performance/_types/TimePeriod";
 import { useStore } from "@/lib/store";
-import { getReturnOnTimeline, ReturnMetricsOnBenchmark } from "@/app/(analysis)/performance/_logic/getReturnOnTimeline";
+import { getReturnOnTimeline } from "@/app/(analysis)/performance/_logic/getReturnOnTimeline";
 import { getCashFlowForBenchmarkComparison } from "@/lib/returnMetrics";
-
-type BenchmarkRow = {
-  benchmark: string;
-} & ReturnMetricsOnBenchmark;
-
-const formatProfit = (value: number): string => {
-  if (value === 0) return "0.00%";
-  return `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
-};
-
-const BenchmarkNumericCell: ColumnDefBase<
-  BenchmarkRow,
-  | {
-      return: number;
-      totalProfit: number;
-    }
-  | string
->["cell"] = (info) => {
-  const value = (
-    info.getValue() as {
-      return: number;
-      totalProfit: number;
-    }
-  ).return as number;
-  return <div className={cn("text-left tabular-nums", getProfitLossClass(value))}>{formatProfit(value)}</div>;
-};
+import { LoaderOverlay } from "@/components/ui/LoaderOverlay";
+import { BenchmarkRow } from "@/app/(analysis)/performance/_components/Benchmarks/Benchmark.types";
+import { benchmarkColumns } from "@/app/(analysis)/performance/_components/Benchmarks/Banchmarks.columns";
 
 export const Benchmarks: React.FC = () => {
-  const { data: portfolioAnalysis } = usePortfolioAnalysis();
+  const { data: portfolioAnalysis, isDataStale } = usePortfolioAnalysis();
   const { selectedReturnMetric } = useStore();
 
   const benchmarkData = useMemo(() => {
@@ -139,60 +115,7 @@ export const Benchmarks: React.FC = () => {
     return rows;
   }, [portfolioAnalysis, selectedReturnMetric]);
 
-  const columns = useMemo<
-    ColumnDef<
-      BenchmarkRow,
-      | {
-          return: number;
-          totalProfit: number;
-        }
-      | string
-    >[]
-  >(
-    () => [
-      {
-        accessorKey: "benchmark",
-        header: "Benchmark",
-        cell: (info) => <div className="font-medium">{info.getValue() as string}</div>,
-      },
-      {
-        accessorKey: TimePeriod.OneWeek,
-        header: "1W",
-        cell: BenchmarkNumericCell,
-      },
-      {
-        accessorKey: TimePeriod.OneMonth,
-        header: "1M",
-        cell: BenchmarkNumericCell,
-      },
-      {
-        accessorKey: TimePeriod.ThreeMonths,
-        header: "3M",
-        cell: BenchmarkNumericCell,
-      },
-      {
-        accessorKey: TimePeriod.SixMonths,
-        header: "6M",
-        cell: BenchmarkNumericCell,
-      },
-      {
-        accessorKey: TimePeriod.OneYear,
-        header: "1Y",
-        cell: BenchmarkNumericCell,
-      },
-      {
-        accessorKey: TimePeriod.YearToDate,
-        header: "YTD",
-        cell: BenchmarkNumericCell,
-      },
-      {
-        accessorKey: TimePeriod.All,
-        header: "All Time",
-        cell: BenchmarkNumericCell,
-      },
-    ],
-    [],
-  );
+  const columns = useMemo(() => benchmarkColumns, []);
 
   const table = useReactTable({
     data: benchmarkData,
@@ -205,7 +128,8 @@ export const Benchmarks: React.FC = () => {
   }
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4 relative">
+      {isDataStale && <LoaderOverlay />}
       <div className="space-y-2">
         <h2 className="text-2xl font-bold">Total Return vs Benchmarks</h2>
       </div>

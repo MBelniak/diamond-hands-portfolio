@@ -13,7 +13,7 @@ import { addYears, isSameDay } from "date-fns";
 import { formatDate } from "../utils";
 import { addDays } from "date-fns/addDays";
 import { CASH, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT, STOCK_OPEN_POSITION } from "@/lib/xlsx-parser/consts";
-import { merge } from "lodash-es";
+import { cloneDeep, merge } from "lodash-es";
 import { getDateRange } from "../xlsx-parser/utils";
 import { BenchmarkIndex } from "@/lib/benchmarks";
 
@@ -46,8 +46,8 @@ function getStocksValueCached(stocks: Record<string, Stock>, date: Date, stockMa
       let recentDate = addDays(date, -1);
       while (recentDate >= addDays(date, -30)) {
         if (formatDate(recentDate) in stockMarketData[symbol]?.tickerQuoteByDateString) {
-          tickerMarketData[dateKey] = JSON.parse(JSON.stringify(tickerMarketData[formatDate(recentDate)]));
-          tickerMarketData[dateKey] = JSON.parse(JSON.stringify(tickerMarketData[formatDate(recentDate)]));
+          tickerMarketData[dateKey] = cloneDeep(tickerMarketData[formatDate(recentDate)]);
+          tickerMarketData[dateKey] = cloneDeep(tickerMarketData[formatDate(recentDate)]);
           break;
         }
         recentDate = addDays(recentDate, -1);

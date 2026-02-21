@@ -5,32 +5,33 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
   getPaginationRowModel,
-  useReactTable,
-  SortingState,
+  getSortedRowModel,
   PaginationState,
+  SortingState,
+  useReactTable,
 } from "@tanstack/react-table";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
-import { getProfitLossTextClass } from "./columns";
-import { Button } from "@/components/ui/button";
-import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight } from "lucide-react";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getProfitLossTextClass } from "./AssetsTable.columns";
 import { cn } from "@/lib/utils";
-import { Asset } from "@/app/(analysis)/assets/_types";
+import { useRouter } from "next/navigation";
+import { AssetTableData } from "@/app/(analysis)/assets/_types";
+import { Pagination } from "@/app/_components/table/Pagination";
 
-interface AssetsDataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
-  totals: Partial<TData> | null;
+type RowId = string;
+
+interface AssetsDataTableProps {
+  columns: ColumnDef<AssetTableData, string | number>[];
+  data: AssetTableData[];
+  totals: Partial<AssetTableData> | null;
 }
 
-export type AssetTableRecord = Asset & { profitScale: number };
-
-export function AssetsTable<TValue>({ columns, data, totals }: AssetsDataTableProps<AssetTableRecord, TValue>) {
+export function AssetsTable({ columns, data, totals }: AssetsDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  // Add pagination state with fixed pageSize = 20
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 15 });
+  const [isLoading, setIsLoading] = React.useState<false | RowId>(false);
+  const router = useRouter();
 
   const table = useReactTable({
     data,
@@ -84,7 +85,17 @@ export function AssetsTable<TValue>({ columns, data, totals }: AssetsDataTablePr
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className={isTotal ? "bg-gray-100 dark:bg-slate-700/80 font-bold" : undefined}
+                  className={cn(
+                    isTotal ? "bg-gray-100 dark:bg-slate-700/80 font-bold" : undefined,
+                    isLoading === row.id ? "opacity-50 cursor-progress" : undefined,
+                    isLoading === false ? "hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer" : undefined,
+                  )}
+                  onClick={() => {
+                    if (isLoading === false) {
+                      setIsLoading(row.id);
+                      router.push("/assets/" + row.original.assetSymbol);
+                    }
+                  }}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
@@ -104,9 +115,9 @@ export function AssetsTable<TValue>({ columns, data, totals }: AssetsDataTablePr
           <TableFooter>
             <TableRow className="bg-gray-100 dark:bg-slate-700/80 font-bold">
               {columns.map((col) => {
-                const colAny = col as unknown as { accessorKey?: string; id?: string };
-                const key = colAny.accessorKey as keyof AssetTableRecord;
-                const totalsTyped = totals as AssetTableRecord;
+                const colAny = col as unknown as { accessorKey: keyof AssetTableData; id?: string };
+                const key = colAny.accessorKey;
+                const totalsTyped = totals;
                 const value = totalsTyped[key];
 
                 if (typeof value === "number") {
@@ -152,52 +163,12 @@ export function AssetsTable<TValue>({ columns, data, totals }: AssetsDataTablePr
         ) : null}
       </Table>
 
-      {/* Pagination controls (20 rows per page) */}
-      <div className="flex items-center justify-between p-2">
-        <div className="flex items-center space-x-2">
-          <Button
-            className="px-2 py-1 border rounded disabled:opacity-50"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-            aria-label="First page"
-            variant={"secondary"}
-          >
-            <ChevronFirst />
-          </Button>
-          <Button
-            className="px-2 py-1 border rounded disabled:opacity-50"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            aria-label="Previous page"
-            variant={"secondary"}
-          >
-            <ChevronLeft />
-          </Button>
-          <Button
-            className="px-2 py-1 border rounded disabled:opacity-50"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            aria-label="Next page"
-            variant={"secondary"}
-          >
-            <ChevronRight />
-          </Button>
-          <Button
-            className="px-2 py-1 border rounded disabled:opacity-50"
-            onClick={() => table.setPageIndex(Math.max(0, table.getPageCount() - 1))}
-            disabled={!table.getCanNextPage()}
-            aria-label="Last page"
-            variant={"secondary"}
-          >
-            <ChevronLast />
-          </Button>
-        </div>
-
-        <div className="text-sm">
-          Page {table.getState().pagination.pageIndex + 1} of {Math.max(1, table.getPageCount())} • Showing up to 15
-          rows per page
-        </div>
-      </div>
+      <Pagination
+        currentPage={table.getState().pagination.pageIndex}
+        pageCount={table.getPageCount()}
+        pageSize={15}
+        onPageChange={(page) => table.setPageIndex(page)}
+      />
     </div>
   );
 }

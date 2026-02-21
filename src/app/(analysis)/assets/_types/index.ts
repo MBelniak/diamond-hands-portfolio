@@ -10,3 +10,5 @@ export type Asset = {
   marketValue: number;
   instrumentType?: string;
 };
+
+export type AssetTableData = Asset & { profitScale: number };
