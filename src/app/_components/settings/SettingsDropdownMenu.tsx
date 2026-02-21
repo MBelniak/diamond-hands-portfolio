@@ -9,7 +9,7 @@ export const SettingsDropdownMenu: React.FC = () => {
 
   return (
     <Popover open={isOpen}>
-      <PopoverTrigger title={"Settings"} asChild onClick={() => setIsOpen(true)}>
+      <PopoverTrigger title={"Settings"} asChild onClick={() => setIsOpen((open) => !open)}>
         <div
           className={
             "rounded-[50%] aspect-square w-9 flex items-center justify-center bg-white/10 hover:bg-white/20 cursor-pointer"
