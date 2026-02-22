@@ -1,7 +1,6 @@
 // @ts-expect-error no typings for this file
 import XLSX from "xlsx/xlsx.js";
-import { isAfter, isSameDay, startOfDay } from "date-fns";
-import { addDays } from "date-fns/addDays";
+import { isAfter, isSameDay } from "date-fns";
 import { isBefore } from "date-fns/isBefore";
 import {
   CashEvent,
@@ -13,31 +12,30 @@ import {
   StockMarketData,
   TickerMarketData,
   TickerQuote,
-  TickerYahooResponse,
   XlsxColumn,
 } from "../types";
-import { createClient } from "redis";
-import {
-  getExchangeRatesRedisKey,
-  getStockPricesRedisKey as getTickerMarketDataRedisKey,
-  REDIS_EXPIRE_IN_DAY,
-} from "../redis";
+import { createClient, RedisClientType } from "redis";
+import { getStockPricesRedisKey as getTickerMarketDataRedisKey, REDIS_EXPIRE_IN_DAY } from "../redis";
 import {
   CASH,
+  CASH_DEPOSIT,
   CASH_OPERATION_HISTORY,
+  CASH_TRANSFER,
+  CASH_WITHDRAWAL,
   CLOSED_POSITION_HISTORY,
   OPEN_POSITION,
   STOCK_CLOSE_EVENT,
   STOCK_OPEN_EVENT,
   STOCK_OPEN_POSITION,
 } from "@/lib/xlsx-parser/consts";
-import { convertToCurrency, getPricesFromTickerQuote, getStockAPISymbol } from "@/lib/xlsx-parser/utils";
-import { setTimeout } from "node:timers/promises";
+import { convertToCurrency, getPricesFromTickerQuote, XlsxHelper } from "@/lib/xlsx-parser/utils";
 import { formatDate } from "@/lib/utils";
 import { UserPortfolioRepository } from "@/database/UserPortfolioRepository";
 import { User } from "@clerk/nextjs/server";
 import { BenchmarkIndex } from "@/lib/benchmarks";
 import { uniqBy } from "lodash-es";
+import { YahooAPIHelper } from "@/lib/yahoo-api/YahooAPIHelper";
+import { ExchangeRatesHelper } from "@/lib/exchange-rates/ExchangeRatesHelper";
 
 if (!process.env.REDIS_URL) {
   throw new Error(
@@ -47,158 +45,84 @@ if (!process.env.REDIS_URL) {
 
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 
-if (!process.env.EXCHANGE_RATES_API_KEY) {
-  throw new Error(
-    "Please set the EXCHANGE_RATES_API_KEY environment variable in the .env file. See https://currencylayer.com/documentation",
-  );
-}
-
-const currencylayerApiKey = process.env.EXCHANGE_RATES_API_KEY;
-
-// Helper function to get column indexes by headers
-function getHeaderKeys<T extends readonly string[]>(
-  headerRow: Record<string, string>,
-  wantedKeys: T,
-): Record<T[number], string> {
-  const map = {} as Record<T[number], string>;
-  for (const wantedKey of wantedKeys) {
-    const foundKey = Object.keys(headerRow).find((key) => headerRow[key] === wantedKey);
-    if (foundKey) {
-      map[wantedKey as T[number]] = foundKey;
-    }
-  }
-  return map;
-}
-
-function parseXLSXDate(dateStr: string | number): Date {
-  const dateObjectParsed = XLSX.SSF.parse_date_code(dateStr as number);
-  return new Date(
-    dateObjectParsed.y,
-    dateObjectParsed.m - 1,
-    dateObjectParsed.d,
-    dateObjectParsed.H || 0,
-    dateObjectParsed.M || 0,
-    dateObjectParsed.S || 0,
-  );
-}
-
-// Helper to extract header index and keys from sheet data
-function extractHeaderAndKeys<T extends readonly string[]>(
-  data: Record<string, string>[],
-  headerNames: T,
-): { headerIdx: number; headerKeys: Record<T[number], string> } {
-  const headerIdx = data.findIndex((row) => Object.values(row).some((val) => headerNames.includes(val as T[number])));
-  const headerRow = data[headerIdx];
-  const headerKeys = getHeaderKeys(headerRow, headerNames);
-  return { headerIdx, headerKeys };
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getCashEvents(workbook: any): CashEvent[] {
-  const cashSheet = workbook.Sheets[CASH_OPERATION_HISTORY];
-  const cashData: Record<string, string>[] = XLSX.utils.sheet_to_json(cashSheet);
+  const cashDataAsObjectArray = XlsxHelper.parseSheetToJson(workbook, CASH_OPERATION_HISTORY);
+  if (cashDataAsObjectArray.length === 0) {
+    return [];
+  }
 
-  const { headerIdx, headerKeys } = extractHeaderAndKeys(cashData, [
-    XlsxColumn.CASH_OPERATION_ID,
-    XlsxColumn.TIME,
-    XlsxColumn.AMOUNT,
-    XlsxColumn.TYPE,
-  ] as const);
-
-  return cashData
-    .slice(headerIdx + 1)
-    .filter((row) => row[headerKeys[XlsxColumn.TIME]])
+  return cashDataAsObjectArray
+    .filter((row) => row[XlsxColumn.TIME])
     .map((row) => ({
-      id: row[headerKeys[XlsxColumn.CASH_OPERATION_ID]] || "",
-      date: parseXLSXDate(row[headerKeys[XlsxColumn.TIME]]).toISOString(),
-      cashChange: parseFloat(row[headerKeys[XlsxColumn.AMOUNT]]) || 0,
+      id: String(row[XlsxColumn.CASH_OPERATION_ID] || ""),
+      date: XlsxHelper.parseXLSXDate(row[XlsxColumn.TIME]).toISOString(),
+      cashChange: Number(row[XlsxColumn.AMOUNT] || 0),
       type: CASH,
-      cashWithdrawalOrDeposit: ["deposit", "withdrawal", "transfer"].includes(row[headerKeys[XlsxColumn.TYPE]])
-        ? parseFloat(row[headerKeys[XlsxColumn.AMOUNT]]) || 0
+      cashWithdrawalOrDeposit: [CASH_DEPOSIT as string, CASH_WITHDRAWAL, CASH_TRANSFER].includes(
+        String(row[XlsxColumn.TYPE]),
+      )
+        ? Number(row[XlsxColumn.AMOUNT])
         : null,
     }));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getStockOpenPositions(workbook: any): PortfolioEvent[] {
-  const openSheet = workbook.Sheets[Object.keys(workbook.Sheets).find((key) => key.startsWith(OPEN_POSITION))!];
-  const openData: Record<string, string>[] = XLSX.utils.sheet_to_json(openSheet);
-
-  const { headerIdx, headerKeys } = extractHeaderAndKeys(openData, [
-    XlsxColumn.OPEN_TIME,
-    XlsxColumn.VOLUME,
-    XlsxColumn.SYMBOL,
-    XlsxColumn.GROSS_PL,
-    XlsxColumn.OPEN_PRICE,
-    XlsxColumn.POSITION_ID,
-  ]);
+  const openData = XlsxHelper.parseSheetToJson(workbook, OPEN_POSITION);
+  if (openData.length === 0) {
+    return [];
+  }
 
   return openData
-    .slice(headerIdx + 1)
-    .filter((row) => row[headerKeys[XlsxColumn.OPEN_TIME]])
+    .filter((row) => row[XlsxColumn.OPEN_TIME])
     .map((row) => ({
-      id: row[headerKeys[XlsxColumn.POSITION_ID]] ?? "",
-      date: parseXLSXDate(row[headerKeys[XlsxColumn.OPEN_TIME]]).toISOString(),
-      stocksVolumeChange: parseFloat(row[headerKeys[XlsxColumn.VOLUME]]) || 0,
+      id: String(row[XlsxColumn.POSITION_ID] ?? ""),
+      date: XlsxHelper.parseXLSXDate(row[XlsxColumn.OPEN_TIME]).toISOString(),
+      stocksVolumeChange: Number(row[XlsxColumn.VOLUME] || 0),
       type: STOCK_OPEN_POSITION,
-      stockSymbol: row[headerKeys[XlsxColumn.SYMBOL]] || null,
-      profitOrLoss: parseFloat(row[headerKeys[XlsxColumn.GROSS_PL]]) || 0,
-      openPrice: parseFloat(row[headerKeys[XlsxColumn.OPEN_PRICE]]) || 0,
+      stockSymbol: String(row[XlsxColumn.SYMBOL] || null),
+      profitOrLoss: Number(row[XlsxColumn.GROSS_PL] || 0),
+      openPrice: Number(row[XlsxColumn.OPEN_PRICE] || 0),
     }));
-}
-
-// Consolidated closed operations extraction
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getClosedOperations(workbook: any) {
-  const closedSheet = workbook.Sheets[CLOSED_POSITION_HISTORY];
-  const closedData: Record<string, string>[] = XLSX.utils.sheet_to_json(closedSheet);
-
-  const { headerIdx, headerKeys } = extractHeaderAndKeys(closedData, [
-    XlsxColumn.CLOSE_TIME,
-    XlsxColumn.OPEN_TIME,
-    XlsxColumn.VOLUME,
-    XlsxColumn.SYMBOL,
-    XlsxColumn.GROSS_PL,
-    XlsxColumn.OPEN_PRICE,
-    XlsxColumn.POSITION_ID,
-    XlsxColumn.CLOSE_PRICE,
-  ] as const);
-
-  return { closedData, headerIdx, headerKeys };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getClosedStocksOpenEvents(workbook: any): PortfolioEvent[] {
-  const { closedData, headerIdx, headerKeys } = getClosedOperations(workbook);
+  const closedData = XlsxHelper.parseSheetToJson(workbook, CLOSED_POSITION_HISTORY);
+  if (closedData.length === 0) {
+    return [];
+  }
 
   return closedData
-    .slice(headerIdx + 1)
-    .filter((row) => row[headerKeys[XlsxColumn.OPEN_TIME]])
+    .filter((row) => row[XlsxColumn.OPEN_TIME])
     .map((row) => ({
-      id: row[headerKeys[XlsxColumn.POSITION_ID]] ?? "",
-      date: parseXLSXDate(row[headerKeys[XlsxColumn.OPEN_TIME]]).toISOString(),
-      stocksVolumeChange: parseFloat(row[headerKeys[XlsxColumn.VOLUME]]) || 0,
+      id: String(row[XlsxColumn.POSITION_ID] ?? ""),
+      date: XlsxHelper.parseXLSXDate(row[XlsxColumn.OPEN_TIME]).toISOString(),
+      stocksVolumeChange: Number(row[XlsxColumn.VOLUME] || 0),
       type: STOCK_OPEN_EVENT,
-      stockSymbol: row[headerKeys[XlsxColumn.SYMBOL]] || null,
-      openPrice: parseFloat(row[headerKeys[XlsxColumn.OPEN_PRICE]]) || 0,
+      stockSymbol: String(row[XlsxColumn.SYMBOL]) || null,
+      openPrice: Number(row[XlsxColumn.OPEN_PRICE] || 0),
     }));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getClosedStocksCloseEvents(workbook: any): PortfolioEvent[] {
-  const { closedData, headerIdx, headerKeys } = getClosedOperations(workbook);
+  const closedData = XlsxHelper.parseSheetToJson(workbook, CLOSED_POSITION_HISTORY);
+  if (closedData.length === 0) {
+    return [];
+  }
 
   return closedData
-    .slice(headerIdx + 1)
-    .filter((row) => row[headerKeys[XlsxColumn.CLOSE_TIME]])
+    .filter((row) => row[XlsxColumn.CLOSE_TIME])
     .map((row) => ({
-      id: row[headerKeys[XlsxColumn.POSITION_ID]] ?? "",
-      date: parseXLSXDate(row[headerKeys[XlsxColumn.CLOSE_TIME]]).toISOString(),
-      stocksVolumeChange: parseFloat(row[headerKeys[XlsxColumn.VOLUME]]) || 0,
+      id: String(row[XlsxColumn.POSITION_ID] ?? ""),
+      date: XlsxHelper.parseXLSXDate(row[XlsxColumn.CLOSE_TIME]).toISOString(),
+      stocksVolumeChange: Number(row[XlsxColumn.VOLUME] || 0),
       type: STOCK_CLOSE_EVENT,
-      stockSymbol: row[headerKeys[XlsxColumn.SYMBOL]] || null,
-      profitOrLoss: parseFloat(row[headerKeys[XlsxColumn.GROSS_PL]] || "0"),
-      closePrice: parseFloat(row[headerKeys[XlsxColumn.CLOSE_PRICE]]) || 0,
+      stockSymbol: String(row[XlsxColumn.SYMBOL]) || null,
+      profitOrLoss: Number(row[XlsxColumn.GROSS_PL] || 0),
+      closePrice: Number(row[XlsxColumn.CLOSE_PRICE] || 0),
     }));
 }
 
@@ -223,33 +147,6 @@ function getCashAndStocksEvents(workbook: any): PortfolioData["portfolioEvents"]
     closedStocksOpenEvents,
     closedStocksCloseEvents,
   };
-}
-
-async function fetchHistoricalTickerMarketData(
-  symbol: string,
-  startDate: Date,
-  endDate: Date,
-): Promise<TickerYahooResponse | null> {
-  const searchParams = new URLSearchParams();
-  searchParams.set("period1", Math.floor(startOfDay(startDate).getTime() / 1000).toString());
-  searchParams.set("period2", Math.floor(startOfDay(endDate).getTime() / 1000).toString());
-  searchParams.set("interval", "1d");
-  searchParams.set("events", "splits");
-
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${getStockAPISymbol(symbol)}?${searchParams.toString()}`;
-  console.log("Fetching stock data for: ", symbol, " from URL: ", url);
-  try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
-      },
-    });
-    return await res.json();
-  } catch (e) {
-    console.warn("Failed to fetch stock data for symbol:", symbol, "Error:", e);
-    return null;
-  }
 }
 
 function parseSplits(splits?: Record<string, { date: number; numerator: number; denominator: number }>): Split[] {
@@ -315,7 +212,7 @@ async function fetchStockClosePriceRange(
   startDate: Date,
   endDate: Date,
 ): Promise<TickerMarketData | null> {
-  const data = await fetchHistoricalTickerMarketData(symbol, startDate, endDate);
+  const data = await YahooAPIHelper.fetchHistoricalTickerMarketData(symbol, startDate, endDate);
   if (!data) {
     return null;
   }
@@ -418,55 +315,6 @@ async function getTickerMarketData(symbol: string, startDate: Date, endDate: Dat
     longName: symbol,
     splits: [],
   };
-}
-
-async function fetchExchangeRates(
-  currencies: Set<string>,
-  baseCurrency: PortfolioCurrency,
-  startDate: Date,
-): Promise<ExchangeRates> {
-  const today = new Date();
-  if (await redis.exists(getExchangeRatesRedisKey(today, baseCurrency))) {
-    return JSON.parse((await redis.get(getExchangeRatesRedisKey(today, baseCurrency))) as string);
-  }
-
-  if (currencies.has("GBp")) {
-    currencies.delete("GBp");
-    currencies.add("GBP");
-  }
-
-  let exchangeRates = {};
-  let endDate = addDays(startDate, 365);
-  while (isBefore(endDate, addDays(new Date(), 365))) {
-    const searchParams = new URLSearchParams();
-    searchParams.set("start_date", formatDate(addDays(endDate, -365)));
-    searchParams.set("end_date", formatDate(isBefore(endDate, new Date()) ? endDate : new Date()));
-    searchParams.set("access_key", currencylayerApiKey);
-    searchParams.set(
-      "currencies",
-      Array.from(currencies)
-        .filter((c) => c !== baseCurrency)
-        .join(","),
-    );
-    searchParams.set("source", baseCurrency);
-
-    const finalURL = `https://apilayer.net/timeframe?${searchParams.toString()}`;
-    console.log("Fetching from " + finalURL);
-    const response = await fetch(finalURL);
-
-    if (response.ok) {
-      const data = (await response.json()).quotes as ExchangeRates;
-      exchangeRates = { ...exchangeRates, ...data };
-      endDate = addDays(endDate, 365);
-    } else {
-      throw new Error("Failed to fetch exchange rates:" + (await response.text()));
-    }
-
-    await setTimeout(1000); // To avoid hitting rate limits
-  }
-
-  await redis.set(getExchangeRatesRedisKey(today, baseCurrency), JSON.stringify(exchangeRates), REDIS_EXPIRE_IN_DAY);
-  return exchangeRates;
 }
 
 const getRawMarketData = async (stocks: Set<string>, startDate: Date, endDate: Date) => {
@@ -706,9 +554,10 @@ export async function getPortfolioData(
       .filter(Boolean),
   );
 
-  const exchangeRates = await fetchExchangeRates(currencies, portfolioCurrency, startDate).catch(
-    () => ({}) as ExchangeRates,
-  );
+  const exchangeRatesHelper = new ExchangeRatesHelper(redis as RedisClientType);
+  const exchangeRates = await exchangeRatesHelper
+    .fetchExchangeRates(currencies, portfolioCurrency, startDate)
+    .catch(() => ({}) as ExchangeRates);
 
   convertMarketDataToCurrency(stockMarketData, exchangeRates, portfolioCurrency);
   adjustEventPrices(events, exchangeRates, stockMarketData, portfolioCurrency);

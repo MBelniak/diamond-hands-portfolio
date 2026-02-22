@@ -35,7 +35,6 @@ export const CFDIndices: Record<string, { lotSize: number }> = {
     lotSize: 20,
   },
 };
-
 /**
  * Returns market value, aggregated volume (taking lotSize into account) and currentPrice for a given stock symbol.
  * - marketValue is calculated from openPositions using the provided stock prices for the given date (defaults to today).

@@ -1,6 +1,36 @@
+// @ts-expect-error no typings for this file
+import XLSX from "xlsx/xlsx.js";
 import { isBefore, isSameDay } from "date-fns";
 import { Currency, PortfolioCurrency, TickerQuote } from "@/lib/types";
 import { omit } from "lodash-es";
+
+export class XlsxHelper {
+  static parseXLSXDate(dateStr: string | number): Date {
+    const dateObjectParsed = XLSX.SSF.parse_date_code(dateStr as number);
+    return new Date(
+      dateObjectParsed.y,
+      dateObjectParsed.m - 1,
+      dateObjectParsed.d,
+      dateObjectParsed.H || 0,
+      dateObjectParsed.M || 0,
+      dateObjectParsed.S || 0,
+    );
+  }
+
+  // eslint-disable-next-line
+  static parseSheetToJson(workbook: any, sheetName: string): Record<string, string | number>[] {
+    const sheet = workbook.Sheets[sheetName];
+    const jsonData: (string | number)[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    const headers = jsonData.at(4);
+    if (!headers || headers.length === 0) {
+      console.warn(`${sheetName} sheet is missing headers. Skipping cash events parsing.`);
+      return [];
+    }
+    return jsonData
+      .slice(5, jsonData.length - 1)
+      .map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index]])));
+  }
+}
 
 export function symbolToYahooSuffix(symbol: string): string {
   if (symbol.endsWith(".UK")) {
