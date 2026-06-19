@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { Switch } from "@/components/ui/switch";
-import { useCurrentTheme } from "@/hooks/useCurrentTheme";
+import { useCurrentTheme } from "@/lib/store";
 
 const items = [
   {

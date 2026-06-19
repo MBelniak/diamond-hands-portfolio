@@ -23,7 +23,6 @@ import {
   CASH_TRANSFER,
   CASH_WITHDRAWAL,
   CLOSED_POSITION_HISTORY,
-  OPEN_POSITION,
   STOCK_CLOSE_EVENT,
   STOCK_OPEN_EVENT,
   STOCK_OPEN_POSITION,
@@ -45,6 +44,28 @@ if (!process.env.REDIS_URL) {
 
 const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 
+const isRowStockSell = (row: Record<string, string | number>) =>
+  ["Stock sell", "Commission"].includes(String(row[XlsxColumn.TYPE]));
+const isRowStockBuy = (row: Record<string, string | number>) => String(row[XlsxColumn.TYPE]) === "Stock purchase";
+
+const parseStockVolumeAndPriceFromCashOperations = (row: Record<string, string | number>) => {
+  const rowText = String(row[XlsxColumn.COMMENT] || "");
+  const match = /(OPEN|CLOSE) BUY (\d+(\.\d+)?)(\/(\d+(\.\d+)?))? @ (\d+(\.\d+)?)/.exec(rowText);
+  if (match) {
+    const volume = Number(match[2]);
+    const price = Number(match[7]);
+    return { volume, price };
+  } else {
+    const correctionMatch = /BUY (\d+(\.\d+)?) @ (\d+(\.\d+)?)/.exec(rowText);
+    if (correctionMatch) {
+      const volume = Number(correctionMatch[1]);
+      const price = Number(correctionMatch[3]);
+      return { volume, price };
+    }
+  }
+  return { volume: 0, price: 0 };
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getCashEvents(workbook: any): CashEvent[] {
   const cashDataAsObjectArray = XlsxHelper.parseSheetToJson(workbook, CASH_OPERATION_HISTORY);
@@ -54,37 +75,24 @@ function getCashEvents(workbook: any): CashEvent[] {
 
   return cashDataAsObjectArray
     .filter((row) => row[XlsxColumn.TIME])
-    .map((row) => ({
-      id: String(row[XlsxColumn.CASH_OPERATION_ID] || ""),
-      date: XlsxHelper.parseXLSXDate(row[XlsxColumn.TIME]).toISOString(),
-      cashChange: Number(row[XlsxColumn.AMOUNT] || 0),
-      type: CASH,
-      cashWithdrawalOrDeposit: [CASH_DEPOSIT as string, CASH_WITHDRAWAL, CASH_TRANSFER].includes(
-        String(row[XlsxColumn.TYPE]),
-      )
-        ? Number(row[XlsxColumn.AMOUNT])
-        : null,
-    }));
-}
+    .map((row) => {
+      const { volume, price } = parseStockVolumeAndPriceFromCashOperations(row);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getStockOpenPositions(workbook: any): PortfolioEvent[] {
-  const openData = XlsxHelper.parseSheetToJson(workbook, OPEN_POSITION);
-  if (openData.length === 0) {
-    return [];
-  }
-
-  return openData
-    .filter((row) => row[XlsxColumn.OPEN_TIME])
-    .map((row) => ({
-      id: String(row[XlsxColumn.POSITION_ID] ?? ""),
-      date: XlsxHelper.parseXLSXDate(row[XlsxColumn.OPEN_TIME]).toISOString(),
-      stocksVolumeChange: Number(row[XlsxColumn.VOLUME] || 0),
-      type: STOCK_OPEN_POSITION,
-      stockSymbol: String(row[XlsxColumn.SYMBOL] || null),
-      profitOrLoss: Number(row[XlsxColumn.GROSS_PL] || 0),
-      openPrice: Number(row[XlsxColumn.OPEN_PRICE] || 0),
-    }));
+      return {
+        id: String(row[XlsxColumn.CASH_OPERATION_ID] || ""),
+        date: XlsxHelper.parseXLSXDate(row[XlsxColumn.TIME]).toISOString(),
+        cashChange: Number(row[XlsxColumn.AMOUNT] || 0),
+        type: CASH,
+        stocksVolumeChange: isRowStockSell(row) ? -volume : isRowStockBuy(row) ? volume : 0,
+        stockSymbol: String(row[XlsxColumn.TICKER]) || null,
+        openPrice: price,
+        cashWithdrawalOrDeposit: [CASH_DEPOSIT as string, CASH_WITHDRAWAL, CASH_TRANSFER].includes(
+          String(row[XlsxColumn.TYPE]),
+        )
+          ? Number(row[XlsxColumn.AMOUNT])
+          : null,
+      };
+    });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -96,14 +104,16 @@ function getClosedStocksOpenEvents(workbook: any): PortfolioEvent[] {
 
   return closedData
     .filter((row) => row[XlsxColumn.OPEN_TIME])
-    .map((row) => ({
-      id: String(row[XlsxColumn.POSITION_ID] ?? ""),
-      date: XlsxHelper.parseXLSXDate(row[XlsxColumn.OPEN_TIME]).toISOString(),
-      stocksVolumeChange: Number(row[XlsxColumn.VOLUME] || 0),
-      type: STOCK_OPEN_EVENT,
-      stockSymbol: String(row[XlsxColumn.SYMBOL]) || null,
-      openPrice: Number(row[XlsxColumn.OPEN_PRICE] || 0),
-    }));
+    .map((row) => {
+      return {
+        id: String(row[XlsxColumn.POSITION_ID] ?? ""),
+        date: XlsxHelper.parseXLSXDate(row[XlsxColumn.OPEN_TIME]).toISOString(),
+        stocksVolumeChange: Number(row[XlsxColumn.VOLUME] || 0),
+        type: STOCK_OPEN_EVENT,
+        stockSymbol: String(row[XlsxColumn.TICKER]) || null,
+        openPrice: Number(row[XlsxColumn.OPEN_PRICE] || 0),
+      };
+    });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,7 +130,7 @@ function getClosedStocksCloseEvents(workbook: any): PortfolioEvent[] {
       date: XlsxHelper.parseXLSXDate(row[XlsxColumn.CLOSE_TIME]).toISOString(),
       stocksVolumeChange: Number(row[XlsxColumn.VOLUME] || 0),
       type: STOCK_CLOSE_EVENT,
-      stockSymbol: String(row[XlsxColumn.SYMBOL]) || null,
+      stockSymbol: String(row[XlsxColumn.TICKER]) || null,
       profitOrLoss: Number(row[XlsxColumn.GROSS_PL] || 0),
       closePrice: Number(row[XlsxColumn.CLOSE_PRICE] || 0),
     }));
@@ -135,7 +145,7 @@ function getCashAndStocksEvents(workbook: any): PortfolioData["portfolioEvents"]
   // Collect all cash operations
   const cashEvents = getCashEvents(workbook);
   // Collect all stock open positions
-  const openPositions = getStockOpenPositions(workbook);
+  // const openPositions = getStockOpenPositions(workbook);
   // Collect all open events from closed positions (stocks)
   const closedStocksOpenEvents = getClosedStocksOpenEvents(workbook);
   // Collect all stock close positions
@@ -143,7 +153,7 @@ function getCashAndStocksEvents(workbook: any): PortfolioData["portfolioEvents"]
 
   return {
     cashEvents,
-    openPositions,
+    openPositions: [],
     closedStocksOpenEvents,
     closedStocksCloseEvents,
   };
@@ -362,6 +372,10 @@ function getStockSymbolsFromEvents(events: PortfolioEvent[]): Set<string> {
         (next as PortfolioEvent & { type: typeof STOCK_OPEN_EVENT | typeof STOCK_OPEN_POSITION }).stockSymbol as string,
       );
     }
+    // Also collect symbols from cash buy operations (covers currently open positions)
+    if (next.type === CASH && next.stockSymbol && next.stocksVolumeChange && next.stocksVolumeChange > 0) {
+      acc.add(next.stockSymbol);
+    }
 
     return acc;
   }, new Set<string>());
@@ -369,7 +383,7 @@ function getStockSymbolsFromEvents(events: PortfolioEvent[]): Set<string> {
 
 const parsePortfolioEvents = (xlsxArrayBuffer: ArrayBuffer): PortfolioData["portfolioEvents"] => {
   console.log("Parsing portfolio from xlsx file");
-  const workbook = XLSX.read(xlsxArrayBuffer);
+  const workbook = XLSX.read(new Uint8Array(xlsxArrayBuffer), { type: "array" });
   return getCashAndStocksEvents(workbook);
 };
 
@@ -426,7 +440,7 @@ const adjustEventPrices = (
   const { openPositions, closedStocksOpenEvents, closedStocksCloseEvents } = events;
   [...openPositions, ...closedStocksOpenEvents, ...closedStocksCloseEvents].forEach((event) => {
     const date = formatDate(new Date(event.date));
-    if (event.type === STOCK_OPEN_POSITION || event.type === STOCK_OPEN_EVENT) {
+    if (event.type === STOCK_OPEN_EVENT) {
       const stockSymbol = event.stockSymbol!;
 
       event.openPrice =
@@ -510,14 +524,15 @@ export async function uploadPortfolioData(
   xlsxArrayBuffer: ArrayBuffer,
 ): Promise<void> {
   const events = parsePortfolioEvents(xlsxArrayBuffer);
-  const existingEvents = await getPortfolioEvents(user, selectedPortfolio);
+  // TODO enable merging
+  // const existingEvents = await getPortfolioEvents(user, selectedPortfolio);
 
-  if (existingEvents) {
-    const mergedEvents = mergeEvents(existingEvents, events);
-    await UserPortfolioRepository.savePortfolioToDB(mergedEvents, user, selectedPortfolio);
-  } else {
-    await UserPortfolioRepository.savePortfolioToDB(events, user, selectedPortfolio);
-  }
+  // if (existingEvents) {
+  // const mergedEvents = mergeEvents(existingEvents, events);
+  // await UserPortfolioRepository.savePortfolioToDB(mergedEvents, user, selectedPortfolio);
+  // } else {
+  await UserPortfolioRepository.savePortfolioToDB(events, user, selectedPortfolio);
+  // }
 }
 
 export async function getPortfolioData(
