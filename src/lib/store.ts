@@ -6,6 +6,7 @@ import { getCurrentTheme, LocalTheme } from "@/hooks/useCurrentTheme";
 import { PortfolioCurrency } from "@/lib/types";
 import { SELECTED_CURRENCY_STORAGE_KEY } from "@/app/consts";
 import { getCurrentChartType } from "@/hooks/useCurrentChartType";
+import { useCallback, useEffect } from "react";
 
 export type ChartType = "line" | "candle";
 
@@ -56,3 +57,27 @@ export const useStore = create<Store>((set) => ({
     set({ chartType });
   },
 }));
+
+export const useCurrentTheme = () => {
+  const isBrowser = typeof window !== "undefined";
+  const { theme, setTheme } = useStore();
+
+  const setCurrentTheme = useCallback((newTheme: LocalTheme) => {
+    if (!isBrowser) return;
+
+    setTheme(newTheme);
+    document.body.classList.toggle("dark", newTheme === "dark");
+    localStorage.setItem("theme", newTheme);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!isBrowser) return;
+
+    const shouldBeDark = getCurrentTheme() === "dark";
+    document.body.classList.toggle("dark", shouldBeDark);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getCurrentTheme]);
+
+  return { theme, setCurrentTheme };
+};

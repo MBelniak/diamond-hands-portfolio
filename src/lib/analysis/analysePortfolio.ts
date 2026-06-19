@@ -12,7 +12,7 @@ import {
 import { addYears, isSameDay } from "date-fns";
 import { formatDate } from "../utils";
 import { addDays } from "date-fns/addDays";
-import { CASH, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT, STOCK_OPEN_POSITION } from "@/lib/xlsx-parser/consts";
+import { CASH, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT } from "@/lib/xlsx-parser/consts";
 import { cloneDeep, merge } from "lodash-es";
 import { getDateRange } from "../xlsx-parser/utils";
 import { BenchmarkIndex } from "@/lib/benchmarks";
@@ -200,12 +200,12 @@ function getPortfolioValueOnEventDay(
 }
 
 function getAssetsAnalysis(
-  stockOpenPositions: PortfolioEvent[],
+  cashEvents: CashEvent[],
   stockClosedPositionsOpenEvents: PortfolioEvent[],
   stockCloseEvents: PortfolioEvent[],
 ): AssetsHistoricalData {
-  return stockOpenPositions
-    .concat(stockClosedPositionsOpenEvents)
+  // Build open/close event history from the closed-positions sheet (unchanged)
+  const result: AssetsHistoricalData = stockClosedPositionsOpenEvents
     .concat(stockCloseEvents)
     .reduce((acc, stockEvent) => {
       const stockSymbol = "stockSymbol" in stockEvent ? stockEvent["stockSymbol"] : null;
@@ -219,20 +219,7 @@ function getAssetsAnalysis(
         };
       }
 
-      if (stockEvent.type === STOCK_OPEN_POSITION) {
-        return merge(acc, {
-          [stockSymbol]: {
-            openPositions: [
-              ...(acc[stockSymbol]?.openPositions || []),
-              {
-                date: formatDate(new Date(stockEvent.date)),
-                volume: stockEvent.stocksVolumeChange,
-                stockPriceOnBuy: stockEvent.openPrice,
-              },
-            ],
-          },
-        });
-      } else if (stockEvent.type === STOCK_OPEN_EVENT) {
+      if (stockEvent.type === STOCK_OPEN_EVENT) {
         const stockSymbol = stockEvent.stockSymbol;
         if (!stockSymbol) return acc;
 
@@ -269,6 +256,55 @@ function getAssetsAnalysis(
 
       return acc;
     }, {} as AssetsHistoricalData);
+
+  // Derive currently open positions from cash buy/sell events using FIFO
+  const buysBySymbol: Record<string, { volume: number; price: number; date: string }[]> = {};
+  const sellVolumeBySymbol: Record<string, number> = {};
+
+  for (const event of cashEvents) {
+    const symbol = event.stockSymbol;
+    if (!symbol || !event.stocksVolumeChange) continue;
+
+    if (event.stocksVolumeChange > 0) {
+      if (!buysBySymbol[symbol]) {
+        buysBySymbol[symbol] = [];
+      }
+      buysBySymbol[symbol].push({
+        volume: event.stocksVolumeChange,
+        price: event.openPrice ?? 0,
+        date: formatDate(new Date(event.date)),
+      });
+    } else {
+      sellVolumeBySymbol[symbol] = (sellVolumeBySymbol[symbol] ?? 0) + Math.abs(event.stocksVolumeChange);
+    }
+  }
+
+  for (const [symbol, buys] of Object.entries(buysBySymbol)) {
+    let remainingSellVolume = sellVolumeBySymbol[symbol] ?? 0;
+    const openLots: AssetsHistoricalData[string]["openPositions"] = [];
+
+    for (const buy of buys.sort((a, b) => a.date.localeCompare(b.date))) {
+      if (remainingSellVolume >= buy.volume - 1e-9) {
+        remainingSellVolume = Math.max(0, remainingSellVolume - buy.volume);
+      } else {
+        openLots.push({
+          volume: buy.volume - remainingSellVolume,
+          stockPriceOnBuy: buy.price,
+          date: buy.date,
+        });
+        remainingSellVolume = 0;
+      }
+    }
+
+    if (openLots.length > 0) {
+      if (!result[symbol]) {
+        result[symbol] = { openPositions: [], closeEvents: [], openEvents: [] };
+      }
+      result[symbol].openPositions = openLots;
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -316,30 +352,31 @@ function getPortfolioValueData(portfolioEvents: PortfolioEvent[], stockMarketDat
         if (event.type === CASH) {
           cash += event.cashChange;
           if (event.cashWithdrawalOrDeposit) {
-            balance += event.cashWithdrawalOrDeposit; // Update balance on withdrawal or deposit
+            balance += event.cashWithdrawalOrDeposit;
             if (event.cashWithdrawalOrDeposit > 0) {
-              totalCapitalInvested += event.cashWithdrawalOrDeposit; // Track total capital invested
+              totalCapitalInvested += event.cashWithdrawalOrDeposit;
             }
           }
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
-        } else if ([STOCK_OPEN_EVENT, STOCK_OPEN_POSITION].includes(event.type) && event.stockSymbol) {
-          if (!(event.stockSymbol in stocks)) {
-            stocks[event.stockSymbol] = { volume: 0 };
-          }
-          stocks[event.stockSymbol] = { volume: stocks[event.stockSymbol].volume + event.stocksVolumeChange };
-        } else if (event.type === STOCK_CLOSE_EVENT && event.stockSymbol) {
-          if (event.stockSymbol in stocks) {
-            const stockRecord = stocks[event.stockSymbol];
+          // Track stock volume changes from cash buy/sell operations
+          if (event.stockSymbol && event.stocksVolumeChange) {
+            if (!(event.stockSymbol in stocks)) {
+              stocks[event.stockSymbol] = { volume: 0 };
+            }
+            const newVolume = stocks[event.stockSymbol].volume + event.stocksVolumeChange;
             stocks[event.stockSymbol] = {
-              volume: stockRecord.volume - event.stocksVolumeChange,
-              takenProfitOrLoss: (stockRecord.takenProfitOrLoss ?? 0) + event.profitOrLoss,
+              ...stocks[event.stockSymbol],
+              volume: newVolume <= 1e-6 ? 0 : Math.max(0, newVolume),
             };
-            if (stocks[event.stockSymbol].volume <= 1e-6) {
-              stocks[event.stockSymbol].volume = 0;
-            }
           }
-          profitOrLoss += event.profitOrLoss || 0; // Add profit or loss from closed position
+        } else if (event.type === STOCK_CLOSE_EVENT && event.stockSymbol) {
+          // Volume is tracked via CASH events; only accumulate P&L from closed positions here
+          if (event.stockSymbol in stocks) {
+            stocks[event.stockSymbol] = {
+              ...stocks[event.stockSymbol],
+              takenProfitOrLoss: (stocks[event.stockSymbol].takenProfitOrLoss ?? 0) + event.profitOrLoss,
+            };
+          }
+          profitOrLoss += event.profitOrLoss || 0;
         }
       }
 
@@ -398,14 +435,15 @@ const getCashFlow = (cashEvents: CashEvent[]): CashFlow => {
 };
 
 export const analysePortfolio = (portfolioData: PortfolioData): PortfolioAnalysis => {
-  const { cashEvents, openPositions, closedStocksOpenEvents, closedStocksCloseEvents } = portfolioData.portfolioEvents;
+  const { cashEvents, closedStocksOpenEvents, closedStocksCloseEvents } = portfolioData.portfolioEvents;
 
-  const allEvents = [...cashEvents, ...openPositions, ...closedStocksOpenEvents, ...closedStocksCloseEvents].toSorted(
+  // Timeline only needs cash events (volume + cash tracking) and close events (P&L)
+  const allEvents = [...cashEvents, ...closedStocksCloseEvents].toSorted(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
   const portfolioTimeline = getPortfolioValueData(allEvents, portfolioData.stockMarketData);
 
-  const assetsAnalysis = getAssetsAnalysis(openPositions, closedStocksOpenEvents, closedStocksCloseEvents);
+  const assetsAnalysis = getAssetsAnalysis(cashEvents, closedStocksOpenEvents, closedStocksCloseEvents);
   const cashFlow = getCashFlow(cashEvents);
 
   return {
