@@ -1,5 +1,5 @@
 import { ChartOptions, ColorType, DeepPartial } from "lightweight-charts";
-import { LocalTheme } from "@/hooks/useCurrentTheme";
+import { LocalTheme } from "@/client/hooks/useCurrentTheme";
 
 export const getChartOptions = (theme: LocalTheme): DeepPartial<ChartOptions> => {
   if (theme === "dark") {

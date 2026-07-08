@@ -2,7 +2,7 @@
 import { SignIn } from "@clerk/nextjs";
 import { useEffect } from "react";
 
-import { portfolioDataDB } from "@/app/indexedDB/portfolioDataDB";
+import { portfolioDataDB } from "@/client/indexedDB/portfolioDataDB";
 import { useStore } from "@/lib/store";
 
 export default function Page() {

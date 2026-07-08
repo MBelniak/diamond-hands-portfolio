@@ -1,7 +1,7 @@
 "use client";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { DualRangeSlider } from "@/components/ui/dual-range-slider";
-import { MIN_WINDOW_SIZE, useDateRange } from "@/hooks/useDateRange";
+import { MIN_WINDOW_SIZE, useDateRange } from "@/client/hooks/useDateRange";
 import { useStore } from "@/lib/store";
 import { PortfolioAnalysis, PortfolioCurrencyToSymbol } from "@/lib/types";
 import { useMemo, useState } from "react";

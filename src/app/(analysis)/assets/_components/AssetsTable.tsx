@@ -17,7 +17,7 @@ import { getProfitLossTextClass } from "./AssetsTable.columns";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { AssetTableData } from "@/app/(analysis)/assets/_types";
-import { Pagination } from "@/app/_components/table/Pagination";
+import { Pagination } from "@/components/table/Pagination";
 
 type RowId = string;
 

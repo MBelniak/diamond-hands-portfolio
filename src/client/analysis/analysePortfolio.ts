@@ -10,11 +10,11 @@ import {
   StockMarketData,
 } from "@/lib/types";
 import { addYears, isSameDay } from "date-fns";
-import { formatDate } from "../utils";
+import { formatDate } from "../../lib/utils";
 import { addDays } from "date-fns/addDays";
 import { CASH, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT } from "@/lib/xlsx-parser/consts";
 import { cloneDeep, merge } from "lodash-es";
-import { getDateRange } from "../xlsx-parser/utils";
+import { getDateRange } from "../../lib/xlsx-parser/utils";
 import { BenchmarkIndex } from "@/lib/benchmarks";
 
 function getInitialBenchmarkStockRecord(): Record<BenchmarkIndex, Stock> {

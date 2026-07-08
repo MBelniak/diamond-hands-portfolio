@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ChartCandlestick, ChartSpline } from "lucide-react";
-import { useCurrentChartType } from "@/hooks/useCurrentChartType";
+import { useCurrentChartType } from "@/client/hooks/useCurrentChartType";
 
 export const ChartTypeSelector = () => {
   const { chartType, setCurrentChartType } = useCurrentChartType();

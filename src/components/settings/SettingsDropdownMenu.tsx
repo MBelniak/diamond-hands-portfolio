@@ -2,7 +2,7 @@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CogIcon } from "lucide-react";
 import React, { useState } from "react";
-import { SettingsPopover } from "@/app/_components/settings/SettingsPopover";
+import { SettingsPopover } from "@/components/settings/SettingsPopover";
 
 export const SettingsDropdownMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);

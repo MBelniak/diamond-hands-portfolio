@@ -2,9 +2,9 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { QueryKeys } from "@/app/_react-query/queryKeys";
 import { PortfolioAnalysis, PortfolioData } from "@/lib/types";
-import { analysePortfolio } from "@/lib/analysis/analysePortfolio";
+import { analysePortfolio } from "@/client/analysis/analysePortfolio";
 import { useStore } from "@/lib/store";
-import { portfolioDataDB } from "@/app/indexedDB/portfolioDataDB";
+import { portfolioDataDB } from "@/client/indexedDB/portfolioDataDB";
 import { useDeferredValue } from "react";
 
 export const usePortfolioAnalysis = (): UseQueryResult<PortfolioAnalysis> & { isDataStale: boolean } => {

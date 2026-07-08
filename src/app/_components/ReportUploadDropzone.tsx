@@ -5,7 +5,7 @@ import { useDropzone } from "react-dropzone";
 import { useUploadXlsxAnalysisFiles } from "@/hooks/useUploadXlsxAnalysisFiles";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { useStore } from "@/lib/store";
-import { portfolioDataDB } from "@/app/indexedDB/portfolioDataDB";
+import { portfolioDataDB } from "@/client/indexedDB/portfolioDataDB";
 
 export const ReportUploadDropzone = () => {
   const { refetch: refetchPortfolio } = usePortfolioAnalysis();

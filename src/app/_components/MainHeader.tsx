@@ -2,25 +2,29 @@
 
 import React from "react";
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
-import { SettingsDropdownMenu } from "./settings/SettingsDropdownMenu";
+import { SettingsDropdownMenu } from "@/components/settings/SettingsDropdownMenu";
 import { FileUploadButton } from "./FileUploadButton";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
-export const MainHeader = () => {
+export const MainHeader = ({ withSidebar = false }: { withSidebar?: boolean }) => {
   return (
-    <header className="flex justify-end items-center p-4 gap-4 h-16">
-      <SettingsDropdownMenu />
-      <FileUploadButton />
-      <SignedOut>
-        <SignInButton />
-        <SignUpButton>
-          <button className="bg-[#6c47ff] text-ceramic-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
-            Sign Up
-          </button>
-        </SignUpButton>
-      </SignedOut>
-      <SignedIn>
-        <UserButton />
-      </SignedIn>
+    <header className="flex items-center p-4 gap-4 h-16">
+      {withSidebar && <SidebarTrigger className="md:hidden" />}
+      <div className="ml-auto flex items-center gap-4">
+        <SettingsDropdownMenu />
+        <FileUploadButton />
+        <SignedOut>
+          <SignInButton />
+          <SignUpButton>
+            <button className="bg-[#6c47ff] text-ceramic-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
+              Sign Up
+            </button>
+          </SignUpButton>
+        </SignedOut>
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
+      </div>
     </header>
   );
 };

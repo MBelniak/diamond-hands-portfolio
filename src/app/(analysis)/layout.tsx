@@ -11,7 +11,7 @@ export default function RootLayout({
     <>
       <SidebarMenuWrapper>
         <div className={"light-gradient dark:dark-gradient min-h-screen"}>
-          <MainHeader />
+          <MainHeader withSidebar />
           <section className={"flex-col gap-8 p-8 flex items-center justify-center"}>{children}</section>
         </div>
       </SidebarMenuWrapper>

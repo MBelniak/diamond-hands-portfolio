@@ -10,7 +10,7 @@ export const SidebarMenuWrapper: React.FC<PropsWithChildren> = ({ children }) =>
           <SidebarMenuContent />
         </SidebarContent>
       </Sidebar>
-      <main className={"w-full"}>{children}</main>
+      <main className={"w-full overflow-auto"}>{children}</main>
     </SidebarProvider>
   );
 };

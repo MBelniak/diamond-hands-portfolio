@@ -524,15 +524,14 @@ export async function uploadPortfolioData(
   xlsxArrayBuffer: ArrayBuffer,
 ): Promise<void> {
   const events = parsePortfolioEvents(xlsxArrayBuffer);
-  // TODO enable merging
-  // const existingEvents = await getPortfolioEvents(user, selectedPortfolio);
+  const existingEvents = await getPortfolioEvents(user, selectedPortfolio);
+  let finalEvents = events;
 
-  // if (existingEvents) {
-  // const mergedEvents = mergeEvents(existingEvents, events);
-  // await UserPortfolioRepository.savePortfolioToDB(mergedEvents, user, selectedPortfolio);
-  // } else {
-  await UserPortfolioRepository.savePortfolioToDB(events, user, selectedPortfolio);
-  // }
+  if (existingEvents) {
+    finalEvents = mergeEvents(existingEvents, events);
+  }
+
+  await UserPortfolioRepository.savePortfolioToDB(finalEvents, user, selectedPortfolio);
 }
 
 export async function getPortfolioData(
