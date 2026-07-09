@@ -8,7 +8,7 @@ import { ReportUploadDropzone } from "./ReportUploadDropzone";
 
 export default function HomePage() {
   useCurrentTheme();
-  const { data, isFetching } = usePortfolioAnalysis();
+  const { data, isPending, error } = usePortfolioAnalysis();
   const router = useRouter();
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export default function HomePage() {
     }
   }, [data, router]);
 
-  if (isFetching || data) {
+  if (isPending || !error) {
     return (
       <>
         <DiamondLoader />

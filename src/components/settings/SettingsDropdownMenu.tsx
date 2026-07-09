@@ -9,14 +9,14 @@ export const SettingsDropdownMenu: React.FC = () => {
 
   return (
     <Popover open={isOpen}>
-      <PopoverTrigger title={"Settings"} asChild onClick={() => setIsOpen((open) => !open)}>
-        <div
-          className={
-            "rounded-[50%] aspect-square w-9 flex items-center justify-center bg-white/10 hover:bg-white/20 cursor-pointer"
-          }
-        >
-          <CogIcon />
-        </div>
+      <PopoverTrigger title={"Settings"} asChild>
+        <button type="button" className={"cursor-pointer"} onClick={() => setIsOpen((open) => !open)}>
+          <div
+            className={"rounded-[50%] aspect-square w-9 flex items-center justify-center bg-white/10 hover:bg-white/20"}
+          >
+            <CogIcon />
+          </div>
+        </button>
       </PopoverTrigger>
       <PopoverContent>
         <SettingsPopover onRequestCloseAction={() => setIsOpen(false)} />
