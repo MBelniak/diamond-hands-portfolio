@@ -438,43 +438,36 @@ const adjustEventPrices = (
   toCurrency: PortfolioCurrency,
 ) => {
   const { openPositions, closedStocksOpenEvents, closedStocksCloseEvents } = events;
-  [...openPositions, ...closedStocksOpenEvents, ...closedStocksCloseEvents].forEach((event) => {
+  for (const event of [...openPositions, ...closedStocksOpenEvents, ...closedStocksCloseEvents]) {
     const date = formatDate(new Date(event.date));
     if (event.type === STOCK_OPEN_EVENT) {
       const stockSymbol = event.stockSymbol!;
+      const marketData = stockMarketData[stockSymbol];
+      if (!marketData) continue;
 
       event.openPrice =
-        convertToCurrency(
-          event.openPrice,
-          exchangeRates[date] || {},
-          stockMarketData[stockSymbol].currency,
-          toCurrency,
-        ) ?? event.openPrice;
+        convertToCurrency(event.openPrice, exchangeRates[date] || {}, marketData.currency, toCurrency) ??
+        event.openPrice;
 
-      event.openPrice = applyReciprocalSplits(
-        { open: event.openPrice },
-        stockMarketData[stockSymbol].splits,
-        new Date(event.date),
-      ).open;
+      event.openPrice = applyReciprocalSplits({ open: event.openPrice }, marketData.splits, new Date(event.date)).open;
     }
 
     if (event.type === STOCK_CLOSE_EVENT) {
       const stockSymbol = event.stockSymbol!;
+      const marketData = stockMarketData[stockSymbol];
+      if (!marketData) continue;
+
       event.closePrice =
-        convertToCurrency(
-          event.closePrice,
-          exchangeRates[date] || {},
-          stockMarketData[stockSymbol].currency,
-          toCurrency,
-        ) ?? event.closePrice;
+        convertToCurrency(event.closePrice, exchangeRates[date] || {}, marketData.currency, toCurrency) ??
+        event.closePrice;
 
       event.closePrice = applyReciprocalSplits(
         { close: event.closePrice },
-        stockMarketData[stockSymbol].splits,
+        marketData.splits,
         new Date(event.date),
       ).close;
     }
-  });
+  }
 };
 
 const filterById =
