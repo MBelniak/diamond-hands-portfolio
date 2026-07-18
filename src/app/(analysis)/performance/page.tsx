@@ -5,13 +5,12 @@ import { PerformanceChart } from "./_components/PerformanceChart/PerformanceChar
 import { Benchmarks } from "./_components/Benchmarks/Benchmarks";
 import { useRouter } from "next/navigation";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
-import { useEffect, useLayoutEffect, useRef } from "react";
-import gsap from "gsap";
+import { useEffect } from "react";
+import { usePageEntrance } from "@/client/hooks/usePageEntrance";
 
 export default function PerformancePage() {
   const { error, isFetching, data } = usePortfolioAnalysis();
   const router = useRouter();
-  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (error || (!isFetching && !data)) {
@@ -20,21 +19,7 @@ export default function PerformancePage() {
   }, [data, error, isFetching, router]);
 
   const willRenderContent = !isFetching && !error && data;
-
-  useLayoutEffect(() => {
-    if (willRenderContent && containerRef.current) {
-      const ctx = gsap.context(() => {
-        gsap.from(containerRef.current, {
-          opacity: 0,
-          y: 100,
-          duration: 0.8,
-          ease: "power1.out",
-        });
-      });
-
-      return () => ctx.revert();
-    }
-  }, [willRenderContent]);
+  const containerRef = usePageEntrance(!!willRenderContent);
 
   if (!willRenderContent) {
     return (

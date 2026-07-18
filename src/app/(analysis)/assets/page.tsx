@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect } from "react";
+import { usePageEntrance } from "@/client/hooks/usePageEntrance";
 import { useRouter } from "next/navigation";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
@@ -70,6 +71,8 @@ export default function AssetsPage() {
 
   const allocationTypeBreakdown = preparePieChartDataByKey("assetSymbol");
   const instrumentTypeBreakdown = preparePieChartDataByKey("instrumentType");
+  const willRenderContent = !isLoading && !error && portfolioAnalysis;
+  const containerRef = usePageEntrance(!!willRenderContent);
 
   if (isLoading || error) {
     return (
@@ -81,14 +84,13 @@ export default function AssetsPage() {
   }
 
   return (
-    <div className="w-full flex flex-col gap-16">
-      <div className="bg-white/80 dark:bg-white/10 backdrop-blur-lg rounded-sm shadow-2xl p-3 w-full mx-4">
-        <div className="overflow-x-auto">
-          <AssetsTable columns={getColumns(selectedPortfolio)} data={tableDataScaled} totals={totalsRow} />
-        </div>
+    <div className="w-full max-w-6xl space-y-4" ref={containerRef}>
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold">Assets</h1>
+        <AssetsTable columns={getColumns(selectedPortfolio)} data={tableDataScaled} totals={totalsRow} />
       </div>
       <div>
-        <h3 className={"text-lg ml-8"}>Currently owned assets allocation</h3>
+        <h3 className={"text-lg"}>Currently owned assets allocation</h3>
         <div className={"w-full grid grid-cols-[repeat(auto-fit,minmax(500px,1fr))] gap-8"}>
           <AssetsDonut data={allocationTypeBreakdown} />
           <AssetsDonut data={instrumentTypeBreakdown} />

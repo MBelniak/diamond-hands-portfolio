@@ -2,7 +2,7 @@
 
 import React from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Asset, AssetTableData } from "../_types";
+import { AssetTableData } from "../_types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { PortfolioCurrency, PortfolioCurrencyToSymbol } from "@/lib/types";
@@ -59,7 +59,7 @@ export const getColumns = (currency: PortfolioCurrency): ColumnDef<AssetTableDat
       const cls = getProfitLossTextClass(profit, info.row.original.profitScale);
 
       return marketValue != null ? (
-        <div className={"flex flex-col"}>
+        <div className={"flex flex-col font-mono"}>
           {marketValue.toFixed(2) + (marketValue != 0 ? ` (${(allocation * 100).toFixed(2)}%)` : "")}
           {marketValue != 0 && (
             <div className={cn(cls, "text-xs")}>{`${profit.toFixed(2)} (${profitAsPercentage.toFixed(2)}%)`}</div>
@@ -76,27 +76,29 @@ export const getColumns = (currency: PortfolioCurrency): ColumnDef<AssetTableDat
     header: "Shares Owned",
     cell: (info) => {
       const v = info.getValue() as number;
-      return v != null ? v.toFixed(2) : "-";
+      return v != null ? <div className="font-mono">{v.toFixed(2)}</div> : "-";
     },
     enableSorting: true,
   },
   {
     accessorKey: "accProfitOrLoss",
     header: `Acc. profit/loss (${PortfolioCurrencyToSymbol[currency]})`,
+    meta: { align: "right" },
     cell: (info) => {
       const v = info.getValue() as number;
       const cls = getProfitLossTextClass(v, info.row.original.profitScale);
-      return <div className={cls}>{v.toFixed(2)}</div>;
+      return <div className={cn(cls, "text-right font-mono")}>{v.toFixed(2)}</div>;
     },
     enableSorting: true,
   },
   {
     accessorKey: "potentialValue",
     header: `Potential Profit/Loss (${PortfolioCurrencyToSymbol[currency]})`,
+    meta: { align: "right" },
     cell: (info) => {
       const v = info.getValue() as number;
       const cls = getProfitLossTextClass(v, info.row.original.profitScale);
-      return <div className={cls}>{v.toFixed(2)}</div>;
+      return <div className={cn(cls, "text-right font-mono")}>{v.toFixed(2)}</div>;
     },
     enableSorting: true,
   },

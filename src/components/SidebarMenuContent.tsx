@@ -1,5 +1,5 @@
 "use client";
-import { TrendingUp, Wallet } from "lucide-react";
+import { ArrowLeftRight, TrendingUp, Wallet } from "lucide-react";
 import React, { useState } from "react";
 
 import {
@@ -24,6 +24,11 @@ const items = [
     title: "Assets",
     url: "/assets",
     icon: Wallet,
+  },
+  {
+    title: "Transactions",
+    url: "/transactions",
+    icon: ArrowLeftRight,
   },
 ];
 

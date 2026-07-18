@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import {
-  ColumnDef,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
@@ -11,31 +10,25 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AssetsTableFooter } from "./AssetsTableFooter";
-import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
-import { AssetTableData } from "@/app/(analysis)/assets/_types";
 import { Pagination } from "@/components/table/Pagination";
+import { TransactionRow } from "@/app/(analysis)/transactions/_types";
+import { cn } from "@/lib/utils";
+import { transactionColumns } from "./TransactionsTable.columns";
 
-type RowId = string;
+const PAGE_SIZE = 25;
 
-interface AssetsDataTableProps {
-  columns: ColumnDef<AssetTableData, string | number>[];
-  data: AssetTableData[];
-  totals: Partial<AssetTableData> | null;
+interface TransactionsTableProps {
+  rows: TransactionRow[];
 }
 
-export function AssetsTable({ columns, data, totals }: AssetsDataTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 15 });
-  const [isLoading, setIsLoading] = React.useState<false | RowId>(false);
-  const router = useRouter();
+export function TransactionsTable({ rows }: TransactionsTableProps) {
+  const [sorting, setSorting] = useState<SortingState>([{ id: "date", desc: true }]);
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: PAGE_SIZE });
 
   const table = useReactTable({
-    data,
-    columns,
+    data: rows,
+    columns: transactionColumns,
     state: { sorting, pagination },
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
@@ -43,6 +36,11 @@ export function AssetsTable({ columns, data, totals }: AssetsDataTableProps) {
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
+
+  // Reset to first page when rows change (filter applied)
+  React.useEffect(() => {
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [rows.length]);
 
   return (
     <div className="overflow-hidden rounded-xs border">
@@ -52,6 +50,7 @@ export function AssetsTable({ columns, data, totals }: AssetsDataTableProps) {
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 const canSort = header.column.getCanSort();
+                const isRight = (header.column.columnDef.meta as { align?: string } | undefined)?.align === "right";
                 return (
                   <TableHead key={header.id}>
                     {header.isPlaceholder ? null : (
@@ -59,9 +58,7 @@ export function AssetsTable({ columns, data, totals }: AssetsDataTableProps) {
                         className={cn(
                           "flex items-center space-x-2",
                           canSort ? "cursor-pointer" : undefined,
-                          (header.column.columnDef.meta as { align?: string } | undefined)?.align === "right"
-                            ? "justify-end"
-                            : undefined,
+                          isRight ? "justify-end" : undefined,
                         )}
                         onClick={header.column.getToggleSortingHandler()}
                       >
@@ -82,46 +79,27 @@ export function AssetsTable({ columns, data, totals }: AssetsDataTableProps) {
           ))}
         </TableHeader>
         <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => {
-              const isTotal = (row.original as unknown as { isTotal?: boolean }).isTotal;
-              return (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className={cn(
-                    isTotal ? "bg-muted font-bold" : undefined,
-                    isLoading === row.id ? "opacity-50 cursor-progress" : undefined,
-                    isLoading === false ? "cursor-pointer" : undefined,
-                  )}
-                  onClick={() => {
-                    if (isLoading === false) {
-                      setIsLoading(row.id);
-                      router.push("/assets/" + row.original.assetSymbol);
-                    }
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                  ))}
-                </TableRow>
-              );
-            })
+          {table.getRowModel().rows.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                ))}
+              </TableRow>
+            ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
+              <TableCell colSpan={transactionColumns.length} className="h-24 text-center text-muted-foreground">
+                No transactions found.
               </TableCell>
             </TableRow>
           )}
         </TableBody>
-        {totals ? <AssetsTableFooter columns={columns} totals={totals} /> : null}
       </Table>
-
       <Pagination
         currentPage={table.getState().pagination.pageIndex}
         pageCount={table.getPageCount()}
-        pageSize={15}
+        pageSize={PAGE_SIZE}
         onPageChange={(page) => table.setPageIndex(page)}
       />
     </div>

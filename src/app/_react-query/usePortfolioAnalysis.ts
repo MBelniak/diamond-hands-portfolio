@@ -1,45 +1,20 @@
 "use client";
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { QueryKeys } from "@/app/_react-query/queryKeys";
-import { PortfolioAnalysis, PortfolioData } from "@/lib/types";
+import { UseQueryResult } from "@tanstack/react-query";
+import { PortfolioAnalysis } from "@/lib/types";
 import { analysePortfolio } from "@/client/analysis/analysePortfolio";
-import { useStore } from "@/lib/store";
-import { portfolioDataDB } from "@/client/indexedDB/portfolioDataDB";
-import { useDeferredValue, useState } from "react";
+import { useMemo } from "react";
+import { usePortfolioData } from "@/app/_react-query/usePortfolioData";
 
 export const usePortfolioAnalysis = (): UseQueryResult<PortfolioAnalysis> & {
   isDataStale: boolean;
 } => {
-  const { selectedPortfolio } = useStore();
+  const { data: portfolioData, ...rest } = usePortfolioData();
 
-  const { data, ...useQueryResult } = useQuery({
-    queryKey: [QueryKeys.PORTFOLIO_ANALYSIS_QUERY_KEY, selectedPortfolio],
-    queryFn: async () => {
-      const cachedData = await portfolioDataDB.getPortfolioData(selectedPortfolio);
-      if (cachedData) {
-        return analysePortfolio(cachedData);
-      }
-      const res = await fetch("/api/portfolio?selectedPortfolio=" + selectedPortfolio);
-      if (!res.ok) throw new Error("Failed to fetch portfolio");
-      const data = (await res.json()) as PortfolioData | null;
-      if (data) {
-        // Ignore if save to DB fails
-        portfolioDataDB.setPortfolioData(data, selectedPortfolio).then();
-        return analysePortfolio(data);
-      }
-      throw new Error("Portfolio does not exists for this user");
-    },
-    staleTime: Infinity,
-    retry: false,
-    refetchOnMount: false,
-    retryOnMount: false,
-  });
-
-  const deferredData = useDeferredValue(data);
+  const analysis = useMemo(() => (portfolioData ? analysePortfolio(portfolioData) : undefined), [portfolioData]);
 
   return {
-    data: deferredData,
-    isDataStale: data !== deferredData,
-    ...useQueryResult,
-  } as UseQueryResult<PortfolioAnalysis> & { isDataStale: boolean };
+    data: analysis,
+    isDataStale: false,
+    ...rest,
+  } as unknown as UseQueryResult<PortfolioAnalysis> & { isDataStale: boolean };
 };
