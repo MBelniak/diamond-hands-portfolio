@@ -24,7 +24,7 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
   const [showMarkers, setShowMarkers] = useState(true);
 
   useEffect(() => {
-    if (error || (!isLoading && !portfolioAnalysis)) {
+    if (error) {
       router.push("/");
     }
   }, [error, isLoading, portfolioAnalysis, router]);

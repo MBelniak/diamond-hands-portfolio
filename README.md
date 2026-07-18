@@ -22,11 +22,11 @@ It's just a playground to see what's possible with public yahoo API (historical 
 ✅ See an overview of all owned assets, with a breakdown of their performance and allocation\
 ✅ Look into open or close position events on a specific assets in a historical context
 
-![Performance](performance.png)
-![PerformanceBottom](performance-bottom.png)
-![Assets](assets.png)
-![AssetsAllocation](assets_allocation.png)
-![Asset](asset.png)
+![Performance](docs/assets/performance.png)
+![PerformanceBottom](docs/assets/performance-bottom.png)
+![Assets](docs/assets/assets.png)
+![AssetsAllocation](docs/assets/assets_allocation.png)
+![Asset](docs/assets/asset.png)
 
 ## Getting Started
 

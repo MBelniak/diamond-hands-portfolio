@@ -59,8 +59,8 @@ export const useAssetsBreakdown = (portfolioAnalysis: PortfolioAnalysis | undefi
 
           return {
             assetSymbol,
-            longName: portfolioAnalysis?.stockMarketData[assetSymbol].longName ?? assetSymbol,
-            instrumentType: portfolioAnalysis?.stockMarketData[assetSymbol].instrumentType,
+            longName: portfolioAnalysis?.stockMarketData[assetSymbol]?.longName ?? assetSymbol,
+            instrumentType: portfolioAnalysis?.stockMarketData[assetSymbol]?.instrumentType,
             accProfitOrLoss,
             potentialValue,
             unrealizedProfitOrLoss,

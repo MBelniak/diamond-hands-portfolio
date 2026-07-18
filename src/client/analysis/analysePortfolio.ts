@@ -42,6 +42,9 @@ function getStocksValueCached(stocks: Record<string, Stock>, date: Date, stockMa
   const dateKey = formatDate(date);
   for (const symbol in stocks) {
     const tickerMarketData = stockMarketData[symbol]?.tickerQuoteByDateString;
+    if (!tickerMarketData) {
+      continue;
+    }
     if (!(dateKey in tickerMarketData)) {
       let recentDate = addDays(date, -1);
       while (recentDate >= addDays(date, -30)) {
