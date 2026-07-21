@@ -5,6 +5,7 @@ import { initDatabase } from "@/database/appwrite";
 import { ClerkProvider } from "@clerk/nextjs";
 import ReactQueryProviders from "@/app/_react-query/ReactQueryProviders";
 import React from "react";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
   return (
     <ClerkProvider afterSignOutUrl={"/sign-in"}>
       <html lang="en">
+        <Analytics />
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}>
           <ReactQueryProviders>{children}</ReactQueryProviders>
         </body>
