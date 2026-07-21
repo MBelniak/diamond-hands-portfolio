@@ -36,7 +36,6 @@ import { BenchmarkIndex } from "@/lib/benchmarks";
 import { uniqBy } from "lodash-es";
 import { YahooAPIHelper } from "@/lib/yahoo-api/YahooAPIHelper";
 import { ExchangeRatesHelper } from "@/lib/exchange-rates/ExchangeRatesHelper";
-import build from "next/dist/build";
 
 if (!process.env.REDIS_URL) {
   throw new Error(
