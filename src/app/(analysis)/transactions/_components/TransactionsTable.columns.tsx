@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 
 const TYPE_LABELS: Record<TransactionType, string> = {
   buy: "Buy",
@@ -53,13 +54,18 @@ export const transactionColumns: ColumnDef<TransactionRow>[] = [
   {
     accessorKey: "ticker",
     header: "Ticker",
-    cell: (info) => {
+    cell: function TickerCell(info) {
+      const router = useRouter();
       const ticker = info.getValue() as string | null;
+
       if (!ticker) return <span className="text-muted-foreground">—</span>;
+
       const name = info.row.original.name;
       const badge = (
         <Badge variant="outline" className="font-mono text-xs">
-          {ticker}
+          <span role={"button"} className={"cursor-pointer"} onClick={() => router.push(`/assets/${ticker}`)}>
+            {ticker}
+          </span>
         </Badge>
       );
       if (!name) return badge;
