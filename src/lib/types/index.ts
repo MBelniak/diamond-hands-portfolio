@@ -160,14 +160,16 @@ export type PortfolioAnalysis = {
   cashFlow: CashFlow;
 };
 
+export type PortfolioEvents = {
+  cashEvents: CashEvent[];
+  openPositions: PortfolioEvent[];
+  closedStocksOpenEvents: PortfolioEvent[];
+  closedStocksCloseEvents: PortfolioEvent[];
+};
+
 export type PortfolioData = {
   stockMarketData: StockMarketData;
-  portfolioEvents: {
-    cashEvents: CashEvent[];
-    openPositions: PortfolioEvent[];
-    closedStocksOpenEvents: PortfolioEvent[];
-    closedStocksCloseEvents: PortfolioEvent[];
-  };
+  portfolioEvents: PortfolioEvents;
 };
 
 export enum PortfolioCurrency {

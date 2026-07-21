@@ -34,8 +34,6 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
     [assetSymbol, portfolioAnalysis],
   );
 
-  console.dir(priceHistory);
-
   useAssetChart(priceHistory, theme, chartType, showMarkers);
 
   if (isLoading || error || (!isLoading && !portfolioAnalysis)) {
@@ -63,16 +61,24 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
           </Link>
         </Button>
       </div>
-      <div className="bg-white/10 backdrop-blur-lg rounded-sm shadow-2xl p-8 w-full">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold drop-shadow-lg">{assetFullName}</h2>
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <Switch checked={showMarkers} onCheckedChange={setShowMarkers} />
-            Show operations
-          </label>
+      {priceHistory.length === 0 && (
+        <div className="bg-white/10 backdrop-blur-lg rounded-sm shadow-2xl p-8 w-full text-center">
+          <h2 className="text-2xl font-bold drop-shadow-lg mb-2">{assetFullName}</h2>
+          <p className="text-sm opacity-80 mb-6">No price history is available for this asset.</p>
         </div>
-        <div id={ASSET_CHART_CONTAINER_ID} className={"w-full px-[1.5rem] h-[60svh]"} />
-      </div>
+      )}
+      {priceHistory.length > 0 && (
+        <div className="bg-white/10 backdrop-blur-lg rounded-sm shadow-2xl p-8 w-full">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold drop-shadow-lg">{assetFullName}</h2>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <Switch checked={showMarkers} onCheckedChange={setShowMarkers} />
+              Show operations
+            </label>
+          </div>
+          <div id={ASSET_CHART_CONTAINER_ID} className={"w-full px-[1.5rem] h-[60svh]"} />
+        </div>
+      )}
     </div>
   );
 }

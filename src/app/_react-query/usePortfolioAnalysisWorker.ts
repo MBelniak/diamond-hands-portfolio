@@ -20,7 +20,7 @@ export const usePortfolioAnalysisWorker = (portfolioDataQuery: UseQueryResult<Po
     enabled: !!portfolioData,
     staleTime: Infinity,
     retry: false,
-    placeholderData: (previousData, previousQuery) =>
-      previousQuery?.queryKey[1] === selectedPortfolio ? previousData : undefined,
+    refetchOnMount: false,
+    retryOnMount: false,
   });
 };

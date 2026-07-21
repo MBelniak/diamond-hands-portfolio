@@ -14,11 +14,10 @@ import {
   ChartLineKey,
   useChartLines,
 } from "@/app/(analysis)/performance/_components/PerformanceChart/hooks/useChartLines";
-import { LoaderOverlay } from "@/components/ui/LoaderOverlay";
 
 export function PerformanceChart() {
   const { useWithdrawnCash, selectedBenchmark, selectedPortfolio } = useStore();
-  const { data, isDataStale } = usePortfolioAnalysis();
+  const { data } = usePortfolioAnalysis();
   const portfolioAnalysis = data as PortfolioAnalysis;
 
   const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
@@ -69,7 +68,6 @@ export function PerformanceChart() {
 
   return (
     <div className="flex flex-col bg-white/5 backdrop-blur-lg rounded-sm shadow-xl w-full p-6 gap-4 relative">
-      {isDataStale && <LoaderOverlay />}
       <h2 className="text-2xl font-bold mb-2 text-center">
         Portfolio value over time ({PortfolioCurrencyToSymbol[selectedPortfolio]})
       </h2>

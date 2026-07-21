@@ -9,12 +9,11 @@ import { TimePeriod } from "@/app/(analysis)/performance/_types/TimePeriod";
 import { useStore } from "@/lib/store";
 import { getReturnOnTimeline } from "@/app/(analysis)/performance/_logic/getReturnOnTimeline";
 import { getCashFlowForBenchmarkComparison } from "@/lib/returnMetrics";
-import { LoaderOverlay } from "@/components/ui/LoaderOverlay";
 import { BenchmarkRow } from "@/app/(analysis)/performance/_components/Benchmarks/Benchmark.types";
 import { benchmarkColumns } from "@/app/(analysis)/performance/_components/Benchmarks/Banchmarks.columns";
 
 export const Benchmarks: React.FC = () => {
-  const { data: portfolioAnalysis, isDataStale } = usePortfolioAnalysis();
+  const { data: portfolioAnalysis } = usePortfolioAnalysis();
   const { selectedReturnMetric } = useStore();
 
   const benchmarkData = useMemo(() => {
@@ -129,7 +128,6 @@ export const Benchmarks: React.FC = () => {
 
   return (
     <div className="w-full space-y-4 relative">
-      {isDataStale && <LoaderOverlay />}
       <div className="space-y-2">
         <h2 className="text-2xl font-bold">Total Return vs Benchmarks</h2>
       </div>

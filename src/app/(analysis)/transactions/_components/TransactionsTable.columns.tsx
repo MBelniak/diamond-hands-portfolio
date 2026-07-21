@@ -9,6 +9,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { CompanyLogo } from "@/components/ui/company-logo";
+import { useStore } from "@/lib/store";
+import { PortfolioCurrencyToSymbol } from "@/lib/types";
 
 const TYPE_LABELS: Record<TransactionType, string> = {
   buy: "Buy",
@@ -112,7 +114,10 @@ export const transactionColumns: ColumnDef<TransactionRow>[] = [
   },
   {
     accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
+    header: function Header() {
+      const { selectedPortfolio } = useStore();
+      return <div className="text-right">Amount ({PortfolioCurrencyToSymbol[selectedPortfolio]})</div>;
+    },
     meta: { align: "right" },
     cell: (info) => {
       const v = info.getValue() as number;

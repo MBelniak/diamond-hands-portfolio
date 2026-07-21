@@ -1,0 +1,3775 @@
+{
+  "cashEvents": [
+    {
+      "date": "2025-03-31T12:10:01.000Z",
+      "cashChange": 37.98,
+      "type": "cash",
+      "stocksVolumeChange": -0.6893,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 55.095,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-03-31T12:10:01.000Z",
+      "cashChange": 46.75,
+      "type": "cash",
+      "stocksVolumeChange": -0.8486,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 55.095,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-03-31T12:10:01.000Z",
+      "cashChange": 36.28,
+      "type": "cash",
+      "stocksVolumeChange": -0.6585,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 55.095,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-03-31T12:10:01.000Z",
+      "cashChange": 45.41,
+      "type": "cash",
+      "stocksVolumeChange": -0.8242,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 55.095,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-03-31T12:09:59.000Z",
+      "cashChange": 9.68,
+      "type": "cash",
+      "stocksVolumeChange": -0.1758,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 55.09,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-03-26T15:20:02.000Z",
+      "cashChange": 0.15,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-03-26T15:20:02.000Z",
+      "cashChange": 0.16,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-03-26T15:20:02.000Z",
+      "cashChange": 0.62,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-03-26T15:20:02.000Z",
+      "cashChange": 0.13,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-03-26T15:20:02.000Z",
+      "cashChange": 0.11,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-03-26T15:20:02.000Z",
+      "cashChange": 0.1,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-03-03T00:23:12.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-03-03T00:23:10.000Z",
+      "cashChange": 0.05,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-27T14:01:21.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-26T13:42:36.000Z",
+      "cashChange": -0.24,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "ITA.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-26T13:31:33.000Z",
+      "cashChange": -218.68,
+      "type": "cash",
+      "stocksVolumeChange": 4,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 54.67,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-26T13:31:22.000Z",
+      "cashChange": -51.88,
+      "type": "cash",
+      "stocksVolumeChange": 0.9468,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 54.79,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-26T13:30:53.000Z",
+      "cashChange": 165.3,
+      "type": "cash",
+      "stocksVolumeChange": -0.678,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 243.8,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-26T13:30:19.000Z",
+      "cashChange": -0.55,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "ITA.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-26T13:30:19.000Z",
+      "cashChange": -0.09,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "ITA.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-24T13:55:28.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "AVGO.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-21T16:32:43.000Z",
+      "cashChange": -0.24,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "ITA.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-21T15:41:50.000Z",
+      "cashChange": 98.69,
+      "type": "cash",
+      "stocksVolumeChange": -0.4425,
+      "stockSymbol": "AVGO.US",
+      "openPrice": 223.03,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-21T14:41:32.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-20T16:51:34.000Z",
+      "cashChange": -99.98,
+      "type": "cash",
+      "stocksVolumeChange": 0.4425,
+      "stockSymbol": "AVGO.US",
+      "openPrice": 225.95,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-20T14:45:32.000Z",
+      "cashChange": 56.91,
+      "type": "cash",
+      "stocksVolumeChange": -1,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 56.91,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-20T14:45:30.000Z",
+      "cashChange": 50.64,
+      "type": "cash",
+      "stocksVolumeChange": -0.8903,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 56.88,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-20T13:09:15.000Z",
+      "cashChange": -0.02,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-19T17:25:54.000Z",
+      "cashChange": -470,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": -470
+    },
+    {
+      "date": "2025-02-19T17:09:25.000Z",
+      "cashChange": -63.66,
+      "type": "cash",
+      "stocksVolumeChange": 1,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 63.66,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-19T17:09:24.000Z",
+      "cashChange": -56.69,
+      "type": "cash",
+      "stocksVolumeChange": 0.8903,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 63.67,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-19T17:08:09.000Z",
+      "cashChange": 575.1,
+      "type": "cash",
+      "stocksVolumeChange": -9,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 63.9,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-19T17:08:07.000Z",
+      "cashChange": 13.75,
+      "type": "cash",
+      "stocksVolumeChange": -0.2153,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 63.87,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-13T09:59:26.000Z",
+      "cashChange": -0.03,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-13T09:59:26.000Z",
+      "cashChange": 0.17,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-10T13:52:38.000Z",
+      "cashChange": -341.55,
+      "type": "cash",
+      "stocksVolumeChange": 9,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 37.95,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-10T13:52:36.000Z",
+      "cashChange": -8.17,
+      "type": "cash",
+      "stocksVolumeChange": 0.2153,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 37.96,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-10T13:07:34.000Z",
+      "cashChange": -0.02,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-10T09:05:51.000Z",
+      "cashChange": -241.23,
+      "type": "cash",
+      "stocksVolumeChange": 4,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 60.308,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-10T09:05:49.000Z",
+      "cashChange": -59.05,
+      "type": "cash",
+      "stocksVolumeChange": 0.9794,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 60.288,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-10T09:05:07.000Z",
+      "cashChange": 480.01,
+      "type": "cash",
+      "stocksVolumeChange": -37,
+      "stockSymbol": "ASWC.DE",
+      "openPrice": 12.626,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-10T09:05:07.000Z",
+      "cashChange": 12.31,
+      "type": "cash",
+      "stocksVolumeChange": -0.9485,
+      "stockSymbol": "ASWC.DE",
+      "openPrice": 12.626,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-10T09:05:07.000Z",
+      "cashChange": 103.79,
+      "type": "cash",
+      "stocksVolumeChange": -8,
+      "stockSymbol": "ASWC.DE",
+      "openPrice": 12.626,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-10T09:05:07.000Z",
+      "cashChange": 0.67,
+      "type": "cash",
+      "stocksVolumeChange": -0.0515,
+      "stockSymbol": "ASWC.DE",
+      "openPrice": 12.626,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-10T09:05:06.000Z",
+      "cashChange": 1.86,
+      "type": "cash",
+      "stocksVolumeChange": -0.1434,
+      "stockSymbol": "ASWC.DE",
+      "openPrice": 12.626,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T14:45:26.000Z",
+      "cashChange": -487.63,
+      "type": "cash",
+      "stocksVolumeChange": 37,
+      "stockSymbol": "ASWC.DE",
+      "openPrice": 12.636,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T14:45:24.000Z",
+      "cashChange": -12.5,
+      "type": "cash",
+      "stocksVolumeChange": 0.9485,
+      "stockSymbol": "ASWC.DE",
+      "openPrice": 12.636,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T13:44:31.000Z",
+      "cashChange": -100,
+      "type": "cash",
+      "stocksVolumeChange": 0.4745,
+      "stockSymbol": "TSM.US",
+      "openPrice": 210.74,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T13:43:05.000Z",
+      "cashChange": 107.61,
+      "type": "cash",
+      "stocksVolumeChange": -3,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 35.87,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T13:43:05.000Z",
+      "cashChange": 20.31,
+      "type": "cash",
+      "stocksVolumeChange": -0.5663,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 35.87,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T13:43:05.000Z",
+      "cashChange": 35.87,
+      "type": "cash",
+      "stocksVolumeChange": -1,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 35.87,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T13:43:05.000Z",
+      "cashChange": 28.28,
+      "type": "cash",
+      "stocksVolumeChange": -0.7884,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 35.87,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T13:43:05.000Z",
+      "cashChange": 35.87,
+      "type": "cash",
+      "stocksVolumeChange": -1,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 35.87,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T13:43:05.000Z",
+      "cashChange": 31.21,
+      "type": "cash",
+      "stocksVolumeChange": -0.87,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 35.87,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T13:43:05.000Z",
+      "cashChange": 71.74,
+      "type": "cash",
+      "stocksVolumeChange": -2,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 35.87,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T13:43:05.000Z",
+      "cashChange": 35.69,
+      "type": "cash",
+      "stocksVolumeChange": -0.9949,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 35.87,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T13:43:05.000Z",
+      "cashChange": 135.6,
+      "type": "cash",
+      "stocksVolumeChange": -3.7804,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 35.87,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T13:43:04.000Z",
+      "cashChange": 7.88,
+      "type": "cash",
+      "stocksVolumeChange": -0.2196,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 35.87,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-07T13:43:04.000Z",
+      "cashChange": 26.52,
+      "type": "cash",
+      "stocksVolumeChange": -0.7393,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 35.87,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-03T05:01:25.000Z",
+      "cashChange": 0.04,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-02-03T00:10:00.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-29T14:09:43.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "MSFT.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-28T13:50:07.000Z",
+      "cashChange": -100.05,
+      "type": "cash",
+      "stocksVolumeChange": 0.8453,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 118.36,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-28T13:49:59.000Z",
+      "cashChange": -84.12,
+      "type": "cash",
+      "stocksVolumeChange": 3,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 28.04,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-28T13:49:58.000Z",
+      "cashChange": -15.88,
+      "type": "cash",
+      "stocksVolumeChange": 0.5663,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 28.05,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-28T13:49:45.000Z",
+      "cashChange": 207.85,
+      "type": "cash",
+      "stocksVolumeChange": -0.4799,
+      "stockSymbol": "MSFT.US",
+      "openPrice": 433.12,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-27T07:05:07.000Z",
+      "cashChange": 67.6,
+      "type": "cash",
+      "stocksVolumeChange": -2,
+      "stockSymbol": "V60A.DE",
+      "openPrice": 32.465,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-27T07:04:23.000Z",
+      "cashChange": 31.89,
+      "type": "cash",
+      "stocksVolumeChange": -0.9454,
+      "stockSymbol": "V60A.DE",
+      "openPrice": 32.4,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-15T14:47:44.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-14T14:17:18.000Z",
+      "cashChange": -160.01,
+      "type": "cash",
+      "stocksVolumeChange": 0.678,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 236,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-14T14:16:52.000Z",
+      "cashChange": -49.99,
+      "type": "cash",
+      "stocksVolumeChange": 0.2444,
+      "stockSymbol": "TSM.US",
+      "openPrice": 204.55,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-14T14:16:22.000Z",
+      "cashChange": 191.69,
+      "type": "cash",
+      "stocksVolumeChange": -1,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 191.69,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-14T14:16:20.000Z",
+      "cashChange": 27.1,
+      "type": "cash",
+      "stocksVolumeChange": -0.1414,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 191.68,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-09T10:00:06.000Z",
+      "cashChange": -0.07,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "TSM.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-09T10:00:06.000Z",
+      "cashChange": 0.32,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "TSM.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-05T08:31:58.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2025-01-05T08:31:57.000Z",
+      "cashChange": 0.02,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-30T15:08:36.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-30T10:55:02.000Z",
+      "cashChange": 0.16,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-30T10:55:02.000Z",
+      "cashChange": 0.1,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-27T13:51:24.000Z",
+      "cashChange": -41.2,
+      "type": "cash",
+      "stocksVolumeChange": 0.6893,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 59.77,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-27T13:50:59.000Z",
+      "cashChange": -32.97,
+      "type": "cash",
+      "stocksVolumeChange": 1,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 32.97,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-27T13:50:58.000Z",
+      "cashChange": -26.01,
+      "type": "cash",
+      "stocksVolumeChange": 0.7884,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 32.99,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-27T13:50:19.000Z",
+      "cashChange": 19.22,
+      "type": "cash",
+      "stocksVolumeChange": -0.0749,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 256.61,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-27T13:50:19.000Z",
+      "cashChange": 80.29,
+      "type": "cash",
+      "stocksVolumeChange": -0.3129,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 256.61,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-27T10:15:27.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-27T10:15:26.000Z",
+      "cashChange": 0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-20T14:52:24.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "AMD.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-20T07:00:56.000Z",
+      "cashChange": -49.5,
+      "type": "cash",
+      "stocksVolumeChange": 0.8486,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 58.328,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-19T18:38:01.000Z",
+      "cashChange": -31.54,
+      "type": "cash",
+      "stocksVolumeChange": 1,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 31.54,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-19T18:38:00.000Z",
+      "cashChange": -27.44,
+      "type": "cash",
+      "stocksVolumeChange": 0.87,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 31.54,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-19T18:35:31.000Z",
+      "cashChange": 84.1,
+      "type": "cash",
+      "stocksVolumeChange": -0.7057,
+      "stockSymbol": "AMD.US",
+      "openPrice": 119.17,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-16T10:02:56.000Z",
+      "cashChange": 0.03,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-16T10:02:55.000Z",
+      "cashChange": -0.03,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-16T10:02:55.000Z",
+      "cashChange": 0.2,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-12T10:00:19.000Z",
+      "cashChange": -0.06,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "MSFT.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-12T10:00:19.000Z",
+      "cashChange": 0.4,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "MSFT.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-03T13:30:23.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "DECK.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-03T07:00:50.000Z",
+      "cashChange": -39.75,
+      "type": "cash",
+      "stocksVolumeChange": 0.6585,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 60.37,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-03T07:00:21.000Z",
+      "cashChange": -60.32,
+      "type": "cash",
+      "stocksVolumeChange": 1,
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 60.323,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-03T00:41:11.000Z",
+      "cashChange": -0.05,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-03T00:41:09.000Z",
+      "cashChange": 0.26,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-12-02T15:49:48.000Z",
+      "cashChange": 123.58,
+      "type": "cash",
+      "stocksVolumeChange": -0.6104,
+      "stockSymbol": "DECK.US",
+      "openPrice": 202.46,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-27T10:01:41.000Z",
+      "cashChange": -0.1,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMSN.UK",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-27T10:01:41.000Z",
+      "cashChange": 0.45,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMSN.UK",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-22T13:50:07.000Z",
+      "cashChange": -66.52,
+      "type": "cash",
+      "stocksVolumeChange": 2,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 33.26,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-22T13:50:06.000Z",
+      "cashChange": -33.18,
+      "type": "cash",
+      "stocksVolumeChange": 0.9949,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 33.35,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-22T13:49:12.000Z",
+      "cashChange": 99.74,
+      "type": "cash",
+      "stocksVolumeChange": -0.1494,
+      "stockSymbol": "ASML.NL",
+      "openPrice": 644.6,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-18T13:46:25.000Z",
+      "cashChange": -16.99,
+      "type": "cash",
+      "stocksVolumeChange": 0.0749,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 226.9,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-14T10:00:45.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-14T10:00:45.000Z",
+      "cashChange": 0.08,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-07T10:00:05.000Z",
+      "cashChange": -0.06,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "ASML.NL",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-07T10:00:05.000Z",
+      "cashChange": 0.41,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "ASML.NL",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:34:24.000Z",
+      "cashChange": -300,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": -300
+    },
+    {
+      "date": "2024-11-06T14:27:45.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "AMD.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:26:48.000Z",
+      "cashChange": -100,
+      "type": "cash",
+      "stocksVolumeChange": 0.6104,
+      "stockSymbol": "DECK.US",
+      "openPrice": 163.82,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:23:13.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:23:06.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "MSFT.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:23:05.000Z",
+      "cashChange": -97.61,
+      "type": "cash",
+      "stocksVolumeChange": 8,
+      "stockSymbol": "ASWC.DE",
+      "openPrice": 11.324,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:23:04.000Z",
+      "cashChange": -2.38,
+      "type": "cash",
+      "stocksVolumeChange": 0.1949,
+      "stockSymbol": "ASWC.DE",
+      "openPrice": 11.324,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:21:02.000Z",
+      "cashChange": -67.9,
+      "type": "cash",
+      "stocksVolumeChange": 2,
+      "stockSymbol": "V60A.DE",
+      "openPrice": 31.49,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:21:00.000Z",
+      "cashChange": -32.1,
+      "type": "cash",
+      "stocksVolumeChange": 0.9454,
+      "stockSymbol": "V60A.DE",
+      "openPrice": 31.49,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:19:58.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "QCOM.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:18:10.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:17:11.000Z",
+      "cashChange": 416.21,
+      "type": "cash",
+      "stocksVolumeChange": -1,
+      "stockSymbol": "MSF.DE",
+      "openPrice": 390.05,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:16:19.000Z",
+      "cashChange": -100.05,
+      "type": "cash",
+      "stocksVolumeChange": 0.5261,
+      "stockSymbol": "TSM.US",
+      "openPrice": 190.18,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:09:38.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:08:41.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "TSM.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:08:21.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T14:03:00.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "DELL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T13:45:34.000Z",
+      "cashChange": -69.99,
+      "type": "cash",
+      "stocksVolumeChange": 0.3129,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 223.69,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T13:45:14.000Z",
+      "cashChange": -133.2,
+      "type": "cash",
+      "stocksVolumeChange": 20,
+      "stockSymbol": "BNKS.UK",
+      "openPrice": 6.66,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T13:42:34.000Z",
+      "cashChange": -199.96,
+      "type": "cash",
+      "stocksVolumeChange": 0.4799,
+      "stockSymbol": "MSFT.US",
+      "openPrice": 416.67,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T13:42:15.000Z",
+      "cashChange": -419,
+      "type": "cash",
+      "stocksVolumeChange": 1,
+      "stockSymbol": "MSF.DE",
+      "openPrice": 389.3,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T13:42:00.000Z",
+      "cashChange": -175.29,
+      "type": "cash",
+      "stocksVolumeChange": 1,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 175.29,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T13:41:58.000Z",
+      "cashChange": -24.79,
+      "type": "cash",
+      "stocksVolumeChange": 0.1414,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 175.29,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T13:41:44.000Z",
+      "cashChange": -84.32,
+      "type": "cash",
+      "stocksVolumeChange": 4,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 21.08,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T13:41:42.000Z",
+      "cashChange": -15.6,
+      "type": "cash",
+      "stocksVolumeChange": 0.7393,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 21.1,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T13:41:23.000Z",
+      "cashChange": -144.33,
+      "type": "cash",
+      "stocksVolumeChange": 1,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 144.33,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T13:41:22.000Z",
+      "cashChange": -55.75,
+      "type": "cash",
+      "stocksVolumeChange": 0.3864,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 144.29,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T13:30:03.000Z",
+      "cashChange": -102.47,
+      "type": "cash",
+      "stocksVolumeChange": 0.7057,
+      "stockSymbol": "AMD.US",
+      "openPrice": 145.2,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T07:03:07.000Z",
+      "cashChange": -99.93,
+      "type": "cash",
+      "stocksVolumeChange": 0.1494,
+      "stockSymbol": "ASML.NL",
+      "openPrice": 619.7,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T07:02:28.000Z",
+      "cashChange": -495,
+      "type": "cash",
+      "stocksVolumeChange": 15,
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 33,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-06T07:02:27.000Z",
+      "cashChange": -4.4,
+      "type": "cash",
+      "stocksVolumeChange": 0.1331,
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 33.04,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:14:59.000Z",
+      "cashChange": 50.88,
+      "type": "cash",
+      "stocksVolumeChange": -2,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 25.44,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:14:57.000Z",
+      "cashChange": 11.44,
+      "type": "cash",
+      "stocksVolumeChange": -0.4497,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 25.43,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:14:53.000Z",
+      "cashChange": 97.09,
+      "type": "cash",
+      "stocksVolumeChange": -0.7406,
+      "stockSymbol": "DELL.US",
+      "openPrice": 131.1,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:14:49.000Z",
+      "cashChange": 98.59,
+      "type": "cash",
+      "stocksVolumeChange": -0.4412,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 223.46,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:14:45.000Z",
+      "cashChange": 101.18,
+      "type": "cash",
+      "stocksVolumeChange": -0.596,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 169.76,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:14:40.000Z",
+      "cashChange": 114.76,
+      "type": "cash",
+      "stocksVolumeChange": -0.6882,
+      "stockSymbol": "QCOM.US",
+      "openPrice": 166.76,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:14:35.000Z",
+      "cashChange": 142.6,
+      "type": "cash",
+      "stocksVolumeChange": -1,
+      "stockSymbol": "AMD.US",
+      "openPrice": 142.6,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:14:34.000Z",
+      "cashChange": 35.66,
+      "type": "cash",
+      "stocksVolumeChange": -0.2501,
+      "stockSymbol": "AMD.US",
+      "openPrice": 142.58,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:14:28.000Z",
+      "cashChange": 96.69,
+      "type": "cash",
+      "stocksVolumeChange": -0.2345,
+      "stockSymbol": "MSFT.US",
+      "openPrice": 412.34,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:14:28.000Z",
+      "cashChange": 196.73,
+      "type": "cash",
+      "stocksVolumeChange": -0.4771,
+      "stockSymbol": "MSFT.US",
+      "openPrice": 412.34,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:13:56.000Z",
+      "cashChange": 113.53,
+      "type": "cash",
+      "stocksVolumeChange": -0.5774,
+      "stockSymbol": "TSM.US",
+      "openPrice": 196.62,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:13:56.000Z",
+      "cashChange": 83.09,
+      "type": "cash",
+      "stocksVolumeChange": -0.4226,
+      "stockSymbol": "TSM.US",
+      "openPrice": 196.62,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:13:55.000Z",
+      "cashChange": 55.2,
+      "type": "cash",
+      "stocksVolumeChange": -0.2809,
+      "stockSymbol": "TSM.US",
+      "openPrice": 196.51,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:13:49.000Z",
+      "cashChange": 277.76,
+      "type": "cash",
+      "stocksVolumeChange": -2,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 138.88,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T14:13:47.000Z",
+      "cashChange": 104.92,
+      "type": "cash",
+      "stocksVolumeChange": -0.7555,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 138.88,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T02:01:49.000Z",
+      "cashChange": -0.08,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-05T02:01:48.000Z",
+      "cashChange": 0.41,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-04T08:31:00.000Z",
+      "cashChange": 193.08,
+      "type": "cash",
+      "stocksVolumeChange": -6,
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 32.18,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-04T08:30:58.000Z",
+      "cashChange": 7.34,
+      "type": "cash",
+      "stocksVolumeChange": -0.2285,
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 32.12,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-04T08:30:48.000Z",
+      "cashChange": 73.91,
+      "type": "cash",
+      "stocksVolumeChange": -0.0694,
+      "stockSymbol": "SMSN.UK",
+      "openPrice": 1065,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-04T08:30:40.000Z",
+      "cashChange": 169.35,
+      "type": "cash",
+      "stocksVolumeChange": -0.2514,
+      "stockSymbol": "ASML.NL",
+      "openPrice": 621.2,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-01T10:01:06.000Z",
+      "cashChange": -0.05,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "DELL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-11-01T10:01:06.000Z",
+      "cashChange": 0.33,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "DELL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-30T12:44:38.000Z",
+      "cashChange": 81.81,
+      "type": "cash",
+      "stocksVolumeChange": -11,
+      "stockSymbol": "IQQH.DE",
+      "openPrice": 6.901,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-30T12:44:37.000Z",
+      "cashChange": 5.48,
+      "type": "cash",
+      "stocksVolumeChange": -0.7374,
+      "stockSymbol": "IQQH.DE",
+      "openPrice": 6.9,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-09T08:00:09.000Z",
+      "cashChange": -0.09,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "TSM.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-09T08:00:09.000Z",
+      "cashChange": 0.44,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "TSM.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-06T11:00:02.000Z",
+      "cashChange": -0.02,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-06T11:00:01.000Z",
+      "cashChange": 0.09,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-04T12:57:53.000Z",
+      "cashChange": -0.58,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "OIL",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-04T12:57:53.000Z",
+      "cashChange": 43.1,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "OIL",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-04T10:54:29.000Z",
+      "cashChange": 0.03,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-02T12:16:24.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-02T12:00:48.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "RYAAY.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T17:11:26.000Z",
+      "cashChange": -99.97,
+      "type": "cash",
+      "stocksVolumeChange": 0.596,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 167.74,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T17:08:30.000Z",
+      "cashChange": -100,
+      "type": "cash",
+      "stocksVolumeChange": 0.5774,
+      "stockSymbol": "TSM.US",
+      "openPrice": 173.19,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T17:03:33.000Z",
+      "cashChange": -81.62,
+      "type": "cash",
+      "stocksVolumeChange": 2,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 40.81,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T17:03:32.000Z",
+      "cashChange": -18.36,
+      "type": "cash",
+      "stocksVolumeChange": 0.4497,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 40.82,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T17:01:37.000Z",
+      "cashChange": 37.57,
+      "type": "cash",
+      "stocksVolumeChange": -0.8435,
+      "stockSymbol": "RYAAY.US",
+      "openPrice": 44.54,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T12:00:02.000Z",
+      "cashChange": 57.17,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "RYAAY.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T05:20:59.000Z",
+      "cashChange": 97.59,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T05:20:59.000Z",
+      "cashChange": 185.23,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T05:20:47.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": -0.2346,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 438.42,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T05:20:47.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T05:20:47.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T05:20:32.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": -0.4453,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 791.41,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T05:20:32.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-10-01T05:20:32.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-26T08:01:02.000Z",
+      "cashChange": -0.21,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "RYAAY.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-26T08:01:02.000Z",
+      "cashChange": 0.84,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "RYAAY.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-26T08:00:02.000Z",
+      "cashChange": -0.09,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "QCOM.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-26T08:00:02.000Z",
+      "cashChange": 0.58,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "QCOM.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-18T11:54:53.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "DECK.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-17T11:27:37.000Z",
+      "cashChange": 90.75,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "DECK.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-17T11:26:51.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": -0.0969,
+      "stockSymbol": "DECK.US",
+      "openPrice": 1029.18,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-17T11:26:51.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "DECK.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-17T11:26:51.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "DECK.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-12T08:00:36.000Z",
+      "cashChange": -0.05,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "MSFT.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-12T08:00:36.000Z",
+      "cashChange": 0.36,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "MSFT.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-04T00:34:06.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-04T00:34:05.000Z",
+      "cashChange": 0.03,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-02T08:01:30.000Z",
+      "cashChange": -0.1,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMSN.UK",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-09-02T08:01:30.000Z",
+      "cashChange": 0.47,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMSN.UK",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-29T11:25:39.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "TM.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-28T16:42:24.000Z",
+      "cashChange": -102.85,
+      "type": "cash",
+      "stocksVolumeChange": 0.2346,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 438.42,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-28T16:42:09.000Z",
+      "cashChange": 93.96,
+      "type": "cash",
+      "stocksVolumeChange": -0.5014,
+      "stockSymbol": "TM.US",
+      "openPrice": 187.39,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-22T09:57:55.000Z",
+      "cashChange": 1.65,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 1.65
+    },
+    {
+      "date": "2024-08-21T12:52:02.000Z",
+      "cashChange": -99.98,
+      "type": "cash",
+      "stocksVolumeChange": 0.4412,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 226.61,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-21T12:47:42.000Z",
+      "cashChange": -192.66,
+      "type": "cash",
+      "stocksVolumeChange": 6,
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 32.11,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-21T12:47:41.000Z",
+      "cashChange": -7.34,
+      "type": "cash",
+      "stocksVolumeChange": 0.2285,
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 32.12,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-21T12:46:34.000Z",
+      "cashChange": -99.98,
+      "type": "cash",
+      "stocksVolumeChange": 0.2345,
+      "stockSymbol": "MSFT.US",
+      "openPrice": 426.37,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-21T12:45:59.000Z",
+      "cashChange": 2.47,
+      "type": "cash",
+      "stocksVolumeChange": -0.0919,
+      "stockSymbol": "ZAL.DE",
+      "openPrice": 24.26,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-21T12:45:59.000Z",
+      "cashChange": 104.9,
+      "type": "cash",
+      "stocksVolumeChange": -3.9081,
+      "stockSymbol": "ZAL.DE",
+      "openPrice": 24.26,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-21T12:45:58.000Z",
+      "cashChange": 2.47,
+      "type": "cash",
+      "stocksVolumeChange": -0.0919,
+      "stockSymbol": "ZAL.DE",
+      "openPrice": 24.26,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-21T11:31:25.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "HALO.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-20T17:36:18.000Z",
+      "cashChange": 60.98,
+      "type": "cash",
+      "stocksVolumeChange": -1,
+      "stockSymbol": "HALO.US",
+      "openPrice": 60.98,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-20T17:36:18.000Z",
+      "cashChange": 53.44,
+      "type": "cash",
+      "stocksVolumeChange": -0.8764,
+      "stockSymbol": "HALO.US",
+      "openPrice": 60.98,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-20T17:36:18.000Z",
+      "cashChange": 68.52,
+      "type": "cash",
+      "stocksVolumeChange": -1.1236,
+      "stockSymbol": "HALO.US",
+      "openPrice": 60.98,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-20T17:36:18.000Z",
+      "cashChange": 60.99,
+      "type": "cash",
+      "stocksVolumeChange": -1,
+      "stockSymbol": "HALO.US",
+      "openPrice": 60.99,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-20T17:36:18.000Z",
+      "cashChange": 53.44,
+      "type": "cash",
+      "stocksVolumeChange": -0.8766,
+      "stockSymbol": "HALO.US",
+      "openPrice": 60.96,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-19T11:55:34.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "PYPL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-16T11:45:01.000Z",
+      "cashChange": -59.63,
+      "type": "cash",
+      "stocksVolumeChange": 1,
+      "stockSymbol": "HALO.US",
+      "openPrice": 59.63,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-16T11:45:00.000Z",
+      "cashChange": -52.28,
+      "type": "cash",
+      "stocksVolumeChange": 0.8764,
+      "stockSymbol": "HALO.US",
+      "openPrice": 59.65,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-16T11:44:47.000Z",
+      "cashChange": 67.8,
+      "type": "cash",
+      "stocksVolumeChange": -1,
+      "stockSymbol": "PYPL.US",
+      "openPrice": 67.8,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-16T11:44:46.000Z",
+      "cashChange": 42.31,
+      "type": "cash",
+      "stocksVolumeChange": -0.6241,
+      "stockSymbol": "PYPL.US",
+      "openPrice": 67.8,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-07T08:00:24.000Z",
+      "cashChange": -0.06,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "ASML.NL",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-07T08:00:24.000Z",
+      "cashChange": 0.41,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "ASML.NL",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-02T08:00:16.000Z",
+      "cashChange": -0.05,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "DELL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-08-02T08:00:16.000Z",
+      "cashChange": 0.33,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "DELL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-07-26T12:35:06.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "NVAX.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-07-26T12:26:48.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "TEAM.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-07-26T05:00:30.000Z",
+      "cashChange": -218.56,
+      "type": "cash",
+      "stocksVolumeChange": 0.2514,
+      "stockSymbol": "ASML.NL",
+      "openPrice": 797.1,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-07-25T13:44:14.000Z",
+      "cashChange": 97.56,
+      "type": "cash",
+      "stocksVolumeChange": -6,
+      "stockSymbol": "NVAX.US",
+      "openPrice": 16.26,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-07-25T13:44:12.000Z",
+      "cashChange": 10.48,
+      "type": "cash",
+      "stocksVolumeChange": -0.6445,
+      "stockSymbol": "NVAX.US",
+      "openPrice": 16.26,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-07-25T13:43:55.000Z",
+      "cashChange": 111.71,
+      "type": "cash",
+      "stocksVolumeChange": -0.6405,
+      "stockSymbol": "TEAM.US",
+      "openPrice": 174.41,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-07-18T11:36:27.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "MDB.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-07-17T17:39:27.000Z",
+      "cashChange": -121.06,
+      "type": "cash",
+      "stocksVolumeChange": 0.7035,
+      "stockSymbol": "TSM.US",
+      "openPrice": 172.08,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-07-17T17:38:20.000Z",
+      "cashChange": 0.18,
+      "type": "cash",
+      "stocksVolumeChange": -0.0007,
+      "stockSymbol": "MDB.US",
+      "openPrice": 261.46,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-07-17T17:37:59.000Z",
+      "cashChange": 120.15,
+      "type": "cash",
+      "stocksVolumeChange": -0.4577,
+      "stockSymbol": "MDB.US",
+      "openPrice": 262.5,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-07-04T01:21:03.000Z",
+      "cashChange": -0.04,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-07-03T19:31:36.000Z",
+      "cashChange": 0.19,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-26T12:37:17.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "HALO.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-25T14:04:03.000Z",
+      "cashChange": -250.5,
+      "type": "cash",
+      "stocksVolumeChange": 2,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 125.25,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-25T14:04:02.000Z",
+      "cashChange": -94.63,
+      "type": "cash",
+      "stocksVolumeChange": 0.7555,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 125.25,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-25T14:03:40.000Z",
+      "cashChange": 156.11,
+      "type": "cash",
+      "stocksVolumeChange": -2.9998,
+      "stockSymbol": "HALO.US",
+      "openPrice": 52.04,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-25T14:03:40.000Z",
+      "cashChange": 0.01,
+      "type": "cash",
+      "stocksVolumeChange": -0.0002,
+      "stockSymbol": "HALO.US",
+      "openPrice": 52.04,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-25T14:03:39.000Z",
+      "cashChange": 5.65,
+      "type": "cash",
+      "stocksVolumeChange": -0.1085,
+      "stockSymbol": "HALO.US",
+      "openPrice": 52.03,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-17T11:29:40.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:32:29.000Z",
+      "cashChange": -61.32,
+      "type": "cash",
+      "stocksVolumeChange": 1,
+      "stockSymbol": "PYPL.US",
+      "openPrice": 61.32,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:31:43.000Z",
+      "cashChange": -158.81,
+      "type": "cash",
+      "stocksVolumeChange": 1,
+      "stockSymbol": "AMD.US",
+      "openPrice": 158.81,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:31:42.000Z",
+      "cashChange": -86.28,
+      "type": "cash",
+      "stocksVolumeChange": 6,
+      "stockSymbol": "NVAX.US",
+      "openPrice": 14.38,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "cashChange": -101.51,
+      "type": "cash",
+      "stocksVolumeChange": 0.4584,
+      "stockSymbol": "MDB.US",
+      "openPrice": 221.45,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "cashChange": 169,
+      "type": "cash",
+      "stocksVolumeChange": -0.2,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 845,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "cashChange": -99.77,
+      "type": "cash",
+      "stocksVolumeChange": 0.7406,
+      "stockSymbol": "DELL.US",
+      "openPrice": 134.71,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "cashChange": -38.31,
+      "type": "cash",
+      "stocksVolumeChange": 0.6241,
+      "stockSymbol": "PYPL.US",
+      "openPrice": 61.38,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "cashChange": -98.49,
+      "type": "cash",
+      "stocksVolumeChange": 0.8435,
+      "stockSymbol": "RYAAY.US",
+      "openPrice": 116.76,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "cashChange": -98.76,
+      "type": "cash",
+      "stocksVolumeChange": 0.5014,
+      "stockSymbol": "TM.US",
+      "openPrice": 196.97,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "cashChange": -99.73,
+      "type": "cash",
+      "stocksVolumeChange": 0.0969,
+      "stockSymbol": "DECK.US",
+      "openPrice": 1029.18,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "cashChange": -149.55,
+      "type": "cash",
+      "stocksVolumeChange": 0.6882,
+      "stockSymbol": "QCOM.US",
+      "openPrice": 217.3,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "cashChange": -39.61,
+      "type": "cash",
+      "stocksVolumeChange": 0.2501,
+      "stockSymbol": "AMD.US",
+      "openPrice": 158.37,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "cashChange": -101.51,
+      "type": "cash",
+      "stocksVolumeChange": 0.6405,
+      "stockSymbol": "TEAM.US",
+      "openPrice": 158.49,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "cashChange": -9.26,
+      "type": "cash",
+      "stocksVolumeChange": 0.6445,
+      "stockSymbol": "NVAX.US",
+      "openPrice": 14.36,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "cashChange": -209.24,
+      "type": "cash",
+      "stocksVolumeChange": 0.4771,
+      "stockSymbol": "MSFT.US",
+      "openPrice": 438.57,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T05:07:11.000Z",
+      "cashChange": -93.34,
+      "type": "cash",
+      "stocksVolumeChange": 11,
+      "stockSymbol": "IQQH.DE",
+      "openPrice": 7.874,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T05:04:26.000Z",
+      "cashChange": -100.63,
+      "type": "cash",
+      "stocksVolumeChange": 0.0694,
+      "stockSymbol": "SMSN.UK",
+      "openPrice": 1450,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T05:04:25.000Z",
+      "cashChange": -6.28,
+      "type": "cash",
+      "stocksVolumeChange": 0.7374,
+      "stockSymbol": "IQQH.DE",
+      "openPrice": 7.9,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T05:01:18.000Z",
+      "cashChange": -2.23,
+      "type": "cash",
+      "stocksVolumeChange": 0.0919,
+      "stockSymbol": "ZAL.DE",
+      "openPrice": 22.52,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-14T05:00:31.000Z",
+      "cashChange": -96.84,
+      "type": "cash",
+      "stocksVolumeChange": 4,
+      "stockSymbol": "ZAL.DE",
+      "openPrice": 22.46,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-13T14:51:36.000Z",
+      "cashChange": -294.66,
+      "type": "cash",
+      "stocksVolumeChange": 6,
+      "stockSymbol": "HALO.US",
+      "openPrice": 49.11,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-13T14:51:34.000Z",
+      "cashChange": -5.34,
+      "type": "cash",
+      "stocksVolumeChange": 0.1087,
+      "stockSymbol": "HALO.US",
+      "openPrice": 49.11,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-13T12:01:51.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-13T11:30:03.000Z",
+      "cashChange": -510.7,
+      "type": "cash",
+      "stocksVolumeChange": 0.6453,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 791.41,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-13T07:27:29.000Z",
+      "cashChange": 1900,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 1900
+    },
+    {
+      "date": "2024-06-12T15:06:02.000Z",
+      "cashChange": 431.76,
+      "type": "cash",
+      "stocksVolumeChange": -2,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 215.88,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-12T15:06:00.000Z",
+      "cashChange": 137.41,
+      "type": "cash",
+      "stocksVolumeChange": -0.6365,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 215.88,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-04T21:48:50.000Z",
+      "cashChange": -0.02,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-06-04T21:48:49.000Z",
+      "cashChange": 0.06,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-05-28T11:40:30.000Z",
+      "cashChange": -660,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": -660
+    },
+    {
+      "date": "2024-05-28T05:05:22.000Z",
+      "cashChange": 533.34,
+      "type": "cash",
+      "stocksVolumeChange": -18,
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 29.63,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-05-28T05:00:45.000Z",
+      "cashChange": 27.08,
+      "type": "cash",
+      "stocksVolumeChange": -0.925,
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 29.28,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-05-24T12:01:49.000Z",
+      "cashChange": 0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-05-23T12:39:42.000Z",
+      "cashChange": -379.3,
+      "type": "cash",
+      "stocksVolumeChange": 2,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 189.65,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-05-23T12:39:40.000Z",
+      "cashChange": -120.72,
+      "type": "cash",
+      "stocksVolumeChange": 0.6365,
+      "stockSymbol": "AAPL.US",
+      "openPrice": 189.67,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-05-23T11:35:27.000Z",
+      "cashChange": 600.59,
+      "type": "cash",
+      "stocksVolumeChange": -0.5803,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 1034.96,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-05-07T01:51:51.000Z",
+      "cashChange": -0.01,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-05-07T01:51:49.000Z",
+      "cashChange": 0.04,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-05-02T07:56:15.000Z",
+      "cashChange": -473.94,
+      "type": "cash",
+      "stocksVolumeChange": 18,
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 26.33,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-05-02T07:56:13.000Z",
+      "cashChange": -24.36,
+      "type": "cash",
+      "stocksVolumeChange": 0.925,
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 26.33,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-05-02T07:53:16.000Z",
+      "cashChange": 400,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 400
+    },
+    {
+      "date": "2024-04-29T10:42:05.000Z",
+      "cashChange": -0.02,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-04-26T12:13:43.000Z",
+      "cashChange": -499.87,
+      "type": "cash",
+      "stocksVolumeChange": 0.5803,
+      "stockSymbol": "NVDA.US",
+      "openPrice": 861.4,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-04-26T11:34:44.000Z",
+      "cashChange": 516.18,
+      "type": "cash",
+      "stocksVolumeChange": -3,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 172.06,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-04-26T11:34:42.000Z",
+      "cashChange": 87.79,
+      "type": "cash",
+      "stocksVolumeChange": -0.5102,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 172.06,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-01-31T13:48:30.000Z",
+      "cashChange": -423.78,
+      "type": "cash",
+      "stocksVolumeChange": 3,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 141.26,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-01-31T13:48:29.000Z",
+      "cashChange": -72.09,
+      "type": "cash",
+      "stocksVolumeChange": 0.5102,
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 141.3,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "date": "2024-01-31T09:32:48.000Z",
+      "cashChange": 497,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 497
+    }
+  ],
+  "openPositions": [],
+  "closedStocksOpenEvents": [
+    {
+      "date": "2024-11-06T13:45:13.000Z",
+      "stocksVolumeChange": 20,
+      "type": "stockOpenEvent",
+      "stockSymbol": "BNKS.UK",
+      "openPrice": 6.66
+    },
+    {
+      "date": "2025-02-26T13:31:22.000Z",
+      "stocksVolumeChange": 4,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 54.67
+    },
+    {
+      "date": "2025-02-26T13:31:22.000Z",
+      "stocksVolumeChange": 0.9468,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 54.79
+    },
+    {
+      "date": "2025-02-07T13:44:31.000Z",
+      "stocksVolumeChange": 0.4745,
+      "type": "stockOpenEvent",
+      "stockSymbol": "TSM.US",
+      "openPrice": 210.74
+    },
+    {
+      "date": "2025-01-14T14:16:52.000Z",
+      "stocksVolumeChange": 0.2444,
+      "type": "stockOpenEvent",
+      "stockSymbol": "TSM.US",
+      "openPrice": 204.55
+    },
+    {
+      "date": "2024-11-06T14:16:19.000Z",
+      "stocksVolumeChange": 0.2811,
+      "type": "stockOpenEvent",
+      "stockSymbol": "TSM.US",
+      "openPrice": 190.18
+    },
+    {
+      "date": "2025-01-28T13:50:07.000Z",
+      "stocksVolumeChange": 0.8453,
+      "type": "stockOpenEvent",
+      "stockSymbol": "NVDA.US",
+      "openPrice": 118.36
+    },
+    {
+      "date": "2024-11-06T13:41:23.000Z",
+      "stocksVolumeChange": 1,
+      "type": "stockOpenEvent",
+      "stockSymbol": "NVDA.US",
+      "openPrice": 144.33
+    },
+    {
+      "date": "2024-11-06T13:41:22.000Z",
+      "stocksVolumeChange": 0.1547,
+      "type": "stockOpenEvent",
+      "stockSymbol": "NVDA.US",
+      "openPrice": 144.29
+    },
+    {
+      "date": "2024-11-06T07:02:27.000Z",
+      "stocksVolumeChange": 4,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 33
+    },
+    {
+      "date": "2024-11-06T07:02:27.000Z",
+      "stocksVolumeChange": 0.1331,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 33.04
+    },
+    {
+      "date": "2025-02-10T09:05:50.000Z",
+      "stocksVolumeChange": 4,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 60.308
+    },
+    {
+      "date": "2025-02-10T09:05:49.000Z",
+      "stocksVolumeChange": 0.9794,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 60.288
+    },
+    {
+      "date": "2024-12-27T13:51:24.000Z",
+      "stocksVolumeChange": 0.6893,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 59.77
+    },
+    {
+      "date": "2024-12-20T07:00:56.000Z",
+      "stocksVolumeChange": 0.8486,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 58.328
+    },
+    {
+      "date": "2024-12-03T07:00:50.000Z",
+      "stocksVolumeChange": 0.6585,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 60.37
+    },
+    {
+      "date": "2024-12-03T07:00:17.000Z",
+      "stocksVolumeChange": 0.8242,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IDUS.UK",
+      "openPrice": 60.323
+    },
+    {
+      "date": "2025-01-14T14:17:18.000Z",
+      "stocksVolumeChange": 0.678,
+      "type": "stockOpenEvent",
+      "stockSymbol": "AAPL.US",
+      "openPrice": 236
+    },
+    {
+      "date": "2025-02-21T16:22:18.000Z",
+      "stocksVolumeChange": 3,
+      "type": "stockOpenEvent",
+      "stockSymbol": "ITA.US",
+      "openPrice": 151.92
+    },
+    {
+      "date": "2025-02-20T16:51:34.000Z",
+      "stocksVolumeChange": 0.4425,
+      "type": "stockOpenEvent",
+      "stockSymbol": "AVGO.US",
+      "openPrice": 225.95
+    },
+    {
+      "date": "2025-02-19T17:09:24.000Z",
+      "stocksVolumeChange": 1,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 63.66
+    },
+    {
+      "date": "2025-02-19T17:09:24.000Z",
+      "stocksVolumeChange": 0.8903,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 63.67
+    },
+    {
+      "date": "2025-02-10T13:52:37.000Z",
+      "stocksVolumeChange": 9,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 37.95
+    },
+    {
+      "date": "2025-02-10T13:52:36.000Z",
+      "stocksVolumeChange": 0.2153,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 37.96
+    },
+    {
+      "date": "2024-11-06T14:23:04.000Z",
+      "stocksVolumeChange": 0.1434,
+      "type": "stockOpenEvent",
+      "stockSymbol": "ASWC.DE",
+      "openPrice": 12.153213775931828
+    },
+    {
+      "date": "2025-02-07T14:45:25.000Z",
+      "stocksVolumeChange": 37,
+      "type": "stockOpenEvent",
+      "stockSymbol": "ASWC.DE",
+      "openPrice": 13.055742108797851
+    },
+    {
+      "date": "2025-02-07T14:45:24.000Z",
+      "stocksVolumeChange": 0.9485,
+      "type": "stockOpenEvent",
+      "stockSymbol": "ASWC.DE",
+      "openPrice": 13.055742108797851
+    },
+    {
+      "date": "2024-11-06T14:23:05.000Z",
+      "stocksVolumeChange": 8,
+      "type": "stockOpenEvent",
+      "stockSymbol": "ASWC.DE",
+      "openPrice": 12.153213775931828
+    },
+    {
+      "date": "2025-01-28T13:49:58.000Z",
+      "stocksVolumeChange": 3,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 28.04
+    },
+    {
+      "date": "2025-01-28T13:49:58.000Z",
+      "stocksVolumeChange": 0.5663,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 28.05
+    },
+    {
+      "date": "2024-12-27T13:50:59.000Z",
+      "stocksVolumeChange": 1,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 32.97
+    },
+    {
+      "date": "2024-12-27T13:50:58.000Z",
+      "stocksVolumeChange": 0.7884,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 32.99
+    },
+    {
+      "date": "2024-12-19T18:38:01.000Z",
+      "stocksVolumeChange": 1,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 31.54
+    },
+    {
+      "date": "2024-12-19T18:38:00.000Z",
+      "stocksVolumeChange": 0.87,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 31.54
+    },
+    {
+      "date": "2024-11-22T13:50:06.000Z",
+      "stocksVolumeChange": 2,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 33.26
+    },
+    {
+      "date": "2024-11-22T13:50:06.000Z",
+      "stocksVolumeChange": 0.9949,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 33.35
+    },
+    {
+      "date": "2024-11-06T13:41:43.000Z",
+      "stocksVolumeChange": 3.7804,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 21.08
+    },
+    {
+      "date": "2024-11-06T13:41:42.000Z",
+      "stocksVolumeChange": 0.7393,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 21.1
+    },
+    {
+      "date": "2024-11-06T13:42:34.000Z",
+      "stocksVolumeChange": 0.4799,
+      "type": "stockOpenEvent",
+      "stockSymbol": "MSFT.US",
+      "openPrice": 416.67
+    },
+    {
+      "date": "2024-11-06T14:21:00.000Z",
+      "stocksVolumeChange": 0.9454,
+      "type": "stockOpenEvent",
+      "stockSymbol": "V60A.DE",
+      "openPrice": 33.79589383646179
+    },
+    {
+      "date": "2024-11-06T14:21:01.000Z",
+      "stocksVolumeChange": 2,
+      "type": "stockOpenEvent",
+      "stockSymbol": "V60A.DE",
+      "openPrice": 33.79589383646179
+    },
+    {
+      "date": "2024-11-06T13:41:59.000Z",
+      "stocksVolumeChange": 1,
+      "type": "stockOpenEvent",
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 175.29
+    },
+    {
+      "date": "2024-11-06T13:41:58.000Z",
+      "stocksVolumeChange": 0.1414,
+      "type": "stockOpenEvent",
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 175.29
+    },
+    {
+      "date": "2024-11-18T13:46:25.000Z",
+      "stocksVolumeChange": 0.0749,
+      "type": "stockOpenEvent",
+      "stockSymbol": "AAPL.US",
+      "openPrice": 226.9
+    },
+    {
+      "date": "2024-11-06T13:45:34.000Z",
+      "stocksVolumeChange": 0.3129,
+      "type": "stockOpenEvent",
+      "stockSymbol": "AAPL.US",
+      "openPrice": 223.69
+    },
+    {
+      "date": "2024-11-06T13:30:03.000Z",
+      "stocksVolumeChange": 0.7057,
+      "type": "stockOpenEvent",
+      "stockSymbol": "AMD.US",
+      "openPrice": 145.2
+    },
+    {
+      "date": "2024-11-06T14:26:48.000Z",
+      "stocksVolumeChange": 0.6104,
+      "type": "stockOpenEvent",
+      "stockSymbol": "DECK.US",
+      "openPrice": 163.82
+    },
+    {
+      "date": "2024-11-06T07:03:07.000Z",
+      "stocksVolumeChange": 0.1494,
+      "type": "stockOpenEvent",
+      "stockSymbol": "ASML.NL",
+      "openPrice": 665.0782918531397
+    },
+    {
+      "date": "2024-11-06T13:42:14.000Z",
+      "stocksVolumeChange": 1,
+      "type": "stockOpenEvent",
+      "stockSymbol": "MSF.DE",
+      "openPrice": 417.8069695311074
+    },
+    {
+      "date": "2024-10-01T17:03:33.000Z",
+      "stocksVolumeChange": 2,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 4.081
+    },
+    {
+      "date": "2024-10-01T17:03:32.000Z",
+      "stocksVolumeChange": 0.4497,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 4.082
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "stocksVolumeChange": 0.7406,
+      "type": "stockOpenEvent",
+      "stockSymbol": "DELL.US",
+      "openPrice": 134.71
+    },
+    {
+      "date": "2024-08-21T12:52:02.000Z",
+      "stocksVolumeChange": 0.4412,
+      "type": "stockOpenEvent",
+      "stockSymbol": "AAPL.US",
+      "openPrice": 226.61
+    },
+    {
+      "date": "2024-10-01T17:11:26.000Z",
+      "stocksVolumeChange": 0.596,
+      "type": "stockOpenEvent",
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 167.74
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "stocksVolumeChange": 0.6882,
+      "type": "stockOpenEvent",
+      "stockSymbol": "QCOM.US",
+      "openPrice": 217.3
+    },
+    {
+      "date": "2024-06-14T11:30:06.000Z",
+      "stocksVolumeChange": 1,
+      "type": "stockOpenEvent",
+      "stockSymbol": "AMD.US",
+      "openPrice": 158.81
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "stocksVolumeChange": 0.2501,
+      "type": "stockOpenEvent",
+      "stockSymbol": "AMD.US",
+      "openPrice": 158.37
+    },
+    {
+      "date": "2024-08-21T12:46:34.000Z",
+      "stocksVolumeChange": 0.2345,
+      "type": "stockOpenEvent",
+      "stockSymbol": "MSFT.US",
+      "openPrice": 426.37
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "stocksVolumeChange": 0.4771,
+      "type": "stockOpenEvent",
+      "stockSymbol": "MSFT.US",
+      "openPrice": 438.57
+    },
+    {
+      "date": "2024-10-01T17:08:30.000Z",
+      "stocksVolumeChange": 0.5774,
+      "type": "stockOpenEvent",
+      "stockSymbol": "TSM.US",
+      "openPrice": 173.19
+    },
+    {
+      "date": "2024-07-17T17:39:27.000Z",
+      "stocksVolumeChange": 0.4226,
+      "type": "stockOpenEvent",
+      "stockSymbol": "TSM.US",
+      "openPrice": 172.08
+    },
+    {
+      "date": "2024-06-25T14:04:02.000Z",
+      "stocksVolumeChange": 2,
+      "type": "stockOpenEvent",
+      "stockSymbol": "NVDA.US",
+      "openPrice": 125.25
+    },
+    {
+      "date": "2024-06-25T14:04:02.000Z",
+      "stocksVolumeChange": 0.7555,
+      "type": "stockOpenEvent",
+      "stockSymbol": "NVDA.US",
+      "openPrice": 125.25
+    },
+    {
+      "date": "2024-08-21T12:47:41.000Z",
+      "stocksVolumeChange": 6,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 32.11
+    },
+    {
+      "date": "2024-08-21T12:47:41.000Z",
+      "stocksVolumeChange": 0.2285,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 32.12
+    },
+    {
+      "date": "2024-06-14T05:04:26.000Z",
+      "stocksVolumeChange": 0.0694,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMSN.UK",
+      "openPrice": 1450
+    },
+    {
+      "date": "2024-07-26T05:00:30.000Z",
+      "stocksVolumeChange": 0.2514,
+      "type": "stockOpenEvent",
+      "stockSymbol": "ASML.NL",
+      "openPrice": 866.6485458004893
+    },
+    {
+      "date": "2024-06-14T05:04:25.000Z",
+      "stocksVolumeChange": 0.7374,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IQQH.DE",
+      "openPrice": 8.468671276196602
+    },
+    {
+      "date": "2024-06-14T05:05:20.000Z",
+      "stocksVolumeChange": 11,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IQQH.DE",
+      "openPrice": 8.440799699844561
+    },
+    {
+      "date": "2024-10-01T17:10:41.000Z",
+      "stocksVolumeChange": 0.01,
+      "type": "stockOpenEvent",
+      "stockSymbol": "OIL",
+      "openPrice": 73.85
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "stocksVolumeChange": 0.8435,
+      "type": "stockOpenEvent",
+      "stockSymbol": "RYAAY.US",
+      "openPrice": 46.72268907563025
+    },
+    {
+      "date": "2024-08-28T16:42:24.000Z",
+      "stocksVolumeChange": 0.2346,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 43.842000000000006
+    },
+    {
+      "date": "2024-06-13T11:30:03.000Z",
+      "stocksVolumeChange": 0.4453,
+      "type": "stockOpenEvent",
+      "stockSymbol": "SMCI.US",
+      "openPrice": 79.141
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "stocksVolumeChange": 0.0969,
+      "type": "stockOpenEvent",
+      "stockSymbol": "DECK.US",
+      "openPrice": 171.53
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "stocksVolumeChange": 0.5014,
+      "type": "stockOpenEvent",
+      "stockSymbol": "TM.US",
+      "openPrice": 196.97
+    },
+    {
+      "date": "2024-06-14T05:01:18.000Z",
+      "stocksVolumeChange": 0.0919,
+      "type": "stockOpenEvent",
+      "stockSymbol": "ZAL.DE",
+      "openPrice": 24.141073055689553
+    },
+    {
+      "date": "2024-06-14T05:00:22.000Z",
+      "stocksVolumeChange": 3.9081,
+      "type": "stockOpenEvent",
+      "stockSymbol": "ZAL.DE",
+      "openPrice": 24.076754033338695
+    },
+    {
+      "date": "2024-08-16T11:45:01.000Z",
+      "stocksVolumeChange": 1,
+      "type": "stockOpenEvent",
+      "stockSymbol": "HALO.US",
+      "openPrice": 59.63
+    },
+    {
+      "date": "2024-08-16T11:45:00.000Z",
+      "stocksVolumeChange": 0.8764,
+      "type": "stockOpenEvent",
+      "stockSymbol": "HALO.US",
+      "openPrice": 59.65
+    },
+    {
+      "date": "2024-06-13T14:51:35.000Z",
+      "stocksVolumeChange": 1.1236,
+      "type": "stockOpenEvent",
+      "stockSymbol": "HALO.US",
+      "openPrice": 49.11
+    },
+    {
+      "date": "2024-06-14T11:30:38.000Z",
+      "stocksVolumeChange": 1,
+      "type": "stockOpenEvent",
+      "stockSymbol": "PYPL.US",
+      "openPrice": 61.32
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "stocksVolumeChange": 0.6241,
+      "type": "stockOpenEvent",
+      "stockSymbol": "PYPL.US",
+      "openPrice": 61.38
+    },
+    {
+      "date": "2024-06-14T11:30:06.000Z",
+      "stocksVolumeChange": 6,
+      "type": "stockOpenEvent",
+      "stockSymbol": "NVAX.US",
+      "openPrice": 14.38
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "stocksVolumeChange": 0.6445,
+      "type": "stockOpenEvent",
+      "stockSymbol": "NVAX.US",
+      "openPrice": 14.36
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "stocksVolumeChange": 0.6405,
+      "type": "stockOpenEvent",
+      "stockSymbol": "TEAM.US",
+      "openPrice": 158.49
+    },
+    {
+      "date": "2024-06-14T11:30:03.000Z",
+      "stocksVolumeChange": 0.0007,
+      "type": "stockOpenEvent",
+      "stockSymbol": "MDB.US",
+      "openPrice": 221.45
+    },
+    {
+      "date": "2024-06-13T14:51:34.000Z",
+      "stocksVolumeChange": 0.0002,
+      "type": "stockOpenEvent",
+      "stockSymbol": "HALO.US",
+      "openPrice": 49.11
+    },
+    {
+      "date": "2024-05-23T12:39:41.000Z",
+      "stocksVolumeChange": 2,
+      "type": "stockOpenEvent",
+      "stockSymbol": "AAPL.US",
+      "openPrice": 189.65
+    },
+    {
+      "date": "2024-05-23T12:39:40.000Z",
+      "stocksVolumeChange": 0.6365,
+      "type": "stockOpenEvent",
+      "stockSymbol": "AAPL.US",
+      "openPrice": 189.67
+    },
+    {
+      "date": "2024-05-02T07:56:14.000Z",
+      "stocksVolumeChange": 18,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 26.33
+    },
+    {
+      "date": "2024-05-02T07:56:13.000Z",
+      "stocksVolumeChange": 0.925,
+      "type": "stockOpenEvent",
+      "stockSymbol": "IUIT.UK",
+      "openPrice": 26.33
+    },
+    {
+      "date": "2024-04-26T12:13:43.000Z",
+      "stocksVolumeChange": 0.5803,
+      "type": "stockOpenEvent",
+      "stockSymbol": "NVDA.US",
+      "openPrice": 86.14
+    },
+    {
+      "date": "2024-01-31T13:48:29.000Z",
+      "stocksVolumeChange": 3,
+      "type": "stockOpenEvent",
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 141.26
+    },
+    {
+      "date": "2024-01-31T13:48:29.000Z",
+      "stocksVolumeChange": 0.5102,
+      "type": "stockOpenEvent",
+      "stockSymbol": "GOOGL.US",
+      "openPrice": 141.3
+    }
+  ],
+  "closedStocksCloseEvents": [
+    {
+      "date": "2024-12-27T13:50:19.000Z",
+      "stocksVolumeChange": 0.0749,
+      "type": "stockCloseEvent",
+      "stockSymbol": "AAPL.US",
+      "profitOrLoss": 2.23,
+      "closePrice": 256.61
+    },
+    {
+      "date": "2024-12-27T13:50:19.000Z",
+      "stocksVolumeChange": 0.3129,
+      "type": "stockCloseEvent",
+      "stockSymbol": "AAPL.US",
+      "profitOrLoss": 10.3,
+      "closePrice": 256.61
+    },
+    {
+      "date": "2024-12-19T18:35:31.000Z",
+      "stocksVolumeChange": 0.7057,
+      "type": "stockCloseEvent",
+      "stockSymbol": "AMD.US",
+      "profitOrLoss": -18.37,
+      "closePrice": 119.17
+    },
+    {
+      "date": "2024-12-02T15:49:48.000Z",
+      "stocksVolumeChange": 0.6104,
+      "type": "stockCloseEvent",
+      "stockSymbol": "DECK.US",
+      "profitOrLoss": 23.58,
+      "closePrice": 202.46
+    },
+    {
+      "date": "2024-11-22T13:49:12.000Z",
+      "stocksVolumeChange": 0.1494,
+      "type": "stockCloseEvent",
+      "stockSymbol": "ASML.NL",
+      "profitOrLoss": -0.19,
+      "closePrice": 671.5632650935042
+    },
+    {
+      "date": "2024-11-06T14:17:11.000Z",
+      "stocksVolumeChange": 1,
+      "type": "stockCloseEvent",
+      "stockSymbol": "MSF.DE",
+      "profitOrLoss": -2.79,
+      "closePrice": 418.6118892001245
+    },
+    {
+      "date": "2024-11-05T14:14:58.000Z",
+      "stocksVolumeChange": 2,
+      "type": "stockCloseEvent",
+      "stockSymbol": "SMCI.US",
+      "profitOrLoss": -30.74,
+      "closePrice": 25.44
+    },
+    {
+      "date": "2024-11-05T14:14:57.000Z",
+      "stocksVolumeChange": 0.4497,
+      "type": "stockCloseEvent",
+      "stockSymbol": "SMCI.US",
+      "profitOrLoss": -6.92,
+      "closePrice": 25.43
+    },
+    {
+      "date": "2024-11-05T14:14:53.000Z",
+      "stocksVolumeChange": 0.7406,
+      "type": "stockCloseEvent",
+      "stockSymbol": "DELL.US",
+      "profitOrLoss": -2.68,
+      "closePrice": 131.1
+    },
+    {
+      "date": "2024-11-05T14:14:49.000Z",
+      "stocksVolumeChange": 0.4412,
+      "type": "stockCloseEvent",
+      "stockSymbol": "AAPL.US",
+      "profitOrLoss": -1.39,
+      "closePrice": 223.46
+    },
+    {
+      "date": "2024-11-05T14:14:45.000Z",
+      "stocksVolumeChange": 0.596,
+      "type": "stockCloseEvent",
+      "stockSymbol": "GOOGL.US",
+      "profitOrLoss": 1.21,
+      "closePrice": 169.76
+    },
+    {
+      "date": "2024-11-05T14:14:40.000Z",
+      "stocksVolumeChange": 0.6882,
+      "type": "stockCloseEvent",
+      "stockSymbol": "QCOM.US",
+      "profitOrLoss": -34.79,
+      "closePrice": 166.76
+    },
+    {
+      "date": "2024-11-05T14:14:34.000Z",
+      "stocksVolumeChange": 1,
+      "type": "stockCloseEvent",
+      "stockSymbol": "AMD.US",
+      "profitOrLoss": -16.21,
+      "closePrice": 142.6
+    },
+    {
+      "date": "2024-11-05T14:14:34.000Z",
+      "stocksVolumeChange": 0.2501,
+      "type": "stockCloseEvent",
+      "stockSymbol": "AMD.US",
+      "profitOrLoss": -3.95,
+      "closePrice": 142.58
+    },
+    {
+      "date": "2024-11-05T14:14:28.000Z",
+      "stocksVolumeChange": 0.2345,
+      "type": "stockCloseEvent",
+      "stockSymbol": "MSFT.US",
+      "profitOrLoss": -3.29,
+      "closePrice": 412.34
+    },
+    {
+      "date": "2024-11-05T14:14:28.000Z",
+      "stocksVolumeChange": 0.4771,
+      "type": "stockCloseEvent",
+      "stockSymbol": "MSFT.US",
+      "profitOrLoss": -12.51,
+      "closePrice": 412.34
+    },
+    {
+      "date": "2024-11-05T14:13:56.000Z",
+      "stocksVolumeChange": 0.5774,
+      "type": "stockCloseEvent",
+      "stockSymbol": "TSM.US",
+      "profitOrLoss": 13.53,
+      "closePrice": 196.62
+    },
+    {
+      "date": "2024-11-05T14:13:56.000Z",
+      "stocksVolumeChange": 0.4226,
+      "type": "stockCloseEvent",
+      "stockSymbol": "TSM.US",
+      "profitOrLoss": 10.37,
+      "closePrice": 196.62
+    },
+    {
+      "date": "2024-11-05T14:13:47.000Z",
+      "stocksVolumeChange": 2,
+      "type": "stockCloseEvent",
+      "stockSymbol": "NVDA.US",
+      "profitOrLoss": 27.26,
+      "closePrice": 138.88
+    },
+    {
+      "date": "2024-11-05T14:13:47.000Z",
+      "stocksVolumeChange": 0.7555,
+      "type": "stockCloseEvent",
+      "stockSymbol": "NVDA.US",
+      "profitOrLoss": 10.29,
+      "closePrice": 138.88
+    },
+    {
+      "date": "2024-11-04T08:30:59.000Z",
+      "stocksVolumeChange": 6,
+      "type": "stockCloseEvent",
+      "stockSymbol": "IUIT.UK",
+      "profitOrLoss": 0.42,
+      "closePrice": 32.18
+    },
+    {
+      "date": "2024-11-04T08:30:58.000Z",
+      "stocksVolumeChange": 0.2285,
+      "type": "stockCloseEvent",
+      "stockSymbol": "IUIT.UK",
+      "profitOrLoss": 0,
+      "closePrice": 32.12
+    },
+    {
+      "date": "2024-11-04T08:30:48.000Z",
+      "stocksVolumeChange": 0.0694,
+      "type": "stockCloseEvent",
+      "stockSymbol": "SMSN.UK",
+      "profitOrLoss": -26.72,
+      "closePrice": 1065
+    },
+    {
+      "date": "2024-11-04T08:30:40.000Z",
+      "stocksVolumeChange": 0.2514,
+      "type": "stockCloseEvent",
+      "stockSymbol": "ASML.NL",
+      "profitOrLoss": -49.21,
+      "closePrice": 675.5096226410991
+    },
+    {
+      "date": "2024-10-30T12:44:37.000Z",
+      "stocksVolumeChange": 0.7374,
+      "type": "stockCloseEvent",
+      "stockSymbol": "IQQH.DE",
+      "profitOrLoss": -0.8,
+      "closePrice": 7.492588852330847
+    },
+    {
+      "date": "2024-10-30T12:44:37.000Z",
+      "stocksVolumeChange": 11,
+      "type": "stockCloseEvent",
+      "stockSymbol": "IQQH.DE",
+      "profitOrLoss": -11.53,
+      "closePrice": 7.493674734773213
+    },
+    {
+      "date": "2024-10-04T12:57:53.000Z",
+      "stocksVolumeChange": 0.01,
+      "type": "stockCloseEvent",
+      "stockSymbol": "OIL",
+      "profitOrLoss": 43.1,
+      "closePrice": 78.16
+    },
+    {
+      "date": "2024-10-01T17:01:37.000Z",
+      "stocksVolumeChange": 0.8435,
+      "type": "stockCloseEvent",
+      "stockSymbol": "RYAAY.US",
+      "profitOrLoss": -60.92,
+      "closePrice": 44.54
+    },
+    {
+      "date": "2024-10-01T05:20:47.000Z",
+      "stocksVolumeChange": 0.2346,
+      "type": "stockCloseEvent",
+      "stockSymbol": "SMCI.US",
+      "profitOrLoss": 0,
+      "closePrice": 41.64
+    },
+    {
+      "date": "2024-10-01T05:20:32.000Z",
+      "stocksVolumeChange": 0.4453,
+      "type": "stockCloseEvent",
+      "stockSymbol": "SMCI.US",
+      "profitOrLoss": 0,
+      "closePrice": 41.64
+    },
+    {
+      "date": "2024-09-17T11:26:51.000Z",
+      "stocksVolumeChange": 0.0969,
+      "type": "stockCloseEvent",
+      "stockSymbol": "DECK.US",
+      "profitOrLoss": 0,
+      "closePrice": 156.26833333333332
+    },
+    {
+      "date": "2024-08-28T16:42:09.000Z",
+      "stocksVolumeChange": 0.5014,
+      "type": "stockCloseEvent",
+      "stockSymbol": "TM.US",
+      "profitOrLoss": -4.8,
+      "closePrice": 187.39
+    },
+    {
+      "date": "2024-08-21T12:45:59.000Z",
+      "stocksVolumeChange": 0.0919,
+      "type": "stockCloseEvent",
+      "stockSymbol": "ZAL.DE",
+      "profitOrLoss": 0.24,
+      "closePrice": 27.058830090400587
+    },
+    {
+      "date": "2024-08-21T12:45:59.000Z",
+      "stocksVolumeChange": 3.9081,
+      "type": "stockCloseEvent",
+      "stockSymbol": "ZAL.DE",
+      "profitOrLoss": 10.28,
+      "closePrice": 27.058830090400587
+    },
+    {
+      "date": "2024-08-20T17:36:18.000Z",
+      "stocksVolumeChange": 1,
+      "type": "stockCloseEvent",
+      "stockSymbol": "HALO.US",
+      "profitOrLoss": 1.35,
+      "closePrice": 60.98
+    },
+    {
+      "date": "2024-08-20T17:36:18.000Z",
+      "stocksVolumeChange": 0.8764,
+      "type": "stockCloseEvent",
+      "stockSymbol": "HALO.US",
+      "profitOrLoss": 1.16,
+      "closePrice": 60.98
+    },
+    {
+      "date": "2024-08-20T17:36:18.000Z",
+      "stocksVolumeChange": 1.1236,
+      "type": "stockCloseEvent",
+      "stockSymbol": "HALO.US",
+      "profitOrLoss": 13.34,
+      "closePrice": 60.98
+    },
+    {
+      "date": "2024-08-16T11:44:46.000Z",
+      "stocksVolumeChange": 1,
+      "type": "stockCloseEvent",
+      "stockSymbol": "PYPL.US",
+      "profitOrLoss": 6.48,
+      "closePrice": 67.8
+    },
+    {
+      "date": "2024-08-16T11:44:46.000Z",
+      "stocksVolumeChange": 0.6241,
+      "type": "stockCloseEvent",
+      "stockSymbol": "PYPL.US",
+      "profitOrLoss": 4,
+      "closePrice": 67.8
+    },
+    {
+      "date": "2024-07-25T13:44:13.000Z",
+      "stocksVolumeChange": 6,
+      "type": "stockCloseEvent",
+      "stockSymbol": "NVAX.US",
+      "profitOrLoss": 11.28,
+      "closePrice": 16.26
+    },
+    {
+      "date": "2024-07-25T13:44:12.000Z",
+      "stocksVolumeChange": 0.6445,
+      "type": "stockCloseEvent",
+      "stockSymbol": "NVAX.US",
+      "profitOrLoss": 1.22,
+      "closePrice": 16.26
+    },
+    {
+      "date": "2024-07-25T13:43:55.000Z",
+      "stocksVolumeChange": 0.6405,
+      "type": "stockCloseEvent",
+      "stockSymbol": "TEAM.US",
+      "profitOrLoss": 10.2,
+      "closePrice": 174.41
+    },
+    {
+      "date": "2024-07-17T17:38:20.000Z",
+      "stocksVolumeChange": 0.0007,
+      "type": "stockCloseEvent",
+      "stockSymbol": "MDB.US",
+      "profitOrLoss": 0.02,
+      "closePrice": 261.46
+    },
+    {
+      "date": "2024-06-25T14:03:39.000Z",
+      "stocksVolumeChange": 0.0002,
+      "type": "stockCloseEvent",
+      "stockSymbol": "HALO.US",
+      "profitOrLoss": 0,
+      "closePrice": 52.04
+    },
+    {
+      "date": "2024-06-12T15:06:01.000Z",
+      "stocksVolumeChange": 2,
+      "type": "stockCloseEvent",
+      "stockSymbol": "AAPL.US",
+      "profitOrLoss": 52.46,
+      "closePrice": 215.88
+    },
+    {
+      "date": "2024-06-12T15:06:00.000Z",
+      "stocksVolumeChange": 0.6365,
+      "type": "stockCloseEvent",
+      "stockSymbol": "AAPL.US",
+      "profitOrLoss": 16.69,
+      "closePrice": 215.88
+    },
+    {
+      "date": "2024-05-28T05:02:09.000Z",
+      "stocksVolumeChange": 18,
+      "type": "stockCloseEvent",
+      "stockSymbol": "IUIT.UK",
+      "profitOrLoss": 59.4,
+      "closePrice": 29.63
+    },
+    {
+      "date": "2024-05-28T05:00:45.000Z",
+      "stocksVolumeChange": 0.925,
+      "type": "stockCloseEvent",
+      "stockSymbol": "IUIT.UK",
+      "profitOrLoss": 2.72,
+      "closePrice": 29.28
+    },
+    {
+      "date": "2024-05-23T11:35:27.000Z",
+      "stocksVolumeChange": 0.5803,
+      "type": "stockCloseEvent",
+      "stockSymbol": "NVDA.US",
+      "profitOrLoss": 100.72,
+      "closePrice": 103.49600000000001
+    },
+    {
+      "date": "2024-04-26T11:34:43.000Z",
+      "stocksVolumeChange": 3,
+      "type": "stockCloseEvent",
+      "stockSymbol": "GOOGL.US",
+      "profitOrLoss": 92.4,
+      "closePrice": 172.06
+    },
+    {
+      "date": "2024-04-26T11:34:42.000Z",
+      "stocksVolumeChange": 0.5102,
+      "type": "stockCloseEvent",
+      "stockSymbol": "GOOGL.US",
+      "profitOrLoss": 15.7,
+      "closePrice": 172.06
+    }
+  ]
+}

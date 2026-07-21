@@ -44,6 +44,8 @@ export function useAssetChart(priceHistory: ChartData[], theme: LocalTheme, char
   useEffect(() => {
     const assetChartContainer = document.getElementById(ASSET_CHART_CONTAINER_ID);
     if (!assetChartContainer) return;
+    if (priceHistory.length === 0) return;
+
     const chart = createChart(assetChartContainer, getChartOptions(theme));
     const markers = showMarkers ? buildMarkers(priceHistory) : [];
 

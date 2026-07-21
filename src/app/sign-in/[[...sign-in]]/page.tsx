@@ -3,13 +3,14 @@ import { SignIn } from "@clerk/nextjs";
 import { useEffect } from "react";
 
 import { portfolioDataDB } from "@/client/indexedDB/portfolioDataDB";
-import { useStore } from "@/lib/store";
+import { PortfolioCurrency } from "@/lib/types";
 
 export default function Page() {
-  const { selectedPortfolio } = useStore();
   useEffect(() => {
-    portfolioDataDB.removePortfolioData(selectedPortfolio).then();
-  }, [selectedPortfolio]);
+    Object.values(PortfolioCurrency).forEach((currency) => {
+      portfolioDataDB.removePortfolioData(currency).then();
+    });
+  }, []);
 
   return (
     <div className={"flex justify-center items-center min-h-screen light-gradient dark:dark-gradient"}>

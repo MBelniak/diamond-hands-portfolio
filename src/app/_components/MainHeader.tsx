@@ -5,14 +5,43 @@ import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from "@cl
 import { SettingsDropdownMenu } from "@/components/settings/SettingsDropdownMenu";
 import { FileUploadButton } from "./FileUploadButton";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useStore } from "@/lib/store";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { QueryKeys } from "@/app/_react-query/queryKeys";
 
 export const MainHeader = ({ withSidebar = false }: { withSidebar?: boolean }) => {
+  const { demoMode, setDemoMode } = useStore();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const handleExitDemoMode = () => {
+    setDemoMode(false);
+    queryClient.invalidateQueries({ queryKey: [QueryKeys.PORTFOLIO_ANALYSIS_QUERY_KEY] }).then();
+    router.push("/");
+  };
+
   return (
     <header className="flex items-center p-4 gap-4 h-16">
       {withSidebar && <SidebarTrigger className="md:hidden" />}
       <div className="ml-auto flex items-center gap-4">
         <SettingsDropdownMenu />
-        <FileUploadButton />
+        {demoMode ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExitDemoMode}
+            className="flex items-center gap-2"
+            title="Exit demo mode"
+          >
+            <LogOut className="w-4 h-4" />
+            Exit Demo
+          </Button>
+        ) : (
+          <FileUploadButton />
+        )}
         <SignedOut>
           <SignInButton />
           <SignUpButton>

@@ -7,6 +7,7 @@ import {
   ExchangeRates,
   PortfolioCurrency,
   PortfolioData,
+  PortfolioEvents,
   type PortfolioEvent,
   type Split,
   StockMarketData,
@@ -35,6 +36,7 @@ import { BenchmarkIndex } from "@/lib/benchmarks";
 import { uniqBy } from "lodash-es";
 import { YahooAPIHelper } from "@/lib/yahoo-api/YahooAPIHelper";
 import { ExchangeRatesHelper } from "@/lib/exchange-rates/ExchangeRatesHelper";
+import build from "next/dist/build";
 
 if (!process.env.REDIS_URL) {
   throw new Error(
@@ -141,7 +143,7 @@ function getClosedStocksCloseEvents(workbook: any): PortfolioEvent[] {
  * Returns an array of objects { date, cash, stocks } sorted ascending by date.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getCashAndStocksEvents(workbook: any): PortfolioData["portfolioEvents"] {
+function getCashAndStocksEvents(workbook: any): PortfolioEvents {
   // Collect all cash operations
   const cashEvents = getCashEvents(workbook);
   // Collect all stock open positions
@@ -390,7 +392,7 @@ const parsePortfolioEvents = (xlsxArrayBuffer: ArrayBuffer): PortfolioData["port
 const getPortfolioEvents = async (
   user: User,
   selectedPortfolio: PortfolioCurrency,
-): Promise<PortfolioData["portfolioEvents"] | null> => {
+): Promise<PortfolioEvents | null> => {
   return await UserPortfolioRepository.getPortfolioFromDB(user, selectedPortfolio);
 };
 
@@ -479,10 +481,7 @@ const filterOutClosedPositions =
   (closedPositions: PortfolioData["portfolioEvents"]["closedStocksCloseEvents"]) => (event: PortfolioEvent) =>
     !closedPositions.some((closedEvent) => closedEvent.id === event.id);
 
-const mergeEvents = (
-  existingEvents: PortfolioData["portfolioEvents"],
-  events: PortfolioData["portfolioEvents"],
-): PortfolioData["portfolioEvents"] => {
+const mergeEvents = (existingEvents: PortfolioEvents, events: PortfolioEvents): PortfolioEvents => {
   return {
     cashEvents: uniqBy(
       events.cashEvents.concat(...existingEvents.cashEvents.filter(filterById(events.cashEvents))),
@@ -527,14 +526,11 @@ export async function uploadPortfolioData(
   await UserPortfolioRepository.savePortfolioToDB(finalEvents, user, selectedPortfolio);
 }
 
-export async function getPortfolioData(
-  user: User,
+export async function buildPortfolioData(
+  eventsInput: PortfolioEvents,
   portfolioCurrency: PortfolioCurrency,
 ): Promise<PortfolioData | null> {
-  const events = await getPortfolioEvents(user, portfolioCurrency);
-  if (!events) {
-    return null;
-  }
+  const events = structuredClone(eventsInput) as PortfolioEvents;
 
   const { cashEvents, openPositions, closedStocksOpenEvents, closedStocksCloseEvents } = events;
 
@@ -550,8 +546,6 @@ export async function getPortfolioData(
   });
 
   const startDate = new Date(2022, 0, 0);
-
-  // Use new getStockMarketData function
   const stockMarketData = await getStockMarketData(stockSymbols, startDate);
 
   const currencies = new Set(
@@ -573,4 +567,12 @@ export async function getPortfolioData(
     portfolioEvents: events,
     stockMarketData,
   };
+}
+
+export async function getPortfolioEventsForUser(user: User, selectedPortfolio: PortfolioCurrency) {
+  const userEvents = await getPortfolioEvents(user, selectedPortfolio);
+  if (userEvents == null) {
+    return null;
+  }
+  return buildPortfolioData(userEvents, selectedPortfolio);
 }

@@ -4,7 +4,7 @@ import { ReturnMetric } from "@/lib/returnMetrics";
 import { BenchmarkIndex, SELECTED_BENCHMARK_STORAGE_KEY } from "@/lib/benchmarks";
 import { getCurrentTheme, LocalTheme } from "@/client/hooks/useCurrentTheme";
 import { PortfolioCurrency } from "@/lib/types";
-import { SELECTED_CURRENCY_STORAGE_KEY } from "@/app/consts";
+import { SELECTED_CURRENCY_STORAGE_KEY, DEMO_MODE_STORAGE_KEY } from "@/app/consts";
 import { getCurrentChartType } from "@/client/hooks/useCurrentChartType";
 import { useCallback, useEffect } from "react";
 
@@ -23,6 +23,8 @@ interface Store {
   setTheme: (data: LocalTheme) => void;
   chartType: ChartType;
   setChartType: (chartType: ChartType) => void;
+  demoMode: boolean;
+  setDemoMode: (data: boolean) => void;
 }
 
 const isBrowser = typeof window !== "undefined";
@@ -55,6 +57,15 @@ export const useStore = create<Store>((set) => ({
   chartType: getCurrentChartType(),
   setChartType: (chartType: ChartType) => {
     set({ chartType });
+  },
+  demoMode: isBrowser ? localStorage.getItem(DEMO_MODE_STORAGE_KEY) === "true" : false,
+  setDemoMode: (data: boolean) => {
+    if (data) {
+      localStorage.setItem(DEMO_MODE_STORAGE_KEY, "true");
+    } else {
+      localStorage.removeItem(DEMO_MODE_STORAGE_KEY);
+    }
+    set({ demoMode: data });
   },
 }));
 

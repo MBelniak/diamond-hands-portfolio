@@ -13,10 +13,10 @@ export default function PerformancePage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (error || (!isFetching && !data)) {
+    if (error) {
       router.push("/");
     }
-  }, [data, error, isFetching, router]);
+  }, [error, router]);
 
   const willRenderContent = !isFetching && !error && data;
   const containerRef = usePageEntrance(!!willRenderContent);

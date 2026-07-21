@@ -5,22 +5,35 @@ import { useStore } from "@/lib/store";
 import { portfolioDataDB } from "@/client/indexedDB/portfolioDataDB";
 import { PortfolioData } from "@/lib/types";
 import { useDeferredValue } from "react";
+import { QueryKeys } from "@/app/_react-query/queryKeys";
 
 export const usePortfolioData = (): UseQueryResult<PortfolioData> => {
-  const { selectedPortfolio } = useStore();
+  const { selectedPortfolio, demoMode } = useStore();
 
   const { data, ...rest } = useQuery({
-    queryKey: ["portfolioData", selectedPortfolio],
+    queryKey: [QueryKeys.PORTFOLIO_DATA_QUERY_KEY, selectedPortfolio, demoMode],
     queryFn: async () => {
-      const cachedData = await portfolioDataDB.getPortfolioData(selectedPortfolio);
-      if (cachedData) {
-        return cachedData;
+      if (!demoMode) {
+        const cachedData = await portfolioDataDB.getPortfolioData(selectedPortfolio);
+        if (cachedData) {
+          return cachedData;
+        }
       }
-      const res = await fetch("/api/portfolio?selectedPortfolio=" + selectedPortfolio);
+
+      const params = new URLSearchParams();
+      params.set("selectedPortfolio", selectedPortfolio);
+      if (demoMode) {
+        params.set("demoData", "true");
+      }
+      const res = await fetch("/api/portfolio?" + params.toString());
+
       if (!res.ok) throw new Error("Failed to fetch portfolio");
+
       const portfolioData = (await res.json()) as PortfolioData | null;
       if (portfolioData) {
-        portfolioDataDB.setPortfolioData(portfolioData, selectedPortfolio).then();
+        if (!demoMode) {
+          portfolioDataDB.setPortfolioData(portfolioData, selectedPortfolio).then();
+        }
         return portfolioData;
       }
       throw new Error("Portfolio does not exist for this user");

@@ -13,6 +13,11 @@ export type ChartData = {
 
 export const getChartData = (portfolioAnalysis: PortfolioAnalysis, asset: string): ChartData[] => {
   const assetData = portfolioAnalysis.assetsAnalysis[asset];
+  const stockMarketData = portfolioAnalysis.stockMarketData[asset];
+
+  if (!stockMarketData) {
+    return [];
+  }
 
   return getDateRange(addYears(new Date(), -3), new Date())
     .map((date) => {
