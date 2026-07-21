@@ -90,7 +90,7 @@ export default function AssetsPage() {
         <AssetsTable columns={getColumns(selectedPortfolio)} data={tableDataScaled} totals={totalsRow} />
       </div>
       <div>
-        <h3 className={"text-lg"}>Currently owned assets allocation</h3>
+        <h2 className={"text-xl mt-10"}>Currently owned assets allocation</h2>
         <div className={"w-full grid grid-cols-[repeat(auto-fit,minmax(500px,1fr))] gap-8"}>
           <AssetsDonut data={allocationTypeBreakdown} />
           <AssetsDonut data={instrumentTypeBreakdown} />

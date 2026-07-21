@@ -6,6 +6,7 @@ import { AssetTableData } from "../_types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { PortfolioCurrency, PortfolioCurrencyToSymbol } from "@/lib/types";
+import { CompanyLogo } from "@/components/ui/company-logo";
 
 export function getProfitLossTextClass(value: number, maxAbs: number): string {
   if (maxAbs > 0) {
@@ -36,14 +37,15 @@ export const getColumns = (currency: PortfolioCurrency): ColumnDef<AssetTableDat
       const fullName = info.row.original.longName;
       const instrumentType = info.row.original.instrumentType;
       return (
-        <div className="max-w-40 flex gap-1 items-center justify-between">
-          <div>
+        <div className="max-w-56 flex items-start gap-2">
+          <CompanyLogo ticker={symbol} className="mt-0.5" />
+          <div className="min-w-0 flex-1">
             <p className="font-medium">{symbol}</p>
             <p className="text-xs text-muted-foreground whitespace-pre-wrap overflow-hidden text-ellipsis line-clamp-3">
               {fullName}
             </p>
           </div>
-          <div>{instrumentType && <Badge variant="outline">{instrumentType}</Badge>}</div>
+          <div className="shrink-0">{instrumentType && <Badge variant="outline">{instrumentType}</Badge>}</div>
         </div>
       );
     },

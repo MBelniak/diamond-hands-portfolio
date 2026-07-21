@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
+import { CompanyLogo } from "@/components/ui/company-logo";
 
 const TYPE_LABELS: Record<TransactionType, string> = {
   buy: "Buy",
@@ -68,10 +69,16 @@ export const transactionColumns: ColumnDef<TransactionRow>[] = [
           </span>
         </Badge>
       );
-      if (!name) return badge;
+      const tickerWithLogo = (
+        <div className="inline-flex items-center gap-2">
+          <CompanyLogo ticker={ticker} />
+          {badge}
+        </div>
+      );
+      if (!name) return tickerWithLogo;
       return (
         <Tooltip>
-          <TooltipTrigger asChild>{badge}</TooltipTrigger>
+          <TooltipTrigger asChild>{tickerWithLogo}</TooltipTrigger>
           <TooltipContent>{name}</TooltipContent>
         </Tooltip>
       );

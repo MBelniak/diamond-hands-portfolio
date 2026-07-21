@@ -17,7 +17,7 @@ export const PerformanceKeyFigures = () => {
   }
 
   return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-sm shadow-xl w-full flex-col flex flex-wrap lg:flex-row lg:justify-around relative">
+    <div className="bg-white/5 backdrop-blur-lg rounded-sm shadow-xl w-full flex-col flex flex-wrap lg:flex-row lg:justify-around relative">
       {isDataStale && <LoaderOverlay />}
       <PortfolioValueSummary portfolioAnalysis={portfolioAnalysis} />
       <PortfolioCapitalSummary portfolioAnalysis={portfolioAnalysis} />

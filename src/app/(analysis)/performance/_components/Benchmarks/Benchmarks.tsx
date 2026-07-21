@@ -133,7 +133,7 @@ export const Benchmarks: React.FC = () => {
       <div className="space-y-2">
         <h2 className="text-2xl font-bold">Total Return vs Benchmarks</h2>
       </div>
-      <Table className="w-full">
+      <Table className="w-full border">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>

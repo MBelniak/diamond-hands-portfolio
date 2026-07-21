@@ -68,7 +68,7 @@ export function PerformanceChart() {
   const windowedData = validTimeline.slice(windowStart, windowEnd + 1);
 
   return (
-    <div className="flex flex-col bg-white/10 backdrop-blur-lg rounded-sm shadow-xl w-full p-6 gap-4 relative">
+    <div className="flex flex-col bg-white/5 backdrop-blur-lg rounded-sm shadow-xl w-full p-6 gap-4 relative">
       {isDataStale && <LoaderOverlay />}
       <h2 className="text-2xl font-bold mb-2 text-center">
         Portfolio value over time ({PortfolioCurrencyToSymbol[selectedPortfolio]})
