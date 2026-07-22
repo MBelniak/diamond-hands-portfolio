@@ -9,17 +9,13 @@ import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
-import { QueryKeys } from "@/app/_react-query/queryKeys";
 
 export const MainHeader = ({ withSidebar = false }: { withSidebar?: boolean }) => {
   const { demoMode, setDemoMode } = useStore();
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const handleExitDemoMode = () => {
     setDemoMode(false);
-    queryClient.invalidateQueries({ queryKey: [QueryKeys.PORTFOLIO_ANALYSIS_QUERY_KEY] }).then();
     router.push("/");
   };
 

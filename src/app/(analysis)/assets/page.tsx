@@ -78,7 +78,7 @@ export default function AssetsPage() {
     return (
       <>
         <DiamondLoader />
-        <p>loading your data...</p>
+        <p>Loading your data...</p>
       </>
     );
   }

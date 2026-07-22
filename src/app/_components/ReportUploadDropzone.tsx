@@ -30,7 +30,6 @@ export const ReportUploadDropzone = () => {
 
   const handleDemoMode = () => {
     setDemoMode(true);
-    refetchPortfolio();
   };
 
   return (

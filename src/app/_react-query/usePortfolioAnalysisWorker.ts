@@ -5,11 +5,11 @@ import { useStore } from "@/lib/store";
 import { PortfolioData } from "@/lib/types";
 
 export const usePortfolioAnalysisWorker = (portfolioDataQuery: UseQueryResult<PortfolioData>) => {
-  const { selectedPortfolio } = useStore();
+  const { selectedPortfolio, demoMode } = useStore();
   const { data: portfolioData } = portfolioDataQuery;
 
   return useQuery({
-    queryKey: [QueryKeys.PORTFOLIO_ANALYSIS_QUERY_KEY, selectedPortfolio, portfolioDataQuery.dataUpdatedAt],
+    queryKey: [QueryKeys.PORTFOLIO_ANALYSIS_QUERY_KEY, selectedPortfolio, demoMode, portfolioDataQuery.dataUpdatedAt],
     queryFn: ({ signal }) => {
       if (!portfolioData) {
         throw new Error("Portfolio data is not available.");
