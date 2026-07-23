@@ -1,28 +1,17 @@
 # Diamond Hands Portfolio 💎
 
-Parses xlsx report file from XTB platform and draws a chart of portfolio value,
-cash and profit over time, with comparison to S&P 500 index.
-Presents assets breakdown with potential profits if positions were never closed.
-
-It's just a playground to see what's possible with public yahoo API (historical stock prices, split events).
-
-### Third party APIs
-
-📈 query1.finance.yahoo.com for fetching historical stock prices and split events.\
-💱 Currency Exchange API for fetching historical currency exchange rates.\
-📇 Redis Cloud for caching stock prices and exchange rates, updated daily.\
-📇 Appwrite for storing users' stock events data.\
-🔑 Clerk for authentication
+Parses xlsx report file from XTB platform and presents analysis of your 
+stocks portfolio.
 
 ### Key features
 
 ✅ Track portfolio value, accumulated profit, cash balance\
-✅ Compare performance with established indexes, like S&P 500 or NASDAQ\
+✅ Compare performance with stock indexes, like S&P 500 or NASDAQ\
 ✅ Manage portfolios in different currencies (currently supporting USD and EUR)\
 ✅ Analyze profits with Simple-Return, Time-Weighted-Return and Money-Weighted-Return metrics\
 ✅ Upload new report - data will be merged accordingly\
 ✅ See an overview of all owned assets, with a breakdown of their performance and allocation\
-✅ Look into Buy/Sell events on a specific assets in a historical context\
+✅ Look into Buy/Sell events on a specific asset in a historical context\
 ✅ Review transaction history
 
 ![Performance](docs/assets/performance.png)
@@ -31,6 +20,14 @@ It's just a playground to see what's possible with public yahoo API (historical 
 ![AssetsAllocation](docs/assets/assets_allocation.png)
 ![Asset](docs/assets/asset.png)
 ![Transactions](docs/assets/transactions.png)
+
+### Third party APIs
+
+📈 query1.finance.yahoo.com for fetching historical stock prices and split events.\
+💱 Currency Exchange API for fetching historical currency exchange rates.\
+📇 Redis Cloud for caching stock prices and exchange rates, updated daily.\
+📇 Appwrite for storing users' stock events data.\
+🔑 Clerk for authentication
 
 ## Getting Started
 
