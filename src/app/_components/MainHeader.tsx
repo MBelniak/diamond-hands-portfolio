@@ -1,22 +1,34 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { SettingsDropdownMenu } from "@/components/settings/SettingsDropdownMenu";
 import { FileUploadButton } from "./FileUploadButton";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogIn, LogOut, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export const MainHeader = ({ withSidebar = false }: { withSidebar?: boolean }) => {
-  const { demoMode, setDemoMode } = useStore();
+export const MainHeader = ({
+  withSidebar = false,
+  initialDemoMode,
+}: {
+  withSidebar?: boolean;
+  initialDemoMode?: boolean;
+}) => {
+  const { demoMode: storeDemoMode, setDemoMode } = useStore();
+  const [demoMode, setDemoModeState] = useState(initialDemoMode ?? storeDemoMode);
   const router = useRouter();
+
+  useEffect(() => {
+    setDemoModeState(storeDemoMode);
+  }, [storeDemoMode]);
 
   const handleExitDemoMode = () => {
     setDemoMode(false);
-    router.push("/");
+    router.replace("/");
+    router.refresh();
   };
 
   return (
@@ -39,12 +51,20 @@ export const MainHeader = ({ withSidebar = false }: { withSidebar?: boolean }) =
           <FileUploadButton />
         )}
         <SignedOut>
-          <SignInButton />
-          <SignUpButton>
-            <button className="bg-[#6c47ff] text-ceramic-white rounded-full w-9 aspect-square font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
-              Sign Up
-            </button>
-          </SignUpButton>
+          <div className="flex items-center gap-2">
+            <SignInButton>
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <LogIn className="size-4" />
+                Sign In
+              </Button>
+            </SignInButton>
+            <SignUpButton>
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <Sparkles className="size-4" />
+                Sign Up
+              </Button>
+            </SignUpButton>
+          </div>
         </SignedOut>
         <SignedIn>
           <UserButton />

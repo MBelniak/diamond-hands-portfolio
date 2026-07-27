@@ -22,9 +22,6 @@ export const usePortfolioData = (): UseQueryResult<PortfolioData> => {
 
       const params = new URLSearchParams();
       params.set("selectedPortfolio", selectedPortfolio);
-      if (demoMode) {
-        params.set("demoData", "true");
-      }
       const res = await fetch("/api/portfolio?" + params.toString());
 
       if (!res.ok) throw new Error("Failed to fetch portfolio");

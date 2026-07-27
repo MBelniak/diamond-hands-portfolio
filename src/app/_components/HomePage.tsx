@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
 import { useCurrentTheme } from "@/lib/store";
 import { ReportUploadDropzone } from "./ReportUploadDropzone";
+import { TryDemoMode } from "@/app/_components/TryDemoMode";
 
 export default function HomePage() {
   useCurrentTheme();
@@ -26,5 +27,10 @@ export default function HomePage() {
     );
   }
 
-  return <ReportUploadDropzone />;
+  return (
+    <div className={"flex flex-col items-center justify-center gap-6"}>
+      <ReportUploadDropzone />
+      <TryDemoMode />
+    </div>
+  );
 }

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { uploadPortfolioData } from "@/lib/xlsx-parser/parseXlsx";
 import { currentUser } from "@clerk/nextjs/server";
 import { PortfolioCurrency } from "@/lib/types";
+import { cookies } from "next/headers";
+import { DEMO_MODE_COOKIE_KEY } from "@/app/consts";
 
 export async function POST(request: Request) {
   const formData = await request.formData();
@@ -16,6 +18,12 @@ export async function POST(request: Request) {
 
   if (!file.name.endsWith(".xlsx")) {
     return NextResponse.json({ error: "Only XLSX files allowed." }, { status: 400 });
+  }
+
+  const cookieStore = await cookies();
+  const demoMode = cookieStore.get(DEMO_MODE_COOKIE_KEY)?.value === "true";
+  if (demoMode) {
+    return NextResponse.json({ error: "Uploads are disabled in demo mode." }, { status: 403 });
   }
 
   const user = await currentUser();

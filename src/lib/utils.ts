@@ -13,12 +13,7 @@ export function getProfitLossClass(profitOrLoss: number) {
   return "text-gray-900 dark:text-gray-200";
 }
 
-export const isDarkMode = (): boolean => {
-  return (
-    localStorage.getItem("theme") === "dark" ||
-    (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)
-  );
-};
+export const isBrowser = () => typeof window !== "undefined";
 
 export function formatDate(date: Date): string {
   return format(date, "yyyy-MM-dd");

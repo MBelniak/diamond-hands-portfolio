@@ -4,9 +4,11 @@ import { ReturnMetric } from "@/lib/returnMetrics";
 import { BenchmarkIndex, SELECTED_BENCHMARK_STORAGE_KEY } from "@/lib/benchmarks";
 import { getCurrentTheme, LocalTheme } from "@/client/hooks/useCurrentTheme";
 import { PortfolioCurrency } from "@/lib/types";
-import { SELECTED_CURRENCY_STORAGE_KEY, DEMO_MODE_STORAGE_KEY } from "@/app/consts";
+import { DEMO_MODE_COOKIE_KEY, SELECTED_CURRENCY_STORAGE_KEY } from "@/app/consts";
 import { getCurrentChartType } from "@/client/hooks/useCurrentChartType";
 import { useCallback, useEffect } from "react";
+import { demoCookies, getInitialDemoMode } from "@/lib/demoModeUtil";
+import { isBrowser } from "@/lib/utils";
 
 export type ChartType = "line" | "candle";
 
@@ -27,8 +29,6 @@ interface Store {
   setDemoMode: (data: boolean) => void;
 }
 
-const isBrowser = typeof window !== "undefined";
-
 export const useStore = create<Store>((set) => ({
   selectedReturnMetric: ReturnMetric.SIMPLE_RETURN,
   setSelectedReturnMetric: (data: ReturnMetric) => {
@@ -39,13 +39,14 @@ export const useStore = create<Store>((set) => ({
     set({ useWithdrawnCash: data });
   },
   selectedBenchmark:
-    (isBrowser ? (localStorage.getItem(SELECTED_BENCHMARK_STORAGE_KEY) as BenchmarkIndex) : undefined) ??
+    (isBrowser() ? (localStorage.getItem(SELECTED_BENCHMARK_STORAGE_KEY) as BenchmarkIndex) : undefined) ??
     BenchmarkIndex.SP_500,
   setSelectedBenchmark: (data: BenchmarkIndex) => {
     localStorage.setItem(SELECTED_BENCHMARK_STORAGE_KEY, data);
     set({ selectedBenchmark: data });
   },
-  selectedPortfolio: ((isBrowser && localStorage.getItem(SELECTED_CURRENCY_STORAGE_KEY)) as PortfolioCurrency) || "USD",
+  selectedPortfolio:
+    ((isBrowser() && localStorage.getItem(SELECTED_CURRENCY_STORAGE_KEY)) as PortfolioCurrency) || "USD",
   setSelectedPortfolio: (data: PortfolioCurrency) => {
     localStorage.setItem(SELECTED_CURRENCY_STORAGE_KEY, data);
     set({ selectedPortfolio: data });
@@ -58,13 +59,16 @@ export const useStore = create<Store>((set) => ({
   setChartType: (chartType: ChartType) => {
     set({ chartType });
   },
-  demoMode: isBrowser ? localStorage.getItem(DEMO_MODE_STORAGE_KEY) === "true" : false,
+  demoMode: getInitialDemoMode(),
   setDemoMode: (data: boolean) => {
-    if (data) {
-      localStorage.setItem(DEMO_MODE_STORAGE_KEY, "true");
-    } else {
-      localStorage.removeItem(DEMO_MODE_STORAGE_KEY);
+    if (isBrowser()) {
+      if (data) {
+        demoCookies.set(DEMO_MODE_COOKIE_KEY, "true", { expires: 30 });
+      } else {
+        demoCookies.remove(DEMO_MODE_COOKIE_KEY);
+      }
     }
+
     set({ demoMode: data });
   },
 }));
