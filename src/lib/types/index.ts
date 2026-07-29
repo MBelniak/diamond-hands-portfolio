@@ -150,6 +150,7 @@ export type TickerMarketData = {
 };
 
 export type StockMarketData = Record<StockSymbol, TickerMarketData>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>, longName: string}
+export type StockMarketDataMap = Map<StockSymbol, TickerMarketData>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>, longName: string}
 
 export type CashFlow = { amount: number; date: ISODateString }[]; // date -> cash flow
 

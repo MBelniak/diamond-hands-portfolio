@@ -3,19 +3,25 @@ import { QueryKeys } from "@/app/_react-query/queryKeys";
 import { analysePortfolioInWorker } from "@/client/analysis/analysePortfolioInWorker";
 import { useStore } from "@/lib/store";
 import { PortfolioData } from "@/lib/types";
+import { useDeferredValue } from "react";
 
 export const usePortfolioAnalysisWorker = (portfolioDataQuery: UseQueryResult<PortfolioData>) => {
   const { selectedPortfolio, demoMode } = useStore();
   const { data: portfolioData } = portfolioDataQuery;
 
-  return useQuery({
+  const { data, ...rest } = useQuery({
     queryKey: [QueryKeys.PORTFOLIO_ANALYSIS_QUERY_KEY, selectedPortfolio, demoMode, portfolioDataQuery.dataUpdatedAt],
-    queryFn: ({ signal }) => {
+    queryFn: async ({ signal }) => {
       if (!portfolioData) {
         throw new Error("Portfolio data is not available.");
       }
+      const time = new Date().getTime();
 
-      return analysePortfolioInWorker(portfolioData, signal);
+      const data = await analysePortfolioInWorker(portfolioData, signal);
+      const diff = new Date().getTime() - time;
+      console.log(diff / 1000);
+
+      return data;
     },
     enabled: !!portfolioData,
     staleTime: Infinity,
@@ -23,4 +29,8 @@ export const usePortfolioAnalysisWorker = (portfolioDataQuery: UseQueryResult<Po
     refetchOnMount: false,
     retryOnMount: false,
   });
+
+  const deferredData = useDeferredValue(data);
+
+  return { data: deferredData, ...rest };
 };

@@ -3,9 +3,9 @@ import React, { useEffect } from "react";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { useRouter } from "next/navigation";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
-import { useCurrentTheme } from "@/lib/store";
 import { ReportUploadDropzone } from "./ReportUploadDropzone";
 import { TryDemoMode } from "@/app/_components/TryDemoMode";
+import { useCurrentTheme } from "@/hooks/useCurrentTheme";
 
 export default function HomePage() {
   useCurrentTheme();

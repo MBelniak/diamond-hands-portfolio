@@ -4,13 +4,12 @@ import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { useStore } from "@/lib/store";
 import { portfolioDataDB } from "@/client/indexedDB/portfolioDataDB";
 import { PortfolioData } from "@/lib/types";
-import { useDeferredValue } from "react";
 import { QueryKeys } from "@/app/_react-query/queryKeys";
 
 export const usePortfolioData = (): UseQueryResult<PortfolioData> => {
   const { selectedPortfolio, demoMode } = useStore();
 
-  const { data, ...rest } = useQuery({
+  return useQuery({
     queryKey: [QueryKeys.PORTFOLIO_DATA_QUERY_KEY, selectedPortfolio, demoMode],
     queryFn: async () => {
       if (!demoMode) {
@@ -40,8 +39,4 @@ export const usePortfolioData = (): UseQueryResult<PortfolioData> => {
     refetchOnMount: false,
     retryOnMount: false,
   });
-
-  const deferredData = useDeferredValue(data);
-
-  return { data: deferredData, ...rest } as UseQueryResult<PortfolioData>;
 };

@@ -7,7 +7,7 @@ import {
   PortfolioEvent,
   PortfolioValue,
   Stock,
-  StockMarketData,
+  StockMarketDataMap,
 } from "@/lib/types";
 import { addYears, isSameDay } from "date-fns";
 import { formatDate } from "../../lib/utils";
@@ -37,18 +37,22 @@ function getInitialBenchmarkValueRecord(): Record<BenchmarkIndex, number> {
   );
 }
 
-function getStocksValueCached(stocks: Record<string, Stock>, date: Date, stockMarketData: StockMarketData): number {
+function getStocksValueCached(stocks: Record<string, Stock>, date: Date, stockMarketData: StockMarketDataMap): number {
   let stocksValue = 0;
   const dateKey = formatDate(date);
   for (const symbol in stocks) {
-    const tickerMarketData = stockMarketData[symbol]?.tickerQuoteByDateString;
+    const marketData = stockMarketData.get(symbol);
+    if (!marketData) {
+      continue;
+    }
+    const tickerMarketData = marketData.tickerQuoteByDateString;
     if (!tickerMarketData) {
       continue;
     }
     if (!(dateKey in tickerMarketData)) {
       let recentDate = addDays(date, -1);
       while (recentDate >= addDays(date, -30)) {
-        if (formatDate(recentDate) in stockMarketData[symbol]?.tickerQuoteByDateString) {
+        if (formatDate(recentDate) in tickerMarketData) {
           tickerMarketData[dateKey] = cloneDeep(tickerMarketData[formatDate(recentDate)]);
           tickerMarketData[dateKey] = cloneDeep(tickerMarketData[formatDate(recentDate)]);
           break;
@@ -57,7 +61,7 @@ function getStocksValueCached(stocks: Record<string, Stock>, date: Date, stockMa
       }
     }
 
-    const closePrice = stockMarketData[symbol]?.tickerQuoteByDateString[dateKey]?.close ?? null;
+    const closePrice = tickerMarketData[dateKey]?.close ?? null;
     if (closePrice !== null) {
       stocksValue += closePrice * stocks[symbol].volume;
     }
@@ -68,7 +72,7 @@ function getStocksValueCached(stocks: Record<string, Stock>, date: Date, stockMa
 function getNextDayPortfolioValue(
   previousState: PortfolioValue,
   date: Date,
-  stockMarketData: StockMarketData,
+  stockMarketData: StockMarketDataMap,
 ): PortfolioValue {
   const dateKey = formatDate(date);
 
@@ -85,8 +89,8 @@ function getNextDayPortfolioValue(
         symbol,
         {
           ...stock,
-          splitAdjustedTickerQuote: stockMarketData[symbol]?.splitAdjustedTickerQuoteByDateString[dateKey],
-          tickerQuote: stockMarketData[symbol]?.tickerQuoteByDateString[dateKey],
+          splitAdjustedTickerQuote: stockMarketData.get(symbol)?.splitAdjustedTickerQuoteByDateString[dateKey],
+          tickerQuote: stockMarketData.get(symbol)?.tickerQuoteByDateString[dateKey],
         },
       ]),
     ),
@@ -117,12 +121,12 @@ function getNextDayPortfolioValue(
       {} as Record<BenchmarkIndex, number>,
     ),
     benchmarkStock: Object.values(BenchmarkIndex).reduce(
-      (all, index) => {
+      (all, indexTicker) => {
         return {
           ...all,
-          [index]: {
-            volume: previousState.benchmarkStock?.[index].volume || 0,
-            price: stockMarketData[index]?.tickerQuoteByDateString[dateKey],
+          [indexTicker]: {
+            volume: previousState.benchmarkStock?.[indexTicker].volume || 0,
+            price: stockMarketData.get(indexTicker)?.tickerQuoteByDateString[dateKey],
           },
         };
       },
@@ -139,7 +143,7 @@ function getPortfolioValueOnEventDay(
   profitOrLoss: number,
   benchmarkVolume: Record<BenchmarkIndex, Stock>,
   date: Date,
-  stockMarketData: StockMarketData,
+  stockMarketData: StockMarketDataMap,
   previousState: PortfolioValue,
 ): PortfolioValue {
   const dateKey = formatDate(date);
@@ -158,8 +162,8 @@ function getPortfolioValueOnEventDay(
         symbol,
         {
           ...stock,
-          splitAdjustedTickerQuote: stockMarketData[symbol]?.splitAdjustedTickerQuoteByDateString[dateKey],
-          tickerQuote: stockMarketData[symbol]?.tickerQuoteByDateString[dateKey],
+          splitAdjustedTickerQuote: stockMarketData.get(symbol)?.splitAdjustedTickerQuoteByDateString[dateKey],
+          tickerQuote: stockMarketData.get(symbol)?.tickerQuoteByDateString[dateKey],
         },
       ]),
     ),
@@ -178,12 +182,12 @@ function getPortfolioValueOnEventDay(
       {} as Record<BenchmarkIndex, number>,
     ),
     benchmarkStock: Object.values(BenchmarkIndex).reduce(
-      (all, index) => {
+      (all, indexTicker) => {
         return {
           ...all,
-          [index]: {
-            volume: previousState.benchmarkStock?.[index].volume || 0,
-            price: stockMarketData[index]?.tickerQuoteByDateString[dateKey] ?? undefined,
+          [indexTicker]: {
+            volume: previousState.benchmarkStock?.[indexTicker].volume || 0,
+            price: stockMarketData.get(indexTicker)?.tickerQuoteByDateString[dateKey] ?? undefined,
           },
         };
       },
@@ -313,22 +317,42 @@ function getAssetsAnalysis(
 /**
  * Main function: for each day fetches the close price and calculates the portfolio value
  */
-function getPortfolioValueData(portfolioEvents: PortfolioEvent[], stockMarketData: StockMarketData): PortfolioValue[] {
+function getPortfolioValueData(
+  portfolioEvents: PortfolioEvent[],
+  stockMarketData: StockMarketDataMap,
+): PortfolioValue[] {
   let cash = 0;
   let balance = 0;
   let totalCapitalInvested = 0;
   let profitOrLoss = 0;
 
   const stocks = {} as Record<string, Stock>;
+  const eventsCopy = cloneDeep(portfolioEvents).toSorted(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
   // Date range
   const startDate = addYears(new Date(), -3);
   const allDates = getDateRange(startDate, new Date());
 
   // For each date, find the portfolio state (cash, stocks) and fetch the close price
   const result: PortfolioValue[] = [];
+
   for (const day of allDates) {
-    // Find events for this day
-    const dayEvents = portfolioEvents.filter((t) => isSameDay(t.date, day));
+    const dayEvents = [] as PortfolioEvent[];
+    let event;
+
+    if (eventsCopy.length > 0 && isSameDay(eventsCopy[0].date, day)) {
+      event = eventsCopy.shift();
+    }
+
+    while (event) {
+      dayEvents.push(event);
+      if (eventsCopy.length > 0 && isSameDay(eventsCopy[0].date, day)) {
+        event = eventsCopy.shift();
+      } else {
+        event = undefined;
+      }
+    }
 
     if (dayEvents.length === 0) {
       const previousState = result.at(-1);
@@ -386,16 +410,17 @@ function getPortfolioValueData(portfolioEvents: PortfolioEvent[], stockMarketDat
       const benchmarkStockVolume = result.at(-1)?.benchmarkStock ?? getInitialBenchmarkStockRecord();
       if (dayEvents.some((e) => e.type === CASH)) {
         const benchmarkPricesNotAvailable = Object.keys(benchmarkStockVolume).every(
-          (index) => !stockMarketData[index]?.tickerQuoteByDateString[formatDate(day)],
+          (indexTicker) => !stockMarketData.get(indexTicker)?.tickerQuoteByDateString[formatDate(day)],
         );
         if (benchmarkPricesNotAvailable) {
           continue;
         }
 
-        Object.keys(benchmarkStockVolume).forEach((index) => {
-          const benchmarkStockPrice = stockMarketData[index]?.tickerQuoteByDateString[formatDate(day)] || null;
+        Object.keys(benchmarkStockVolume).forEach((indexTicker) => {
+          const benchmarkStockPrice =
+            stockMarketData.get(indexTicker)?.tickerQuoteByDateString[formatDate(day)] || null;
           if (benchmarkStockPrice === null || benchmarkStockPrice.close == null) {
-            console.warn(`No ${index} price for date: `, formatDate(day));
+            console.warn(`No ${indexTicker} price for date: `, formatDate(day));
             return;
           }
           const depositBalance = dayEvents
@@ -405,7 +430,7 @@ function getPortfolioValueData(portfolioEvents: PortfolioEvent[], stockMarketDat
             )
             .reduce((acc, e) => acc + e.cashWithdrawalOrDeposit!, 0);
 
-          benchmarkStockVolume[index as BenchmarkIndex].volume += depositBalance / benchmarkStockPrice.close;
+          benchmarkStockVolume[indexTicker as BenchmarkIndex].volume += depositBalance / benchmarkStockPrice.close;
         });
       }
 
@@ -441,10 +466,8 @@ export const analysePortfolio = (portfolioData: PortfolioData): PortfolioAnalysi
   const { cashEvents, closedStocksOpenEvents, closedStocksCloseEvents } = portfolioData.portfolioEvents;
 
   // Timeline only needs cash events (volume + cash tracking) and close events (P&L)
-  const allEvents = [...cashEvents, ...closedStocksCloseEvents].toSorted(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-  );
-  const portfolioTimeline = getPortfolioValueData(allEvents, portfolioData.stockMarketData);
+  const allEvents = [...cashEvents, ...closedStocksCloseEvents];
+  const portfolioTimeline = getPortfolioValueData(allEvents, new Map(Object.entries(portfolioData.stockMarketData)));
 
   const assetsAnalysis = getAssetsAnalysis(cashEvents, closedStocksOpenEvents, closedStocksCloseEvents);
   const cashFlow = getCashFlow(cashEvents);
