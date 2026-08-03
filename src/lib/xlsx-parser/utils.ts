@@ -98,6 +98,9 @@ export function convertToCurrency(
   if (rates[toCurrency + fromCurrency]) {
     return price * (1 / rates[toCurrency + fromCurrency]);
   }
+  if (rates[fromCurrency + toCurrency]) {
+    return price * rates[fromCurrency + toCurrency];
+  }
   return price;
 }
 
