@@ -7,6 +7,7 @@ export type TickerQuote = {
   close?: number;
   low?: number;
   volume?: number;
+  regularMarketPrice?: number; // Exists only for the last timestamp
 };
 
 export type Stock = {

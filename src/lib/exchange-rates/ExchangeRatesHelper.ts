@@ -2,7 +2,7 @@ import { ExchangeRates } from "../types";
 import { setTimeout } from "node:timers/promises";
 import { PortfolioCurrency } from "../types";
 import { RedisClientType } from "redis";
-import { getExchangeRatesRedisKey, REDIS_EXPIRE_IN_DAY } from "@/lib/redis";
+import { getExchangeRatesRedisKey, REDIS_EXPIRE_IN_HOUR } from "@/lib/redis";
 import { addDays, isBefore } from "date-fns";
 import { formatDate } from "@/lib/utils";
 
@@ -66,7 +66,7 @@ export class ExchangeRatesHelper {
     await this.redisClient.set(
       getExchangeRatesRedisKey(today, baseCurrency),
       JSON.stringify(exchangeRates),
-      REDIS_EXPIRE_IN_DAY,
+      REDIS_EXPIRE_IN_HOUR,
     );
     return exchangeRates;
   }

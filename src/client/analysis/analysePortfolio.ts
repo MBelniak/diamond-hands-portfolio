@@ -61,9 +61,9 @@ function getStocksValueCached(stocks: Record<string, Stock>, date: Date, stockMa
       }
     }
 
-    const closePrice = tickerMarketData[dateKey]?.close ?? null;
-    if (closePrice !== null) {
-      stocksValue += closePrice * stocks[symbol].volume;
+    const currentPrice = tickerMarketData[dateKey]?.regularMarketPrice ?? tickerMarketData[dateKey]?.close ?? null;
+    if (currentPrice !== null) {
+      stocksValue += currentPrice * stocks[symbol].volume;
     }
   }
   return stocksValue;

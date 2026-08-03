@@ -1,5 +1,5 @@
 import { AssetsHistoricalData, PortfolioAnalysis } from "@/lib/types";
-import { CFDIndices, getStockMarketValue } from "@/lib/utils";
+import { getLotSize, getStockMarketValue, sumLotValue } from "@/lib/utils";
 import { useMemo } from "react";
 import { Asset } from "../_types";
 
@@ -23,18 +23,15 @@ export const useAssetsBreakdown = (portfolioAnalysis: PortfolioAnalysis | undefi
         .filter((assetSymbol) => !!assetsAnalysis?.[assetSymbol])
         .map((assetSymbol) => {
           const assetEvents = assetsAnalysis?.[assetSymbol] as AssetsHistoricalData[string];
-          const { marketValue, volume } = getStockMarketValue(
+          const { marketValue, volume, currentPrice } = getStockMarketValue(
             assetSymbol,
             assetsAnalysis,
             portfolioAnalysis?.stockMarketData,
           );
+          const lotSize = getLotSize(assetSymbol);
 
           const unrealizedProfitOrLoss =
-            marketValue -
-            assetEvents.openPositions.reduce((acc, openPosition) => {
-              const lotSize = assetSymbol in CFDIndices ? CFDIndices[assetSymbol].lotSize : 1;
-              return acc + openPosition.volume * openPosition.stockPriceOnBuy * lotSize;
-            }, 0);
+            marketValue - sumLotValue(assetEvents.openPositions, lotSize, (p) => p.stockPriceOnBuy);
 
           const unrealizedProfitOrLossPercentage =
             (unrealizedProfitOrLoss / (marketValue - unrealizedProfitOrLoss) || 0) * 100;
@@ -48,14 +45,10 @@ export const useAssetsBreakdown = (portfolioAnalysis: PortfolioAnalysis | undefi
 
           const accProfitOrLoss = realizedProfitOrLoss + unrealizedProfitOrLoss;
 
-          const potentialValue = assetEvents?.openEvents
-            ?.concat(assetEvents.openPositions)
-            .reduce((acc: number, event) => {
-              const currentPrice = portfolioAnalysis?.stockMarketData[assetSymbol]?.regularMarketPrice;
-              const lotSize = assetSymbol in CFDIndices ? CFDIndices[assetSymbol].lotSize : 1;
-              const volume = event.volume * lotSize;
-              return acc + (currentPrice ? volume * currentPrice - event.volume * event.stockPriceOnBuy * lotSize : 0);
-            }, 0);
+          const allEvents = [...(assetEvents?.openEvents ?? []), ...assetEvents.openPositions];
+          const potentialValue = currentPrice
+            ? sumLotValue(allEvents, lotSize, (e) => currentPrice - e.stockPriceOnBuy)
+            : 0;
 
           return {
             assetSymbol,

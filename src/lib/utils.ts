@@ -30,6 +30,20 @@ export const CFDIndices: Record<string, { lotSize: number }> = {
     lotSize: 20,
   },
 };
+
+export function getLotSize(symbol: string): number {
+  return symbol in CFDIndices ? CFDIndices[symbol].lotSize : 1;
+}
+
+/** Sums `volume × lotSize × getPrice(event)` for each event in the array. */
+export function sumLotValue<T extends { volume: number }>(
+  events: T[],
+  lotSize: number,
+  getPrice: (event: T) => number,
+): number {
+  return events.reduce((acc, e) => acc + (e.volume ?? 0) * lotSize * getPrice(e), 0);
+}
+
 /**
  * Returns market value, aggregated volume (taking lotSize into account) and currentPrice for a given stock symbol.
  * - marketValue is calculated from openPositions using the provided stock prices for the given date (defaults to today).
@@ -42,14 +56,11 @@ export function getStockMarketValue(
 ): { marketValue: number; volume: number; currentPrice: number | undefined } {
   const assetEvents = assetsAnalysis?.[stock];
   const openPositions = assetEvents?.openPositions ?? [];
-  const lotSize = stock in CFDIndices ? CFDIndices[stock].lotSize : 1;
+  const lotSize = getLotSize(stock);
   const currentPrice = stockMarketData?.[stock]?.regularMarketPrice;
 
-  const volume = openPositions.reduce((s: number, pos) => s + (pos.volume ?? 0) * lotSize, 0);
-  const marketValue = openPositions.reduce(
-    (s: number, pos) => s + (currentPrice ? pos.volume * lotSize * currentPrice : 0),
-    0,
-  );
+  const volume = sumLotValue(openPositions, lotSize, () => 1);
+  const marketValue = currentPrice ? sumLotValue(openPositions, lotSize, () => currentPrice) : 0;
 
   return { marketValue, volume, currentPrice };
 }

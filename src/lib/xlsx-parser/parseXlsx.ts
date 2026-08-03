@@ -16,7 +16,7 @@ import {
   XlsxColumn,
 } from "../types";
 import { createClient, RedisClientType } from "redis";
-import { getStockPricesRedisKey as getTickerMarketDataRedisKey, REDIS_EXPIRE_IN_DAY } from "../redis";
+import { getStockPricesRedisKey as getTickerMarketDataRedisKey, REDIS_EXPIRE_IN_HOUR } from "../redis";
 import {
   CASH_EVENT,
   CASH_DEPOSIT,
@@ -218,11 +218,8 @@ function populatePriceMapForDate(date: Date, tickerQuote: TickerQuote, splits: S
  * Fetches closing prices for a given stock symbol in the specified date range.
  * Now supports conversion to USD using daily exchange rates.
  */
-async function fetchStockClosePriceRange(
-  symbol: string,
-  startDate: Date,
-  endDate: Date,
-): Promise<TickerMarketData | null> {
+async function fetchStockClosePriceRange(symbol: string, startDate: Date): Promise<TickerMarketData | null> {
+  const endDate = new Date();
   const data = await YahooAPIHelper.fetchHistoricalTickerMarketData(symbol, startDate, endDate);
   if (!data) {
     return null;
@@ -263,6 +260,8 @@ async function fetchStockClosePriceRange(
     splits,
   };
 
+  let previousTickerQuote: Partial<TickerQuote> = {};
+
   for (let i = 0; i < timestamp.length; i++) {
     const date = new Date(timestamp[i] * 1000);
 
@@ -270,16 +269,7 @@ async function fetchStockClosePriceRange(
       continue;
     }
 
-    // Push missing data points forward
-    Object.keys(quote).forEach((key) => {
-      const _key = key as keyof typeof quote;
-      if (quote[_key].length === i) {
-        quote[_key].push(quote[_key][i - 1]);
-      }
-      if (quote[_key][i] === null || quote[_key][i] === undefined) {
-        quote[_key][i] = quote[_key][i - 1];
-      }
-    });
+    const isLastTimestamp = i === timestamp.length - 1;
 
     const tickerQuote: TickerQuote = {
       open: quote.open[i],
@@ -289,31 +279,42 @@ async function fetchStockClosePriceRange(
       volume: quote.volume[i],
     };
 
-    if (
-      tradingPeriodRegularEndDate &&
-      (isSameDay(date, tradingPeriodRegularEndDate) || isAfter(date, tradingPeriodRegularEndDate)) &&
-      isBefore(new Date(), tradingPeriodRegularEndDate) &&
-      regularMarketPrice
-    ) {
-      // If market is still open and we ask for today's or future date, return current price
-      populatePriceMapForDate(date, tickerQuote, splits, pricesRecord);
-    } else {
-      populatePriceMapForDate(date, tickerQuote, splits, pricesRecord);
+    if (isLastTimestamp && regularMarketPrice) {
+      tickerQuote.regularMarketPrice = regularMarketPrice;
     }
+
+    Object.keys(tickerQuote).forEach((key) => {
+      const _key = key as keyof typeof tickerQuote;
+      if (tickerQuote[_key] === null || tickerQuote[_key] === undefined) {
+        if (_key === "close" && isLastTimestamp && regularMarketPrice) {
+          tickerQuote[_key] = regularMarketPrice;
+        } else if (quote.close[i] != null) {
+          tickerQuote[_key] = quote.close[i];
+        } else if (quote.high[i] != null) {
+          tickerQuote[_key] = quote.high[i];
+        } else if (previousTickerQuote[_key] != null) {
+          tickerQuote[_key] = previousTickerQuote[_key]!;
+        }
+      }
+    });
+
+    previousTickerQuote = { ...tickerQuote };
+
+    populatePriceMapForDate(date, tickerQuote, splits, pricesRecord);
   }
 
   return pricesRecord;
 }
 
 // Fetches stock prices
-async function getTickerMarketData(symbol: string, startDate: Date, endDate: Date): Promise<TickerMarketData> {
-  const tickerMarketData = await fetchStockClosePriceRange(symbol, startDate, endDate);
+async function getTickerMarketData(symbol: string, startDate: Date): Promise<TickerMarketData> {
+  const tickerMarketData = await fetchStockClosePriceRange(symbol, startDate);
 
   if (tickerMarketData) {
     await redis.set(
-      getTickerMarketDataRedisKey(symbol, startDate, endDate),
+      getTickerMarketDataRedisKey(symbol, startDate),
       JSON.stringify(tickerMarketData),
-      REDIS_EXPIRE_IN_DAY,
+      REDIS_EXPIRE_IN_HOUR,
     );
     return tickerMarketData;
   }
@@ -328,15 +329,15 @@ async function getTickerMarketData(symbol: string, startDate: Date, endDate: Dat
   };
 }
 
-const getRawMarketData = async (stocks: Set<string>, startDate: Date, endDate: Date) => {
+const getRawMarketData = async (stocks: Set<string>, startDate: Date) => {
   return (
     await Promise.all(
       Array.from(stocks).map(async (symbol) => {
         let marketData: TickerMarketData;
-        if (await redis.exists(getTickerMarketDataRedisKey(symbol, startDate, endDate))) {
-          marketData = JSON.parse((await redis.get(getTickerMarketDataRedisKey(symbol, startDate, endDate))) as string);
+        if (await redis.exists(getTickerMarketDataRedisKey(symbol, startDate))) {
+          marketData = JSON.parse((await redis.get(getTickerMarketDataRedisKey(symbol, startDate))) as string);
         } else {
-          marketData = await getTickerMarketData(symbol, startDate, endDate);
+          marketData = await getTickerMarketData(symbol, startDate);
         }
         return { symbol, marketData };
       }),
@@ -350,10 +351,9 @@ const getRawMarketData = async (stocks: Set<string>, startDate: Date, endDate: D
  * @param startDate
  */
 async function getStockMarketData(stocks: Set<string>, startDate: Date): Promise<StockMarketData> {
-  const endDate = new Date();
   const stockMarketData: StockMarketData = {};
 
-  const rawMarketData = await getRawMarketData(stocks, startDate, endDate);
+  const rawMarketData = await getRawMarketData(stocks, startDate);
 
   rawMarketData.forEach(({ symbol, marketData }) => {
     stockMarketData[symbol] = marketData;
