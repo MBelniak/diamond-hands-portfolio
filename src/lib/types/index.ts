@@ -1,4 +1,4 @@
-import { CASH, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT, STOCK_OPEN_POSITION } from "../xlsx-parser/consts";
+import { CASH_EVENT, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT, STOCK_OPEN_POSITION } from "../xlsx-parser/consts";
 import { BenchmarkIndex } from "@/lib/benchmarks";
 
 export type TickerQuote = {
@@ -70,11 +70,11 @@ export const enum XlsxColumn {
 
 export type PortfolioEvent = {
   date: ISODateTimeString;
-  type: typeof CASH | typeof STOCK_OPEN_POSITION | typeof STOCK_OPEN_EVENT | typeof STOCK_CLOSE_EVENT;
+  type: typeof CASH_EVENT | typeof STOCK_OPEN_POSITION | typeof STOCK_OPEN_EVENT | typeof STOCK_CLOSE_EVENT;
   id: string;
 } & (
   | {
-      type: typeof CASH;
+      type: typeof CASH_EVENT;
       cashChange: number; // all cash operations
       cashWithdrawalOrDeposit: number | null; // only user-initiated deposits/withdrawals
       stocksVolumeChange?: number;
@@ -102,7 +102,7 @@ export type PortfolioEvent = {
     ))
 );
 
-export type CashEvent = PortfolioEvent & { type: typeof CASH };
+export type CashEvent = PortfolioEvent & { type: typeof CASH_EVENT };
 
 export type AssetsHistoricalData = {
   [stockSymbol: StockSymbol]: {

@@ -1,7 +1,7 @@
 export const STOCK_OPEN_POSITION = "stockOpenPosition" as const;
 export const STOCK_OPEN_EVENT = "stockOpenEvent" as const;
 export const STOCK_CLOSE_EVENT = "stockCloseEvent" as const;
-export const CASH = "cash" as const;
+export const CASH_EVENT = "cash" as const;
 export const CLOSED_POSITION_HISTORY = "Closed Positions" as const;
 export const CASH_OPERATION_HISTORY = "Cash Operations" as const;
 export const OPEN_POSITION = "Open Positions" as const;

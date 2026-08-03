@@ -18,7 +18,7 @@ import {
 import { createClient, RedisClientType } from "redis";
 import { getStockPricesRedisKey as getTickerMarketDataRedisKey, REDIS_EXPIRE_IN_DAY } from "../redis";
 import {
-  CASH,
+  CASH_EVENT,
   CASH_DEPOSIT,
   CASH_OPERATION_HISTORY,
   CASH_TRANSFER,
@@ -83,7 +83,7 @@ function getCashEvents(workbook: any): CashEvent[] {
         id: String(row[XlsxColumn.CASH_OPERATION_ID] || ""),
         date: XlsxHelper.parseXLSXDate(row[XlsxColumn.TIME]).toISOString(),
         cashChange: Number(row[XlsxColumn.AMOUNT] || 0),
-        type: CASH,
+        type: CASH_EVENT,
         stocksVolumeChange: isRowStockSell(row) ? -volume : isRowStockBuy(row) ? volume : 0,
         stockSymbol: String(row[XlsxColumn.TICKER]) || null,
         openPrice: price,
@@ -374,7 +374,7 @@ function getStockSymbolsFromEvents(events: PortfolioEvent[]): Set<string> {
       );
     }
     // Also collect symbols from cash buy operations (covers currently open positions)
-    if (next.type === CASH && next.stockSymbol && next.stocksVolumeChange && next.stocksVolumeChange > 0) {
+    if (next.type === CASH_EVENT && next.stockSymbol && next.stocksVolumeChange && next.stocksVolumeChange > 0) {
       acc.add(next.stockSymbol);
     }
 
@@ -438,13 +438,19 @@ const adjustEventPrices = (
   stockMarketData: StockMarketData,
   toCurrency: PortfolioCurrency,
 ) => {
-  const { openPositions, closedStocksOpenEvents, closedStocksCloseEvents } = events;
-  for (const event of [...openPositions, ...closedStocksOpenEvents, ...closedStocksCloseEvents]) {
+  const { cashEvents, openPositions, closedStocksOpenEvents, closedStocksCloseEvents } = events;
+
+  for (const event of [...cashEvents, ...openPositions, ...closedStocksOpenEvents, ...closedStocksCloseEvents]) {
+    if (!event.stockSymbol) continue;
+
+    const stockSymbol = event.stockSymbol;
+    const marketData = stockMarketData[stockSymbol];
+
+    if (!marketData) continue;
+
     const date = formatDate(new Date(event.date));
-    if (event.type === STOCK_OPEN_EVENT) {
-      const stockSymbol = event.stockSymbol!;
-      const marketData = stockMarketData[stockSymbol];
-      if (!marketData) continue;
+    if (event.type === STOCK_OPEN_EVENT || event.type === CASH_EVENT) {
+      if (!event.openPrice) continue;
 
       event.openPrice =
         convertToCurrency(event.openPrice, exchangeRates[date] || {}, marketData.currency, toCurrency) ??
@@ -454,10 +460,6 @@ const adjustEventPrices = (
     }
 
     if (event.type === STOCK_CLOSE_EVENT) {
-      const stockSymbol = event.stockSymbol!;
-      const marketData = stockMarketData[stockSymbol];
-      if (!marketData) continue;
-
       event.closePrice =
         convertToCurrency(event.closePrice, exchangeRates[date] || {}, marketData.currency, toCurrency) ??
         event.closePrice;

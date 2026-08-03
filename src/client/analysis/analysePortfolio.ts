@@ -12,7 +12,7 @@ import {
 import { addYears, isSameDay } from "date-fns";
 import { formatDate } from "../../lib/utils";
 import { addDays } from "date-fns/addDays";
-import { CASH, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT } from "@/lib/xlsx-parser/consts";
+import { CASH_EVENT, STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT } from "@/lib/xlsx-parser/consts";
 import { cloneDeep, merge } from "lodash-es";
 import { getDateRange } from "../../lib/xlsx-parser/utils";
 import { BenchmarkIndex } from "@/lib/benchmarks";
@@ -376,7 +376,7 @@ function getPortfolioValueData(
       result.push(getNextDayPortfolioValue(previousState, day, stockMarketData));
     } else {
       for (const event of dayEvents) {
-        if (event.type === CASH) {
+        if (event.type === CASH_EVENT) {
           cash += event.cashChange;
           if (event.cashWithdrawalOrDeposit) {
             balance += event.cashWithdrawalOrDeposit;
@@ -408,7 +408,7 @@ function getPortfolioValueData(
       }
 
       const benchmarkStockVolume = result.at(-1)?.benchmarkStock ?? getInitialBenchmarkStockRecord();
-      if (dayEvents.some((e) => e.type === CASH)) {
+      if (dayEvents.some((e) => e.type === CASH_EVENT)) {
         const benchmarkPricesNotAvailable = Object.keys(benchmarkStockVolume).every(
           (indexTicker) => !stockMarketData.get(indexTicker)?.tickerQuoteByDateString[formatDate(day)],
         );
@@ -425,8 +425,8 @@ function getPortfolioValueData(
           }
           const depositBalance = dayEvents
             .filter(
-              (e): e is PortfolioEvent & { type: typeof CASH } =>
-                e.type === CASH && !!e.cashWithdrawalOrDeposit && e.cashWithdrawalOrDeposit > 0,
+              (e): e is PortfolioEvent & { type: typeof CASH_EVENT } =>
+                e.type === CASH_EVENT && !!e.cashWithdrawalOrDeposit && e.cashWithdrawalOrDeposit > 0,
             )
             .reduce((acc, e) => acc + e.cashWithdrawalOrDeposit!, 0);
 
