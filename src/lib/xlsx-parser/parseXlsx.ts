@@ -1,6 +1,6 @@
 // @ts-expect-error no typings for this file
 import XLSX from "xlsx/xlsx.js";
-import { isAfter, isSameDay } from "date-fns";
+import { isSameDay } from "date-fns";
 import { isBefore } from "date-fns/isBefore";
 import {
   CashEvent,
@@ -243,10 +243,6 @@ async function fetchStockClosePriceRange(symbol: string, startDate: Date): Promi
   const currency = result[0].meta?.currency ?? "USD";
   const splits = parseSplits(result[0].events?.splits);
   const regularMarketPrice = result[0].meta?.regularMarketPrice;
-  const tradingPeriodRegularEndTimestamp = result[0].meta?.currentTradingPeriod?.regular?.end;
-  const tradingPeriodRegularEndDate = tradingPeriodRegularEndTimestamp
-    ? new Date(tradingPeriodRegularEndTimestamp * 1000)
-    : null;
   const longName = result[0].meta?.longName ?? symbol;
   const instrumentType = result[0].meta?.instrumentType;
 

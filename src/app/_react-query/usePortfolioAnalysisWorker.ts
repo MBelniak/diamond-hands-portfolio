@@ -15,13 +15,8 @@ export const usePortfolioAnalysisWorker = (portfolioDataQuery: UseQueryResult<Po
       if (!portfolioData) {
         throw new Error("Portfolio data is not available.");
       }
-      const time = new Date().getTime();
 
-      const data = await analysePortfolioInWorker(portfolioData, signal);
-      const diff = new Date().getTime() - time;
-      console.log(diff / 1000);
-
-      return data;
+      return await analysePortfolioInWorker(portfolioData, signal);
     },
     enabled: !!portfolioData,
     staleTime: Infinity,

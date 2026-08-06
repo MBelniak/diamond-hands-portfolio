@@ -28,11 +28,12 @@ export function PerformanceChart() {
     () =>
       portfolioTimeline
         .map((item) => {
-          const adjPortfolioValue =
-            item.portfolioValue + (useWithdrawnCash ? item.totalCapitalInvested - item.balance : 0);
+          const accPortfolioValue = item.portfolioValue + (item.totalCapitalInvested - item.balance);
+          const adjPortfolioValue = useWithdrawnCash ? accPortfolioValue : item.portfolioValue;
           const profit = item.portfolioValue - item.balance;
           return {
             ...item,
+            accPortfolioValue,
             benchmarkStockValue: item.benchmarkStockValue[selectedBenchmark],
             date: item.date.slice(0, 10),
             portfolioValue: adjPortfolioValue,

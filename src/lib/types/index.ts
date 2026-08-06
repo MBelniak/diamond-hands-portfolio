@@ -31,6 +31,7 @@ export type PortfolioValue = {
   totalCapitalInvested: number;
   stocks: Record<StockSymbol, Stock>;
   portfolioValue: number;
+  accPortfolioValue: number;
   profitOrLoss: number;
   profitOrLossIfNotSelling?: number;
   oneDayProfit: number;
@@ -155,11 +156,34 @@ export type StockMarketDataMap = Map<StockSymbol, TickerMarketData>; // symbol -
 
 export type CashFlow = { amount: number; date: ISODateString }[]; // date -> cash flow
 
+export type RiskMetrics = {
+  /** Annualized standard deviation of daily returns */
+  volatility: number;
+  /** Worst peak-to-trough decline as a fraction (e.g. -0.25 = -25%) */
+  maxDrawdown: number;
+  maxDrawdownPeakDate: ISODateString;
+  maxDrawdownTroughDate: ISODateString;
+  /** Risk-adjusted return: (annualReturn - riskFreeRate) / volatility */
+  sharpeRatio: number;
+  /** Like Sharpe but only penalises downside volatility */
+  sortinoRatio: number;
+  /** Portfolio sensitivity vs each benchmark index */
+  beta: Record<BenchmarkIndex, number>;
+  /** Historical Value at Risk at 95% confidence (daily return fraction) */
+  var95: number;
+};
+
 export type PortfolioAnalysis = {
   assetsAnalysis: AssetsHistoricalData;
   portfolioTimeline: PortfolioValue[];
   stockMarketData: StockMarketData;
   cashFlow: CashFlow;
+  riskMetrics: RiskMetrics;
+  riskMetricsByPeriod: {
+    thirtyDays: RiskMetrics;
+    ninetyDays: RiskMetrics;
+    oneYear: RiskMetrics;
+  };
 };
 
 export type PortfolioEvents = {
