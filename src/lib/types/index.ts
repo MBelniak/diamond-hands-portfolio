@@ -157,6 +157,10 @@ export type StockMarketDataMap = Map<StockSymbol, TickerMarketData>; // symbol -
 export type CashFlow = { amount: number; date: ISODateString }[]; // date -> cash flow
 
 export type RiskMetrics = {
+  /** Daily portfolio returns expressed as fractions (e.g. 0.01 = 1%) */
+  dailyReturns: number[];
+  /** Daily benchmark returns expressed as fractions (e.g. 0.01 = 1%) */
+  benchmarkDailyReturns: Record<BenchmarkIndex, number[]>;
   /** Annualized standard deviation of daily returns */
   volatility: number;
   /** Worst peak-to-trough decline as a fraction (e.g. -0.25 = -25%) */

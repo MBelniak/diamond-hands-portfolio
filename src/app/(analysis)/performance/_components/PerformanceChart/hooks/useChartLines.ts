@@ -3,8 +3,8 @@ import { useMemo } from "react";
 
 export type ChartLineKey = "portfolioValue" | "realizedProfitOrLoss" | "cash" | "profit" | "benchmarkStockValue";
 
-export type ChartLine = {
-  key: ChartLineKey;
+export type ChartLine<LineKey extends string = ChartLineKey> = {
+  key: LineKey;
   label: string;
   color: string;
 };

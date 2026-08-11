@@ -178,8 +178,7 @@ function getPortfolioValueOnEventDay(
           ...all,
           [index]:
             getStocksValueCached(benchmarkStock, date, stockMarketData) -
-            balance -
-            (previousState.benchmarkStockValue[index] - previousState.balance),
+            getStocksValueCached(benchmarkStock, addDays(date, -1), stockMarketData),
         };
       },
       {} as Record<BenchmarkIndex, number>,

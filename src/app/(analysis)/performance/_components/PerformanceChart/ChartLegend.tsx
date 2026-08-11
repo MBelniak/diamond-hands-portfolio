@@ -1,12 +1,23 @@
-import { ChartLine, ChartLineKey } from "@/app/(analysis)/performance/_components/PerformanceChart/hooks/useChartLines";
 import React, { Dispatch, SetStateAction } from "react";
 
-export const ChartLegend: React.FC<{
-  chartLines: ChartLine[];
-  enabledLines: Record<ChartLineKey, boolean>;
-  handleLinesChange: Dispatch<SetStateAction<Record<ChartLineKey, boolean>>>;
-}> = ({ chartLines, enabledLines, handleLinesChange }) => {
-  const toggleLine = (key: ChartLineKey) => {
+type ChartLegendLine<LineKey extends string> = {
+  key: LineKey;
+  label: string;
+  color: string;
+};
+
+type ChartLegendProps<LineKey extends string> = {
+  chartLines: Array<ChartLegendLine<LineKey>>;
+  enabledLines: Record<LineKey, boolean>;
+  handleLinesChange: Dispatch<SetStateAction<Record<LineKey, boolean>>>;
+};
+
+export function ChartLegend<LineKey extends string>({
+  chartLines,
+  enabledLines,
+  handleLinesChange,
+}: ChartLegendProps<LineKey>) {
+  const toggleLine = (key: LineKey) => {
     handleLinesChange((prev) => ({
       ...prev,
       [key]: !prev[key],
@@ -40,4 +51,4 @@ export const ChartLegend: React.FC<{
       ))}
     </div>
   );
-};
+}

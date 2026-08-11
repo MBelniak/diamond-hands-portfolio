@@ -14,6 +14,8 @@ import {
   var95Rating,
 } from "./_components/RiskMetricCard";
 import { RiskBetaBreakdown } from "./_components/RiskBetaBreakdown";
+import { DailyReturnsComparisonCharts } from "./_components/DailyReturnsComparisonCharts";
+import { useStore } from "@/lib/store";
 
 type Period = "30d" | "90d" | "1y" | "all";
 
@@ -28,6 +30,7 @@ export default function RiskPage() {
   const { error, isFetching, data } = usePortfolioAnalysis();
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("1y");
+  const { selectedBenchmark } = useStore();
 
   useEffect(() => {
     if (error) router.push("/");
@@ -111,6 +114,8 @@ export default function RiskPage() {
           subtitle="Daily loss threshold"
         />
       </div>
+
+      <DailyReturnsComparisonCharts analysis={analysis} period={period} selectedBenchmark={selectedBenchmark} />
 
       {/* Beta breakdown */}
       <RiskBetaBreakdown metrics={metrics} />

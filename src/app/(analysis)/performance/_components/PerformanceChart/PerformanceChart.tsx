@@ -28,12 +28,10 @@ export function PerformanceChart() {
     () =>
       portfolioTimeline
         .map((item) => {
-          const accPortfolioValue = item.portfolioValue + (item.totalCapitalInvested - item.balance);
-          const adjPortfolioValue = useWithdrawnCash ? accPortfolioValue : item.portfolioValue;
+          const adjPortfolioValue = useWithdrawnCash ? item.accPortfolioValue : item.portfolioValue;
           const profit = item.portfolioValue - item.balance;
           return {
-            ...item,
-            accPortfolioValue,
+            cash: item.cash,
             benchmarkStockValue: item.benchmarkStockValue[selectedBenchmark],
             date: item.date.slice(0, 10),
             portfolioValue: adjPortfolioValue,
@@ -77,8 +75,6 @@ export function PerformanceChart() {
       </div>
       <div className={"w-full pr-4 h-[350px]"}>
         <ResponsiveContainer width="100%" height="100%">
-          {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
-          {/*@ts-ignore*/}
           <AreaChart data={windowedData}>
             <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--foreground)" }} />
             <YAxis tick={{ fontSize: 12, fill: "var(--foreground)" }} />

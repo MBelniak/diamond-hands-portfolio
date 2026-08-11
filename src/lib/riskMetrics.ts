@@ -7,8 +7,18 @@ const TRADING_DAYS_PER_YEAR = 252;
 function getDailyReturns(timeline: PortfolioValue[]): number[] {
   const returns: number[] = [];
   for (let i = 1; i < timeline.length; i++) {
-    if (timeline[i - 1].accPortfolioValue === 0) continue;
-    returns.push(timeline[i].oneDayProfit / timeline[i - 1].accPortfolioValue);
+    const previous = timeline[i - 1];
+    if (previous.accPortfolioValue === 0) {
+      returns.push(0);
+    } else {
+      const odp = timeline[i].oneDayProfit / previous.accPortfolioValue;
+      if (odp > 0.2 || odp < -0.2) {
+        console.warn(`Unusually large one-day profit/loss detected on ${timeline[i].date}: ${odp * 100}%`);
+        returns.push(0);
+      } else {
+        returns.push(timeline[i].oneDayProfit / previous.accPortfolioValue);
+      }
+    }
   }
 
   return returns;
@@ -17,8 +27,12 @@ function getDailyReturns(timeline: PortfolioValue[]): number[] {
 function getBenchmarkDailyReturns(timeline: PortfolioValue[], index: BenchmarkIndex): number[] {
   const returns: number[] = [];
   for (let i = 1; i < timeline.length; i++) {
-    if (timeline[i - 1].benchmarkStockValue[index] === 0) continue;
-    returns.push(timeline[i].benchmarkOneDayProfit[index] / timeline[i - 1].benchmarkStockValue[index]);
+    const previous = timeline[i - 1];
+    if (previous.benchmarkStockValue[index] === 0) {
+      returns.push(0);
+    } else {
+      returns.push(timeline[i].benchmarkOneDayProfit[index] / previous.benchmarkStockValue[index]);
+    }
   }
 
   return returns;
@@ -115,10 +129,17 @@ export function getTimelineWindow(timeline: PortfolioValue[], daysAgo: number): 
 
 export function calculateRiskMetrics(timeline: PortfolioValue[], annualRiskFreeRate = 0.04): RiskMetrics {
   const dailyReturns = getDailyReturns(timeline);
+  const benchmarkDailyReturns = Object.values(BenchmarkIndex).reduce(
+    (acc, index) => ({
+      ...acc,
+      [index]: getBenchmarkDailyReturns(timeline, index),
+    }),
+    {} as Record<BenchmarkIndex, number[]>,
+  );
   const beta = Object.values(BenchmarkIndex).reduce(
     (acc, index) => ({
       ...acc,
-      [index]: calculateBeta(dailyReturns, getBenchmarkDailyReturns(timeline, index)),
+      [index]: calculateBeta(dailyReturns, benchmarkDailyReturns[index]),
     }),
     {} as Record<BenchmarkIndex, number>,
   );
@@ -130,6 +151,8 @@ export function calculateRiskMetrics(timeline: PortfolioValue[], annualRiskFreeR
   } = calculateMaxDrawdown(timeline);
 
   return {
+    dailyReturns,
+    benchmarkDailyReturns,
     volatility: calculateVolatility(dailyReturns),
     maxDrawdown,
     maxDrawdownPeakDate,
