@@ -1,10 +1,77 @@
 import { type ClassValue, clsx } from "clsx";
 import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
-import { AssetsHistoricalData, StockMarketData } from "@/lib/types";
+import { AssetsHistoricalData, BenchmarkData, StockMarketData } from "@/lib/types";
+import { BenchmarkIndex } from "./benchmarks";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export function getAverage(values: number[]): number {
+  if (!values.length) {
+    return 0;
+  }
+
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+export function getRangeForPeriod(
+  timelineLength: number,
+  period: "30d" | "90d" | "1y" | "all",
+): [number, number] | null {
+  if (!timelineLength) {
+    return null;
+  }
+
+  const periodDays: Record<"30d" | "90d" | "1y" | "all", number | null> = {
+    "30d": 30,
+    "90d": 90,
+    "1y": 365,
+    all: null,
+  };
+
+  if (periodDays[period] === null) {
+    return [0, timelineLength - 1];
+  }
+
+  const periodWindow = Math.min(periodDays[period]!, timelineLength);
+  return [Math.max(0, timelineLength - periodWindow), timelineLength - 1];
+}
+
+export function getFilteredTimeline<T>(items: T[], range: readonly [number, number]): T[] {
+  const [start, end] = range;
+  return items.slice(start, end + 1);
+}
+
+export function getAverageDailyReturnForRange<T extends { dailyReturn: number }>(
+  timeline: T[],
+  range: readonly [number, number],
+): number {
+  const values = timeline.slice(range[0], range[1] + 1).map((item) => item.dailyReturn);
+  return getAverage(values);
+}
+
+export function getBenchmarkDailyReturnsForRange(
+  timeline: { benchmarkData: Record<BenchmarkIndex, BenchmarkData> }[],
+  range: readonly [number, number],
+  benchmark: BenchmarkIndex,
+): number[] {
+  const returns: number[] = [];
+
+  for (let index = range[0]; index <= range[1]; index++) {
+    returns.push(timeline[index].benchmarkData[benchmark].dailyReturn);
+  }
+
+  return returns;
+}
+
+export function getAverageBenchmarkDailyReturnForRange(
+  timeline: { benchmarkData: Record<BenchmarkIndex, BenchmarkData> }[],
+  range: readonly [number, number],
+  benchmark: BenchmarkIndex,
+): number {
+  return getAverage(getBenchmarkDailyReturnsForRange(timeline, range, benchmark));
 }
 
 export function getProfitLossClass(profitOrLoss: number) {

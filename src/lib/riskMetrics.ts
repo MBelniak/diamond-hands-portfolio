@@ -4,40 +4,6 @@ import { addDays, isAfter, parseISO } from "date-fns";
 
 const TRADING_DAYS_PER_YEAR = 252;
 
-function getDailyReturns(timeline: PortfolioValue[]): number[] {
-  const returns: number[] = [];
-  for (let i = 1; i < timeline.length; i++) {
-    const previous = timeline[i - 1];
-    if (previous.accPortfolioValue === 0) {
-      returns.push(0);
-    } else {
-      const odp = timeline[i].oneDayProfit / previous.accPortfolioValue;
-      if (odp > 0.2 || odp < -0.2) {
-        console.warn(`Unusually large one-day profit/loss detected on ${timeline[i].date}: ${odp * 100}%`);
-        returns.push(0);
-      } else {
-        returns.push(timeline[i].oneDayProfit / previous.accPortfolioValue);
-      }
-    }
-  }
-
-  return returns;
-}
-
-function getBenchmarkDailyReturns(timeline: PortfolioValue[], index: BenchmarkIndex): number[] {
-  const returns: number[] = [];
-  for (let i = 1; i < timeline.length; i++) {
-    const previous = timeline[i - 1];
-    if (previous.benchmarkStockValue[index] === 0) {
-      returns.push(0);
-    } else {
-      returns.push(timeline[i].benchmarkOneDayProfit[index] / previous.benchmarkStockValue[index]);
-    }
-  }
-
-  return returns;
-}
-
 function mean(values: number[]): number {
   if (!values.length) return 0;
   return values.reduce((s, v) => s + v, 0) / values.length;
@@ -128,11 +94,11 @@ export function getTimelineWindow(timeline: PortfolioValue[], daysAgo: number): 
 }
 
 export function calculateRiskMetrics(timeline: PortfolioValue[], annualRiskFreeRate = 0.04): RiskMetrics {
-  const dailyReturns = getDailyReturns(timeline);
+  const dailyReturns = timeline.map((entry) => entry.dailyReturn);
   const benchmarkDailyReturns = Object.values(BenchmarkIndex).reduce(
     (acc, index) => ({
       ...acc,
-      [index]: getBenchmarkDailyReturns(timeline, index),
+      [index]: timeline.map((entry) => entry.benchmarkData[index].dailyReturn),
     }),
     {} as Record<BenchmarkIndex, number[]>,
   );
@@ -151,7 +117,6 @@ export function calculateRiskMetrics(timeline: PortfolioValue[], annualRiskFreeR
   } = calculateMaxDrawdown(timeline);
 
   return {
-    dailyReturns,
     benchmarkDailyReturns,
     volatility: calculateVolatility(dailyReturns),
     maxDrawdown,

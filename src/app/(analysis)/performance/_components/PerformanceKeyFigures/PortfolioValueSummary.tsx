@@ -24,11 +24,9 @@ export const PortfolioValueSummary: React.FC<{
   const last = portfolioTimeline.at(-1)!;
   const totalCapitalInvested = last.totalCapitalInvested;
 
-  const realizedProfitOrLoss = last.profitOrLoss;
+  const realizedProfitOrLoss = last.realizedProfitOrLoss;
 
-  const totalPortfolioValue = useWithdrawnCash
-    ? last.portfolioValue + (totalCapitalInvested - last.balance)
-    : last.portfolioValue;
+  const totalPortfolioValue = useWithdrawnCash ? last.accPortfolioValue : last.portfolioValue;
 
   const valueTimeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
     ...el,

@@ -24,20 +24,28 @@ export type StockSymbol = string;
 export type Currency = string;
 export type ExchangeRates = Record<ISODateString, Record<Currency, number>>;
 
+export type BenchmarkData = {
+  stock: Stock;
+  stockValue: number;
+  oneDayProfit: number;
+  dailyReturn: number;
+};
+
 export type PortfolioValue = {
   date: ISODateString;
   cash: number;
   balance: number;
   totalCapitalInvested: number;
+  profit: number;
+  loss: number;
+  profitOrLoss: number;
   stocks: Record<StockSymbol, Stock>;
   portfolioValue: number;
   accPortfolioValue: number;
-  profitOrLoss: number;
-  profitOrLossIfNotSelling?: number;
+  realizedProfitOrLoss: number;
   oneDayProfit: number;
-  benchmarkOneDayProfit: Record<BenchmarkIndex, number>;
-  benchmarkStock: Record<BenchmarkIndex, Stock>;
-  benchmarkStockValue: Record<BenchmarkIndex, number>;
+  dailyReturn: number;
+  benchmarkData: Record<BenchmarkIndex, BenchmarkData>;
 };
 
 export type ValueTimeline = {
@@ -158,7 +166,6 @@ export type CashFlow = { amount: number; date: ISODateString }[]; // date -> cas
 
 export type RiskMetrics = {
   /** Daily portfolio returns expressed as fractions (e.g. 0.01 = 1%) */
-  dailyReturns: number[];
   /** Daily benchmark returns expressed as fractions (e.g. 0.01 = 1%) */
   benchmarkDailyReturns: Record<BenchmarkIndex, number[]>;
   /** Annualized standard deviation of daily returns */

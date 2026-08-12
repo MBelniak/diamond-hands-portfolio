@@ -35,26 +35,26 @@ export const Benchmarks: React.FC = () => {
 
     const sp500Timeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
       ...el,
-      value: el.benchmarkStockValue[BenchmarkIndex.SP_500],
-      oneDayProfit: el.benchmarkOneDayProfit[BenchmarkIndex.SP_500],
+      value: el.benchmarkData[BenchmarkIndex.SP_500].stockValue,
+      oneDayProfit: el.benchmarkData[BenchmarkIndex.SP_500].oneDayProfit,
     }));
 
     const nasdaqTimeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
       ...el,
-      value: el.benchmarkStockValue[BenchmarkIndex.NASDAQ],
-      oneDayProfit: el.benchmarkOneDayProfit[BenchmarkIndex.NASDAQ],
+      value: el.benchmarkData[BenchmarkIndex.NASDAQ].stockValue,
+      oneDayProfit: el.benchmarkData[BenchmarkIndex.NASDAQ].oneDayProfit,
     }));
 
     const dowJonesTimeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
       ...el,
-      value: el.benchmarkStockValue[BenchmarkIndex.DOW_JONES],
-      oneDayProfit: el.benchmarkOneDayProfit[BenchmarkIndex.DOW_JONES],
+      value: el.benchmarkData[BenchmarkIndex.DOW_JONES].stockValue,
+      oneDayProfit: el.benchmarkData[BenchmarkIndex.DOW_JONES].oneDayProfit,
     }));
 
     const nyseTimeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
       ...el,
-      value: el.benchmarkStockValue[BenchmarkIndex.NYSE],
-      oneDayProfit: el.benchmarkOneDayProfit[BenchmarkIndex.NYSE],
+      value: el.benchmarkData[BenchmarkIndex.NYSE].stockValue,
+      oneDayProfit: el.benchmarkData[BenchmarkIndex.NYSE].oneDayProfit,
     }));
 
     const rows: BenchmarkRow[] = [

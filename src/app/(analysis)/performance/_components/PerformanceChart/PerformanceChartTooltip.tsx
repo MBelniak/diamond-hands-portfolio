@@ -16,10 +16,7 @@ const labelStyle: React.CSSProperties = { color: "var(--foreground)", fontWeight
 
 export const CustomTooltip = ({ active, payload, label }: Partial<TooltipContentProps<string | number, string>>) => {
   const filteredKeys = useMemo(
-    () =>
-      payload
-        ?.filter((p) => p.dataKey !== "profitPositive" && p.dataKey !== "profitNegative")
-        .sort((a, b) => b.value - a.value),
+    () => payload?.filter((p) => p.dataKey !== "profit" && p.dataKey !== "loss").sort((a, b) => b.value - a.value),
     [payload],
   );
 

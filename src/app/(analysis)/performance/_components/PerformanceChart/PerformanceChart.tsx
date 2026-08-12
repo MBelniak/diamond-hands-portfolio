@@ -4,7 +4,7 @@ import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { MIN_WINDOW_SIZE, useDateRange } from "@/client/hooks/useDateRange";
 import { useStore } from "@/lib/store";
 import { PortfolioAnalysis, PortfolioCurrencyToSymbol } from "@/lib/types";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Area, AreaChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CustomTooltip } from "./PerformanceChartTooltip";
 import { TimePeriodZoom } from "@/app/(analysis)/performance/_components/PerformanceChart/TimePeriodZoom";
@@ -22,48 +22,39 @@ export function PerformanceChart() {
 
   const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
 
-  const chartLines = useChartLines(selectedBenchmark);
+  const chartLines = useChartLines(selectedBenchmark, useWithdrawnCash);
 
-  const validTimeline = useMemo(
-    () =>
-      portfolioTimeline
-        .map((item) => {
-          const adjPortfolioValue = useWithdrawnCash ? item.accPortfolioValue : item.portfolioValue;
-          const profit = item.portfolioValue - item.balance;
-          return {
-            cash: item.cash,
-            benchmarkStockValue: item.benchmarkStockValue[selectedBenchmark],
-            date: item.date.slice(0, 10),
-            portfolioValue: adjPortfolioValue,
-            realizedProfitOrLoss: item.profitOrLoss,
-            profit,
-            profitPositive: profit > 0 ? profit : 0,
-            profitNegative: profit < 0 ? profit : 0,
-          };
-        })
-        .slice(
-          portfolioTimeline.findIndex((record) => Object.entries(record.stocks).length || record.cash),
-          -1,
-        ),
-    [portfolioTimeline, selectedBenchmark, useWithdrawnCash],
-  );
-
-  const [range, handleRangeChange] = useDateRange(validTimeline.length - 1);
+  const [range, handleRangeChange] = useDateRange(portfolioTimeline.length - 1);
 
   // Track which lines are enabled
   const [enabledLines, setEnabledLines] = useState<Record<ChartLineKey, boolean>>({
     portfolioValue: true,
-    profit: true,
+    accPortfolioValue: false,
+    profitOrLoss: true,
     realizedProfitOrLoss: false,
     cash: false,
-    benchmarkStockValue: false,
+    benchmarkData: false,
   });
 
-  const [period, handlePeriodChange] = useTimePeriodChange(validTimeline, handleRangeChange);
+  useEffect(() => {
+    if (useWithdrawnCash) {
+      setEnabledLines((prev) => ({
+        ...prev,
+        portfolioValue: false,
+        accPortfolioValue: true,
+      }));
+    } else {
+      setEnabledLines((prev) => ({
+        ...prev,
+        portfolioValue: true,
+        accPortfolioValue: false,
+      }));
+    }
+  }, [useWithdrawnCash]);
 
-  const windowStart = Math.max(0, Math.min(range[0], validTimeline.length - MIN_WINDOW_SIZE));
-  const windowEnd = Math.max(windowStart + MIN_WINDOW_SIZE - 1, Math.min(range[1], validTimeline.length - 1));
-  const windowedData = validTimeline.slice(windowStart, windowEnd + 1);
+  const [period, handlePeriodChange] = useTimePeriodChange(portfolioTimeline, handleRangeChange);
+
+  const windowedData = portfolioTimeline.slice(range[0], range[1] + 1);
 
   return (
     <div className="flex flex-col bg-white/5 backdrop-blur-lg rounded-sm shadow-xl w-full p-6 gap-4 relative">
@@ -80,25 +71,25 @@ export function PerformanceChart() {
             <YAxis tick={{ fontSize: 12, fill: "var(--foreground)" }} />
             <Tooltip content={<CustomTooltip />} />
 
-            {enabledLines.profit && (
+            {enabledLines.profitOrLoss && (
               <>
                 <Area
                   isAnimationActive={false}
                   type="monotone"
-                  dataKey="profitPositive"
+                  dataKey="profit"
                   stroke="none"
                   baseValue={0}
                   fill="rgba(34,197,94,0.18)"
-                  name="Profit (positive)"
+                  name="Profit"
                 />
                 <Area
                   isAnimationActive={false}
                   type="monotone"
-                  dataKey="profitNegative"
+                  dataKey="loss"
                   stroke="none"
                   baseValue={0}
                   fill="rgba(239,68,68,0.18)"
-                  name="Profit (negative)"
+                  name="Loss"
                 />
               </>
             )}
@@ -111,7 +102,7 @@ export function PerformanceChart() {
                     key={line.key}
                     isAnimationActive={false}
                     type="monotone"
-                    dataKey={line.key}
+                    dataKey={line.key === "benchmarkData" ? `benchmarkData.${selectedBenchmark}.stockValue` : line.key}
                     stroke={line.color}
                     strokeWidth={2}
                     dot={false}
@@ -125,12 +116,12 @@ export function PerformanceChart() {
       <ChartLegend chartLines={chartLines} enabledLines={enabledLines} handleLinesChange={setEnabledLines} />
       <div className={"w-full mt-4 flex flex-col gap-8 px-8"}>
         <label className=" font-semibold">
-          Date range: {validTimeline[windowStart].date} - {validTimeline[windowEnd].date}
+          Date range: {portfolioTimeline[range[0]].date.slice(0, 10)} - {portfolioTimeline[range[1]].date.slice(0, 10)}
         </label>
         <DualRangeSlider
           min={0}
-          max={validTimeline.length - 1}
-          value={[windowStart, windowEnd]}
+          max={portfolioTimeline.length - 1}
+          value={range}
           step={1}
           minStepsBetweenThumbs={MIN_WINDOW_SIZE - 1}
           onValueChange={handleRangeChange}

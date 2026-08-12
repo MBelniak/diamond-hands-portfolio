@@ -23,12 +23,12 @@ export const PerformanceBenchmarkIndexSummary: React.FC<{
   const last = portfolioTimeline.at(-1)!;
 
   const totalCapitalInvested = last.totalCapitalInvested;
-  const benchmarkProfitOrLoss = last.benchmarkStockValue[selectedBenchmark] - totalCapitalInvested;
+  const benchmarkProfitOrLoss = last.benchmarkData[selectedBenchmark].stockValue - totalCapitalInvested;
 
   const benchmarkTimeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
     ...el,
-    value: el.benchmarkStockValue[selectedBenchmark],
-    oneDayProfit: el.benchmarkOneDayProfit[selectedBenchmark],
+    value: el.benchmarkData[selectedBenchmark].stockValue,
+    oneDayProfit: el.benchmarkData[selectedBenchmark].oneDayProfit,
   }));
 
   const benchmarkCashFlow = getCashFlowForBenchmarkComparison(portfolioAnalysis.cashFlow);
@@ -68,7 +68,7 @@ export const PerformanceBenchmarkIndexSummary: React.FC<{
       </strong>
       <p className={"text-2xl font-bold"}>
         {PortfolioCurrencyToSymbol[selectedPortfolio]}
-        {last.benchmarkStockValue[selectedBenchmark].toFixed(2)}
+        {last.benchmarkData[selectedBenchmark].stockValue.toFixed(2)}
       </p>
       <p className={"text-sm text-gray-800 dark:text-gray-200 mt-2 w-full flex justify-between"}>
         {benchmarkProfitOrLoss >= 0 ? "Potential profit: " : "Potential loss: "}
