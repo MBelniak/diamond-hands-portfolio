@@ -199,7 +199,6 @@ export type PortfolioAnalysis = {
 
 export type PortfolioEvents = {
   cashEvents: CashEvent[];
-  openPositions: PortfolioEvent[];
   closedStocksOpenEvents: PortfolioEvent[];
   closedStocksCloseEvents: PortfolioEvent[];
 };

@@ -131,3 +131,8 @@ export function getStockMarketValue(
 
   return { marketValue, volume, currentPrice };
 }
+
+export const isPathNested = (path: string): boolean => {
+  const segments = path.split("/").filter(Boolean);
+  return segments.length > 1;
+};

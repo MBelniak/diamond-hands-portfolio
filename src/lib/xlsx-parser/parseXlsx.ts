@@ -154,7 +154,6 @@ function getCashAndStocksEvents(workbook: any): PortfolioEvents {
 
   return {
     cashEvents,
-    openPositions: [],
     closedStocksOpenEvents,
     closedStocksCloseEvents,
   };
@@ -434,9 +433,9 @@ const adjustEventPrices = (
   stockMarketData: StockMarketData,
   toCurrency: PortfolioCurrency,
 ) => {
-  const { cashEvents, openPositions, closedStocksOpenEvents, closedStocksCloseEvents } = events;
+  const { cashEvents, closedStocksOpenEvents, closedStocksCloseEvents } = events;
 
-  for (const event of [...cashEvents, ...openPositions, ...closedStocksOpenEvents, ...closedStocksCloseEvents]) {
+  for (const event of [...cashEvents, ...closedStocksOpenEvents, ...closedStocksCloseEvents]) {
     if (!event.stockSymbol) continue;
 
     const stockSymbol = event.stockSymbol;
@@ -474,22 +473,10 @@ const filterById =
   (event: PortfolioEvent) =>
     !events.some((e) => e.id === event.id);
 
-const filterOutClosedPositions =
-  (closedPositions: PortfolioData["portfolioEvents"]["closedStocksCloseEvents"]) => (event: PortfolioEvent) =>
-    !closedPositions.some((closedEvent) => closedEvent.id === event.id);
-
 const mergeEvents = (existingEvents: PortfolioEvents, events: PortfolioEvents): PortfolioEvents => {
   return {
     cashEvents: uniqBy(
       events.cashEvents.concat(...existingEvents.cashEvents.filter(filterById(events.cashEvents))),
-      "id",
-    ),
-    openPositions: uniqBy(
-      events.openPositions.concat(
-        ...existingEvents.openPositions
-          .filter(filterById(events.openPositions))
-          .filter(filterOutClosedPositions(events.closedStocksCloseEvents)),
-      ),
       "id",
     ),
     closedStocksOpenEvents: uniqBy(
@@ -529,9 +516,9 @@ export async function buildPortfolioData(
 ): Promise<PortfolioData | null> {
   const events = structuredClone(eventsInput) as PortfolioEvents;
 
-  const { cashEvents, openPositions, closedStocksOpenEvents, closedStocksCloseEvents } = events;
+  const { cashEvents, closedStocksOpenEvents, closedStocksCloseEvents } = events;
 
-  const allEvents = [...cashEvents, ...openPositions, ...closedStocksOpenEvents, ...closedStocksCloseEvents].toSorted(
+  const allEvents = [...cashEvents, ...closedStocksOpenEvents, ...closedStocksCloseEvents].toSorted(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
 
