@@ -53,3 +53,6 @@ next-env.d.ts
 .DS_Store
 *.suo
 *.ntvs*
+
+# Sentry Config File
+.env.sentry-build-plugin
