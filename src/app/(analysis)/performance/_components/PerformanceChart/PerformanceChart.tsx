@@ -52,6 +52,14 @@ export function PerformanceChart() {
     }
   }, [useWithdrawnCash]);
 
+  useEffect(() => {
+    // Reset range if range[0] or range[1] is out of bounds after portfolioTimeline changes
+    if (range[0] >= portfolioTimeline.length || range[1] >= portfolioTimeline.length) {
+      handleRangeChange([0, portfolioTimeline.length - 1]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPortfolio, portfolioTimeline.length]);
+
   const [period, handlePeriodChange] = useTimePeriodChange(portfolioTimeline, handleRangeChange);
 
   const windowedData = portfolioTimeline.slice(range[0], range[1] + 1);
@@ -116,7 +124,7 @@ export function PerformanceChart() {
       <ChartLegend chartLines={chartLines} enabledLines={enabledLines} handleLinesChange={setEnabledLines} />
       <div className={"w-full mt-4 flex flex-col gap-8 px-8"}>
         <label className=" font-semibold">
-          Date range: {portfolioTimeline[range[0]].date.slice(0, 10)} - {portfolioTimeline[range[1]].date.slice(0, 10)}
+          Date range: {windowedData[0].date.slice(0, 10)} - {windowedData[windowedData.length - 1].date.slice(0, 10)}
         </label>
         <DualRangeSlider
           min={0}
