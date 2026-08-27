@@ -1,14 +1,14 @@
 import { ExchangeRates } from "../types";
 import { setTimeout } from "node:timers/promises";
 import { PortfolioCurrency } from "../types";
-import { RedisClientType } from "redis";
-import { getExchangeRatesRedisKey, REDIS_EXPIRE_IN_HOUR } from "@/lib/redis";
+import { AbstractRedisClient } from "@/lib/redis";
 import { addDays, isBefore } from "date-fns";
 import { formatDate } from "@/lib/utils";
+import iocContainer from "@/iocContainer";
 
 export class ExchangeRatesHelper {
   private currencylayerApiKey;
-  constructor(private redisClient: RedisClientType) {
+  constructor() {
     if (!process.env.EXCHANGE_RATES_API_KEY) {
       throw new Error(
         "Please set the EXCHANGE_RATES_API_KEY environment variable in the .env file. See https://currencylayer.com/documentation",
@@ -18,22 +18,37 @@ export class ExchangeRatesHelper {
     this.currencylayerApiKey = process.env.EXCHANGE_RATES_API_KEY;
   }
 
-  async fetchExchangeRates(
+  async getExchangeRates(
     currencies: Set<string>,
     baseCurrency: PortfolioCurrency,
     startDate: Date,
   ): Promise<ExchangeRates> {
     const today = new Date();
-    if (await this.redisClient.exists(getExchangeRatesRedisKey(today, baseCurrency))) {
-      return JSON.parse((await this.redisClient.get(getExchangeRatesRedisKey(today, baseCurrency))) as string);
+    const redisClient = iocContainer.get<AbstractRedisClient>(AbstractRedisClient);
+    let exchangeRates = await redisClient.getCachedExchangeRates(today, baseCurrency);
+
+    if (exchangeRates) {
+      return exchangeRates;
     }
+
+    exchangeRates = await this.fetchExchangeRates(currencies, baseCurrency, startDate);
+
+    await redisClient.cacheExchangeRates(today, baseCurrency, exchangeRates);
+    return exchangeRates;
+  }
+
+  private async fetchExchangeRates(
+    currencies: Set<string>,
+    baseCurrency: PortfolioCurrency,
+    startDate: Date,
+  ): Promise<ExchangeRates> {
+    let exchangeRates = {};
 
     if (currencies.has("GBp")) {
       currencies.delete("GBp");
       currencies.add("GBP");
     }
 
-    let exchangeRates = {};
     let endDate = addDays(startDate, 365);
     while (isBefore(endDate, addDays(new Date(), 365))) {
       const searchParams = new URLSearchParams();
@@ -62,12 +77,6 @@ export class ExchangeRatesHelper {
 
       await setTimeout(1000); // To avoid hitting rate limits
     }
-
-    await this.redisClient.set(
-      getExchangeRatesRedisKey(today, baseCurrency),
-      JSON.stringify(exchangeRates),
-      REDIS_EXPIRE_IN_HOUR,
-    );
     return exchangeRates;
   }
 }

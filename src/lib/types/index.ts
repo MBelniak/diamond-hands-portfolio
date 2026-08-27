@@ -20,7 +20,7 @@ export type Stock = {
 
 export type ISODateString = string;
 export type ISODateTimeString = string;
-export type StockSymbol = string;
+export type StockTicker = string;
 export type Currency = string;
 export type ExchangeRates = Record<ISODateString, Record<Currency, number>>;
 
@@ -39,7 +39,7 @@ export type PortfolioValue = {
   profit: number;
   loss: number;
   profitOrLoss: number;
-  stocks: Record<StockSymbol, Stock>;
+  stocks: Record<StockTicker, Stock>;
   portfolioValue: number;
   accPortfolioValue: number;
   realizedProfitOrLoss: number;
@@ -115,7 +115,7 @@ export type PortfolioEvent = {
 export type CashEvent = PortfolioEvent & { type: typeof CASH_EVENT };
 
 export type AssetsHistoricalData = {
-  [stockSymbol: StockSymbol]: {
+  [stockSymbol: StockTicker]: {
     openPositions: { volume: number; stockPriceOnBuy: number; date: ISODateString }[];
     openEvents: { volume: number; stockPriceOnBuy: number; date: ISODateString }[];
     closeEvents: { volume: number; stockPriceOnSell: number; profitOrLoss: number; date: ISODateString }[];
@@ -159,8 +159,8 @@ export type TickerMarketData = {
   splits: Split[];
 };
 
-export type StockMarketData = Record<StockSymbol, TickerMarketData>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>, longName: string}
-export type StockMarketDataMap = Map<StockSymbol, TickerMarketData>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>, longName: string}
+export type StockMarketData = Record<StockTicker, TickerMarketData>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>, longName: string}
+export type StockMarketDataMap = Map<StockTicker, TickerMarketData>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>, longName: string}
 
 export type CashFlow = { amount: number; date: ISODateString }[]; // date -> cash flow
 

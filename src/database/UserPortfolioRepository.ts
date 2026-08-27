@@ -1,5 +1,5 @@
 import { CashEvent, PortfolioCurrency, PortfolioData, type PortfolioEvent } from "@/lib/types";
-import container from "@/iocContainer";
+import iocContainer from "@/iocContainer";
 import { AbstractDatabaseClient } from "@/database/index";
 import { Models, Query, TablesDB } from "node-appwrite";
 import { User } from "@clerk/nextjs/server";
@@ -13,7 +13,7 @@ export class UserPortfolioRepository {
     user: User,
     currency: PortfolioCurrency,
   ): Promise<void> {
-    const db = container.get(AbstractDatabaseClient);
+    const db = iocContainer.get(AbstractDatabaseClient);
     const dbClient = db.getDBClient();
     console.log("Storing portfolio in DB");
 
@@ -62,7 +62,7 @@ export class UserPortfolioRepository {
     user: User,
     currency: PortfolioCurrency,
   ): Promise<PortfolioData["portfolioEvents"] | null> {
-    const db = container.get(AbstractDatabaseClient);
+    const db = iocContainer.get(AbstractDatabaseClient);
     const storage = db.getStorage();
     const dbClient = db.getDBClient();
 

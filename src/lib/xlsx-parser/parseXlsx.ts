@@ -14,9 +14,9 @@ import {
   TickerMarketData,
   TickerQuote,
   XlsxColumn,
+  StockTicker,
 } from "../types";
-import { createClient, RedisClientType } from "redis";
-import { getStockPricesRedisKey as getTickerMarketDataRedisKey, REDIS_EXPIRE_IN_HOUR } from "../redis";
+import { AbstractRedisClient } from "../redis";
 import {
   CASH_EVENT,
   CASH_DEPOSIT,
@@ -36,14 +36,13 @@ import { BenchmarkIndex } from "@/lib/benchmarks";
 import { uniqBy } from "lodash-es";
 import { YahooAPIHelper } from "@/lib/yahoo-api/YahooAPIHelper";
 import { ExchangeRatesHelper } from "@/lib/exchange-rates/ExchangeRatesHelper";
+import iocContainer from "@/iocContainer";
 
 if (!process.env.REDIS_URL) {
   throw new Error(
     "Please set the REDIS_URL environment variable in the .env file. Example: REDIS_URL=redis://localhost:6379",
   );
 }
-
-const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 
 const isRowStockSell = (row: Record<string, string | number>) =>
   ["Stock sell", "Commission"].includes(String(row[XlsxColumn.TYPE]));
@@ -301,43 +300,28 @@ async function fetchStockClosePriceRange(symbol: string, startDate: Date): Promi
   return pricesRecord;
 }
 
-// Fetches stock prices
-async function getTickerMarketData(symbol: string, startDate: Date): Promise<TickerMarketData> {
-  const tickerMarketData = await fetchStockClosePriceRange(symbol, startDate);
+const getRawMarketData = async (
+  stocks: Set<string>,
+  startDate: Date,
+): Promise<{ ticker: string; marketData: TickerMarketData }[]> => {
+  const redis = iocContainer.get<AbstractRedisClient>(AbstractRedisClient);
 
-  if (tickerMarketData) {
-    await redis.set(
-      getTickerMarketDataRedisKey(symbol, startDate),
-      JSON.stringify(tickerMarketData),
-      REDIS_EXPIRE_IN_HOUR,
-    );
-    return tickerMarketData;
-  }
-
-  return {
-    currency: "USD",
-    tickerQuoteByDateString: {},
-    splitAdjustedTickerQuoteByDateString: {},
-    regularMarketPrice: 0,
-    longName: symbol,
-    splits: [],
-  };
-}
-
-const getRawMarketData = async (stocks: Set<string>, startDate: Date) => {
   return (
     await Promise.all(
-      Array.from(stocks).map(async (symbol) => {
-        let marketData: TickerMarketData;
-        if (await redis.exists(getTickerMarketDataRedisKey(symbol, startDate))) {
-          marketData = JSON.parse((await redis.get(getTickerMarketDataRedisKey(symbol, startDate))) as string);
-        } else {
-          marketData = await getTickerMarketData(symbol, startDate);
+      Array.from(stocks).map(async (ticker) => {
+        let marketData = await redis.getCachedMarketData(ticker, startDate);
+        if (marketData === null) {
+          marketData = await fetchStockClosePriceRange(ticker, startDate);
+          if (marketData) {
+            await redis.cacheMarketData(ticker, startDate, marketData);
+          } else {
+            console.warn(`No market data found for symbol: ${ticker}`);
+          }
         }
-        return { symbol, marketData };
+        return { ticker, marketData };
       }),
     )
-  ).filter(({ marketData }) => !!marketData);
+  ).filter(({ marketData }) => !!marketData) as { ticker: string; marketData: TickerMarketData }[];
 };
 
 /**
@@ -345,19 +329,19 @@ const getRawMarketData = async (stocks: Set<string>, startDate: Date) => {
  * @param stocks
  * @param startDate
  */
-async function getStockMarketData(stocks: Set<string>, startDate: Date): Promise<StockMarketData> {
+async function getStockMarketData(stocks: Set<StockTicker>, startDate: Date): Promise<StockMarketData> {
   const stockMarketData: StockMarketData = {};
 
   const rawMarketData = await getRawMarketData(stocks, startDate);
 
-  rawMarketData.forEach(({ symbol, marketData }) => {
-    stockMarketData[symbol] = marketData;
+  rawMarketData.forEach(({ ticker, marketData }) => {
+    stockMarketData[ticker] = marketData;
   });
 
   return stockMarketData;
 }
 
-function getStockSymbolsFromEvents(events: PortfolioEvent[]): Set<string> {
+function getStockTickersFromEvents(events: PortfolioEvent[]): Set<string> {
   return events.reduce((acc, next) => {
     if (
       [STOCK_OPEN_EVENT, STOCK_OPEN_POSITION].includes(
@@ -499,6 +483,7 @@ export async function uploadPortfolioData(
   selectedPortfolio: PortfolioCurrency,
   xlsxArrayBuffer: ArrayBuffer,
 ): Promise<void> {
+  await iocContainer.get(AbstractRedisClient).initialize();
   const events = parsePortfolioEvents(xlsxArrayBuffer);
   const existingEvents = await getPortfolioEvents(user, selectedPortfolio);
   let finalEvents = events;
@@ -524,13 +509,13 @@ export async function buildPortfolioData(
 
   if (!allEvents.length) return null;
 
-  const stockSymbols = getStockSymbolsFromEvents(allEvents);
+  const stockTickers = getStockTickersFromEvents(allEvents);
   Object.values(BenchmarkIndex).forEach((value) => {
-    stockSymbols.add(value);
+    stockTickers.add(value);
   });
 
   const startDate = new Date(2022, 0, 0);
-  const stockMarketData = await getStockMarketData(stockSymbols, startDate);
+  const stockMarketData = await getStockMarketData(stockTickers, startDate);
 
   const currencies = new Set(
     Object.values(stockMarketData)
@@ -539,9 +524,9 @@ export async function buildPortfolioData(
       .filter(Boolean),
   );
 
-  const exchangeRatesHelper = new ExchangeRatesHelper(redis as RedisClientType);
+  const exchangeRatesHelper = new ExchangeRatesHelper();
   const exchangeRates = await exchangeRatesHelper
-    .fetchExchangeRates(currencies, portfolioCurrency, startDate)
+    .getExchangeRates(currencies, portfolioCurrency, startDate)
     .catch(() => ({}) as ExchangeRates);
 
   convertMarketDataToCurrency(stockMarketData, exchangeRates, portfolioCurrency);

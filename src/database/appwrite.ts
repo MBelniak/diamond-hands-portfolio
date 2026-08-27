@@ -1,5 +1,5 @@
 import { Client, TablesDB } from "node-appwrite";
-import container from "../iocContainer";
+import iocContainer from "../iocContainer";
 import { AbstractDatabaseClient } from "@/database/index";
 import {
   CURRENCY_COLUMN,
@@ -12,7 +12,7 @@ import {
 export const client = new Client();
 
 export const initDatabase = async (appwriteDbId: string) => {
-  const db = container.get(AbstractDatabaseClient);
+  const db = iocContainer.get(AbstractDatabaseClient);
   if (!(await isCollectionsInitialized(db.getDBClient(), appwriteDbId))) {
     await initializeCollections(db.getDBClient(), appwriteDbId);
   }
