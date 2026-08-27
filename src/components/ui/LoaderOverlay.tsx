@@ -6,7 +6,7 @@ export const LoaderOverlay: React.FC<{ title?: string }> = ({ title }) => {
   return (
     <div
       className={cn(
-        "absolute inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center transition-opacity duration-300",
+        "absolute inset-0 max-h-[100dvh] bg-white/10 backdrop-blur-md flex items-center justify-center transition-opacity duration-300",
       )}
       role="status"
       aria-live="polite"

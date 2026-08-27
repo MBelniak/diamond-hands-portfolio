@@ -123,9 +123,11 @@ export function PerformanceChart() {
       </div>
       <ChartLegend chartLines={chartLines} enabledLines={enabledLines} handleLinesChange={setEnabledLines} />
       <div className={"w-full mt-4 flex flex-col gap-8 px-8"}>
-        <label className=" font-semibold">
-          Date range: {windowedData[0].date.slice(0, 10)} - {windowedData[windowedData.length - 1].date.slice(0, 10)}
-        </label>
+        {windowedData.length > 0 && (
+          <label className=" font-semibold">
+            Date range: {windowedData[0].date.slice(0, 10)} - {windowedData[windowedData.length - 1].date.slice(0, 10)}
+          </label>
+        )}
         <DualRangeSlider
           min={0}
           max={portfolioTimeline.length - 1}

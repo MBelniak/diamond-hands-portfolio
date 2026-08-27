@@ -7,7 +7,7 @@ import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { useStore } from "@/lib/store";
 import { portfolioDataDB } from "@/client/indexedDB/portfolioDataDB";
 
-export const ReportUploadDropzone = () => {
+export const ReportUploadDropzone = ({ onSuccess }: { onSuccess?: () => void }) => {
   const { refetch: refetchPortfolio } = usePortfolioAnalysis();
   const { selectedPortfolio } = useStore();
 
@@ -17,6 +17,7 @@ export const ReportUploadDropzone = () => {
     error: uploadError,
   } = useUploadXlsxAnalysisFiles(() => {
     portfolioDataDB.removePortfolioData(selectedPortfolio).then(() => refetchPortfolio());
+    onSuccess?.();
   });
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

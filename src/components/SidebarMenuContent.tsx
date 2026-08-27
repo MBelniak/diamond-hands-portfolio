@@ -11,9 +11,11 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Switch } from "@/components/ui/switch";
 
 import { useCurrentTheme } from "@/hooks/useCurrentTheme";
+import { useNavigationLoading } from "@/components/NavigationLoadingProvider";
 
 const items = [
   {
@@ -42,6 +44,8 @@ export const SidebarMenuContent = () => {
   // Theme switcher logic
   const { theme, setCurrentTheme } = useCurrentTheme();
   const [isDark, setIsDark] = useState(theme === "dark");
+  const { setIsNavigating } = useNavigationLoading();
+  const pathname = usePathname();
 
   // When toggled, update theme and localStorage
   const handleThemeToggle = () => {
@@ -59,7 +63,13 @@ export const SidebarMenuContent = () => {
             {items.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
-                  <Link className={"rounded-sm"} href={item.url}>
+                  <Link
+                    className={"rounded-sm"}
+                    href={item.url}
+                    onClick={() => {
+                      if (pathname !== item.url) setIsNavigating(true);
+                    }}
+                  >
                     <item.icon />
                     <span>{item.title}</span>
                   </Link>

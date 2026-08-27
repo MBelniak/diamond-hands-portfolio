@@ -1,11 +1,13 @@
 import { Upload } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ReportUploadDropzone } from "@/app/_components/ReportUploadDropzone";
 
 export const FileUploadButton = () => {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger title={"Upload a new file"}>
         <div
           className={
@@ -17,7 +19,7 @@ export const FileUploadButton = () => {
       </DialogTrigger>
       <DialogContent>
         <h3>Upload new transactions</h3>
-        <ReportUploadDropzone />
+        <ReportUploadDropzone onSuccess={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );
