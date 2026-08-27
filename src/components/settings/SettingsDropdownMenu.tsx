@@ -19,7 +19,7 @@ export const SettingsDropdownMenu: React.FC = () => {
         </button>
       </PopoverTrigger>
       <PopoverContent>
-        <SettingsPopover onRequestCloseAction={() => setIsOpen(false)} />
+        <SettingsPopover onRequestClose={() => setIsOpen(false)} />
       </PopoverContent>
     </Popover>
   );

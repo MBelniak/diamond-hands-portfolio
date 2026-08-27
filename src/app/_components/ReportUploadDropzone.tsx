@@ -1,4 +1,3 @@
-"use client";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
 import React from "react";
 import { useDropzone } from "react-dropzone";
