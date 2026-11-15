@@ -1,65 +1,89 @@
-# Diamond Hands Portfolio 💎
+<div align="center">
 
-Parses xlsx report file from XTB platform and presents analysis of your 
-stocks portfolio.
+# 💎 Diamond Hands
 
-### Key features
+**Portfolio analytics for XTB investors.** Upload your broker report and get performance, benchmark comparison, risk metrics and a full transaction history in seconds.
 
-✅ Track portfolio value, accumulated profit, cash balance\
-✅ Compare performance with stock indexes, like S&P 500 or NASDAQ\
-✅ Manage portfolios in different currencies (currently supporting USD and EUR)\
-✅ Analyze profits with Simple-Return, Time-Weighted-Return and Money-Weighted-Return metrics\
-✅ Upload new report - data will be merged accordingly\
-✅ See an overview of all owned assets, with a breakdown of their performance and allocation\
-✅ Look into Buy/Sell events on a specific asset in a historical context\
-✅ Review transaction history
+[![Next.js](https://img.shields.io/badge/Next.js_15-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React_19-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-0F172A?style=flat-square&logo=tailwindcss&logoColor=38BDF8)](https://tailwindcss.com)
+[![TanStack Query](https://img.shields.io/badge/TanStack_Query-FF4154?style=flat-square&logo=reactquery&logoColor=white)](https://tanstack.com/query)
+[![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io)
+[![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev)
 
-![Performance](docs/assets/performance.png)
-![PerformanceBottom](docs/assets/performance-bottom.png)
-![Assets](docs/assets/assets.png)
-![AssetsAllocation](docs/assets/assets_allocation.png)
-![Asset](docs/assets/asset.png)
-![Transactions](docs/assets/transactions.png)
+<img src="docs/assets/performance.png" alt="Performance dashboard: portfolio value, capital and benchmark comparison" width="100%" />
 
-### Third party APIs
+</div>
 
-📈 query1.finance.yahoo.com for fetching historical stock prices and split events.\
-💱 Currency Exchange API for fetching historical currency exchange rates.\
-📇 Redis Cloud for caching stock prices and exchange rates, updated daily.\
-📇 Appwrite for storing users' stock events data.\
-🔑 Clerk for authentication
+## ✨ Highlights
 
-## Getting Started
+- **One-click import:** parses the `.xlsx` account statement exported from the XTB platform; uploading a newer report merges it with existing data.
+- **Performance tracking:** portfolio value, accumulated and realised profit, open-position P/L by period, cash balance and withdrawals.
+- **Three return metrics:** Simple Return, **Time-Weighted Return** and **Money-Weighted Return (IRR)**, switchable app-wide.
+- **Benchmarking:** "what if I had invested in the index instead?", with period-by-period comparison against the **S&P 500, NASDAQ, Dow Jones and NYSE**.
+- **Risk analysis:** Sharpe and Sortino ratios, annualised volatility, max drawdown, historical VaR (95%) and beta against each benchmark.
+- **Asset drill-down:** per-asset price history (line or candlestick) with your buy/sell operations plotted on the chart.
+- **Multi-currency:** USD and EUR portfolios, backed by historical exchange rates.
+- **Demo mode:** explore the whole app with sample data, no account required.
 
-First, run the development server:
+## 📸 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Performance
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Portfolio value over time, with the benchmark overlaid and total return compared across indices.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+<img src="docs/assets/performance-chart.png" alt="Portfolio value chart with S&P 500 overlay and benchmark return table" width="100%" />
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Assets
 
-## Learn More
+Every position with market value, allocation, accumulated and potential profit/loss, plus an allocation breakdown by asset and instrument type.
 
-To learn more about Next.js, take a look at the following resources:
+<img src="docs/assets/assets.png" alt="Assets table" width="100%" />
+<img src="docs/assets/assets-allocation.png" alt="Asset allocation donut charts" width="100%" />
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Asset details
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+<img src="docs/assets/asset.png" alt="Asset price history with buy and sell markers" width="100%" />
 
-## Deploy on Vercel
+### Risk analysis
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+<img src="docs/assets/risk.png" alt="Risk metrics: Sharpe, Sortino, volatility, drawdown, VaR and daily returns" width="100%" />
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Transactions
+
+Filterable, sortable history of buys, sells, deposits and withdrawals.
+
+<img src="docs/assets/transactions.png" alt="Transactions table with type and ticker filters" width="100%" />
+
+### Light and dark
+
+<table>
+  <tr>
+    <td><img src="docs/assets/performance-light.png" alt="Light theme" /></td>
+    <td><img src="docs/assets/performance.png" alt="Dark theme" /></td>
+  </tr>
+</table>
+
+## 🛠️ Engineering highlights
+
+- **Heavy computation off the main thread:** the portfolio analysis (daily timeline, returns, risk metrics) runs in a **Web Worker** with request cancellation, so the UI stays responsive on large histories.
+- **Layered caching:** market data and FX rates are cached in **Redis** (refreshed daily), user data is persisted in **Appwrite**, and parsed portfolios are cached client-side in **IndexedDB**. Server state is managed with **TanStack Query**.
+- **Financial maths implemented from scratch:** TWR and IRR-based MWR, Sharpe/Sortino, drawdown, historical VaR and beta, all unit-tested with **Vitest**.
+- **Corporate actions handled:** historical prices are adjusted for **stock splits** fetched from Yahoo Finance.
+- **Dependency injection** with **Inversify** for server-side clients (database, Redis), keeping them swappable and testable.
+- **Design system** built on Radix UI primitives and Tailwind CSS 4 design tokens (flat outlined surfaces, a shared card system, theme-aware charts).
+- **Production concerns:** authentication with **Clerk**, error monitoring with **Sentry**, analytics with **Vercel Analytics**.
+
+## 🧰 Tech stack
+
+| Area           | Tools                                                                      |
+| -------------- | -------------------------------------------------------------------------- |
+| Framework      | Next.js 15 (App Router, Turbopack), React 19, TypeScript                   |
+| UI             | Tailwind CSS 4, Radix UI, lucide-react, GSAP                               |
+| Data & state   | TanStack Query, TanStack Table, Zustand, IndexedDB (`idb`)                 |
+| Charts         | Recharts, TradingView Lightweight Charts                                   |
+| Backend & data | Next.js route handlers, Appwrite, Redis, Inversify                         |
+| External APIs  | Yahoo Finance (prices and splits), Currency Exchange API, logo.dev (logos) |
+| Auth & ops     | Clerk, Sentry, Vercel Analytics                                            |
+| Quality        | Vitest, ESLint, Prettier                                                   |

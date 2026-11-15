@@ -59,6 +59,7 @@ export const getColumns = (currency: PortfolioCurrency): ColumnDef<AssetTableDat
       const allocation = info.row.original.allocation ?? 0;
       const profitAsPercentage = info.row.original.unrealizedProfitOrLossPercentage;
       const cls = getProfitLossTextClass(profit, info.row.original.profitScale);
+      const volume = info.row.original.volume;
 
       return marketValue != null ? (
         <div className={"flex flex-col figure"}>
@@ -66,19 +67,13 @@ export const getColumns = (currency: PortfolioCurrency): ColumnDef<AssetTableDat
           {marketValue != 0 && (
             <div className={cn(cls, "text-xs")}>{`${profit.toFixed(2)} (${profitAsPercentage.toFixed(2)}%)`}</div>
           )}
+          {marketValue != 0 && volume != null && (
+            <div className="text-muted-foreground text-xs">{volume.toFixed(2)} units</div>
+          )}
         </div>
       ) : (
         "-"
       );
-    },
-    enableSorting: true,
-  },
-  {
-    accessorKey: "volume",
-    header: "Shares Owned",
-    cell: (info) => {
-      const v = info.getValue() as number;
-      return v != null ? <div className="figure">{v.toFixed(2)}</div> : "-";
     },
     enableSorting: true,
   },

@@ -15,7 +15,7 @@ const SidebarMenuWrapperInner: React.FC<PropsWithChildren> = ({ children }) => {
           <SidebarMenuContent />
         </SidebarContent>
       </Sidebar>
-      <main className={"relative w-full overflow-auto"}>
+      <main className={"relative w-full overflow-clip"}>
         {children}
         {isNavigating && <LoaderOverlay />}
       </main>

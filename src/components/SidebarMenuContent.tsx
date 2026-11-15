@@ -1,6 +1,6 @@
 "use client";
 import { ArrowLeftRight, Gem, Moon, ShieldAlert, TrendingUp, Wallet } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   SidebarFooter,
@@ -45,15 +45,18 @@ const items = [
 export const SidebarMenuContent = () => {
   // Theme switcher logic
   const { theme, setCurrentTheme } = useCurrentTheme();
-  const [isDark, setIsDark] = useState(theme === "dark");
+  // The theme comes from localStorage, which the server can't see. Render the switch "off" on the first
+  // pass (matching the server HTML) and reflect the real theme only after mount, avoiding a hydration mismatch
+  // that left the switch unchecked in dark mode.
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
+  const isDark = isMounted && theme === "dark";
   const { setIsNavigating } = useNavigationLoading();
   const pathname = usePathname();
 
   // When toggled, update theme and localStorage
   const handleThemeToggle = () => {
-    const newIsDark = !isDark;
-    setIsDark(newIsDark);
-    setCurrentTheme(newIsDark ? "dark" : "light");
+    setCurrentTheme(isDark ? "light" : "dark");
   };
 
   return (

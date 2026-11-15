@@ -137,8 +137,25 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    /* Always reserve the scrollbar's space so the layout doesn't jump when content grows past the viewport */
+    scrollbar-gutter: stable;
+    /* Thin, theme-matched scrollbars (inherited by every scroll container) */
+    color-scheme: light;
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.78 0 0) transparent;
+  }
+  /* The theme class lives on <body>, but the viewport scrollbar is styled from <html> */
+  html:has(> body.dark) {
+    color-scheme: dark;
+    scrollbar-color: oklch(0.4 0.01 260) transparent;
+  }
   body {
     @apply bg-gray-50 text-foreground;
+  }
+  body.dark {
+    /* Matches the start of the dark page gradient, so the scrollbar gutter isn't a light strip */
+    background-color: var(--color-gray-900);
   }
 }
 

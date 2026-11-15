@@ -66,6 +66,9 @@ export function useAssetChart(priceHistory: ChartData[], theme: LocalTheme, char
       createSeriesMarkers(candleSeries, markers);
     }
 
+    // Show the whole history (and therefore every buy/sell marker) instead of only the most recent bars
+    chart.timeScale().fitContent();
+
     return () => {
       chart.remove();
     };
