@@ -7,7 +7,7 @@ const iocContainer = new Container();
 // server side
 if (typeof window === "undefined") {
   iocContainer.bind<AbstractDatabaseClient>(AbstractDatabaseClient).to(DatabaseClient);
-  iocContainer.bind<AbstractRedisClient>(AbstractRedisClient).to(RedisClient);
+  iocContainer.bind<AbstractRedisClient>(AbstractRedisClient).to(RedisClient).inSingletonScope();
 }
 
 export default iocContainer;

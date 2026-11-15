@@ -261,26 +261,6 @@
       "cashWithdrawalOrDeposit": null
     },
     {
-      "id": "665975300",
-      "date": "2024-11-27T10:01:41.000Z",
-      "cashChange": -0.1,
-      "type": "cash",
-      "stocksVolumeChange": 0,
-      "stockSymbol": "SMSN.UK",
-      "openPrice": 0,
-      "cashWithdrawalOrDeposit": null
-    },
-    {
-      "id": "665975299",
-      "date": "2024-11-27T10:01:41.000Z",
-      "cashChange": 0.45,
-      "type": "cash",
-      "stocksVolumeChange": 0,
-      "stockSymbol": "SMSN.UK",
-      "openPrice": 0,
-      "cashWithdrawalOrDeposit": null
-    },
-    {
       "id": "663229224",
       "date": "2024-11-22T13:50:07.000Z",
       "cashChange": -66.52,
@@ -359,16 +339,6 @@
       "stockSymbol": "ASML.NL",
       "openPrice": 0,
       "cashWithdrawalOrDeposit": null
-    },
-    {
-      "id": "651429372",
-      "date": "2024-11-06T14:34:24.000Z",
-      "cashChange": -300,
-      "type": "cash",
-      "stocksVolumeChange": 0,
-      "stockSymbol": null,
-      "openPrice": 0,
-      "cashWithdrawalOrDeposit": -300
     },
     {
       "id": "651414703",
@@ -861,16 +831,6 @@
       "cashWithdrawalOrDeposit": null
     },
     {
-      "id": "648258028",
-      "date": "2024-11-04T08:30:48.000Z",
-      "cashChange": 73.91,
-      "type": "cash",
-      "stocksVolumeChange": -0.0694,
-      "stockSymbol": "SMSN.UK",
-      "openPrice": 1065,
-      "cashWithdrawalOrDeposit": null
-    },
-    {
       "id": "648257919",
       "date": "2024-11-04T08:30:40.000Z",
       "cashChange": 169.35,
@@ -991,6 +951,26 @@
       "cashWithdrawalOrDeposit": null
     },
     {
+      "id": "627051804",
+      "date": "2024-10-02T13:47:33.000Z",
+      "cashChange": -81.62,
+      "type": "cash",
+      "stocksVolumeChange": 2,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 40.81,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
+      "id": "627051798",
+      "date": "2024-10-02T13:47:32.000Z",
+      "cashChange": -18.36,
+      "type": "cash",
+      "stocksVolumeChange": 0.4497,
+      "stockSymbol": "SMCI.US",
+      "openPrice": 40.82,
+      "cashWithdrawalOrDeposit": null
+    },
+    {
       "id": "627621639",
       "date": "2024-10-02T12:16:24.000Z",
       "cashChange": 0,
@@ -1031,26 +1011,6 @@
       "cashWithdrawalOrDeposit": null
     },
     {
-      "id": "627051804",
-      "date": "2024-10-01T17:03:33.000Z",
-      "cashChange": -81.62,
-      "type": "cash",
-      "stocksVolumeChange": 2,
-      "stockSymbol": "SMCI.US",
-      "openPrice": 40.81,
-      "cashWithdrawalOrDeposit": null
-    },
-    {
-      "id": "627051798",
-      "date": "2024-10-01T17:03:32.000Z",
-      "cashChange": -18.36,
-      "type": "cash",
-      "stocksVolumeChange": 0.4497,
-      "stockSymbol": "SMCI.US",
-      "openPrice": 40.82,
-      "cashWithdrawalOrDeposit": null
-    },
-    {
       "id": "627051020",
       "date": "2024-10-01T17:01:37.000Z",
       "cashChange": 37.57,
@@ -1072,7 +1032,7 @@
     },
     {
       "id": "626166305",
-      "date": "2024-10-01T05:20:59.000Z",
+      "date": "2024-09-30T19:50:59.000Z",
       "cashChange": 97.59,
       "type": "cash",
       "stocksVolumeChange": 0,
@@ -1082,7 +1042,7 @@
     },
     {
       "id": "626164541",
-      "date": "2024-10-01T05:20:59.000Z",
+      "date": "2024-09-30T19:50:59.000Z",
       "cashChange": 185.23,
       "type": "cash",
       "stocksVolumeChange": 0,
@@ -1092,7 +1052,7 @@
     },
     {
       "id": "626160908",
-      "date": "2024-10-01T05:20:47.000Z",
+      "date": "2024-09-30T19:50:47.000Z",
       "cashChange": 0,
       "type": "cash",
       "stocksVolumeChange": -0.2346,
@@ -1102,7 +1062,7 @@
     },
     {
       "id": "626160907",
-      "date": "2024-10-01T05:20:47.000Z",
+      "date": "2024-09-30T19:50:47.000Z",
       "cashChange": 0,
       "type": "cash",
       "stocksVolumeChange": 0,
@@ -1112,7 +1072,7 @@
     },
     {
       "id": "626160906",
-      "date": "2024-10-01T05:20:47.000Z",
+      "date": "2024-09-30T19:50:47.000Z",
       "cashChange": 0,
       "type": "cash",
       "stocksVolumeChange": 0,
@@ -1122,7 +1082,7 @@
     },
     {
       "id": "626154873",
-      "date": "2024-10-01T05:20:32.000Z",
+      "date": "2024-09-30T19:50:32.000Z",
       "cashChange": 0,
       "type": "cash",
       "stocksVolumeChange": -0.4453,
@@ -1132,7 +1092,7 @@
     },
     {
       "id": "626154872",
-      "date": "2024-10-01T05:20:32.000Z",
+      "date": "2024-09-30T19:50:32.000Z",
       "cashChange": 0,
       "type": "cash",
       "stocksVolumeChange": 0,
@@ -1142,7 +1102,7 @@
     },
     {
       "id": "626154871",
-      "date": "2024-10-01T05:20:32.000Z",
+      "date": "2024-09-30T19:50:32.000Z",
       "cashChange": 0,
       "type": "cash",
       "stocksVolumeChange": 0,
@@ -1277,26 +1237,6 @@
       "type": "cash",
       "stocksVolumeChange": 0,
       "stockSymbol": null,
-      "openPrice": 0,
-      "cashWithdrawalOrDeposit": null
-    },
-    {
-      "id": "608465483",
-      "date": "2024-09-02T08:01:30.000Z",
-      "cashChange": -0.1,
-      "type": "cash",
-      "stocksVolumeChange": 0,
-      "stockSymbol": "SMSN.UK",
-      "openPrice": 0,
-      "cashWithdrawalOrDeposit": null
-    },
-    {
-      "id": "608465482",
-      "date": "2024-09-02T08:01:30.000Z",
-      "cashChange": 0.47,
-      "type": "cash",
-      "stocksVolumeChange": 0,
-      "stockSymbol": "SMSN.UK",
       "openPrice": 0,
       "cashWithdrawalOrDeposit": null
     },
@@ -1741,6 +1681,16 @@
       "cashWithdrawalOrDeposit": null
     },
     {
+      "id": "567577197",
+      "date": "2024-06-24T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
       "id": "565602805",
       "date": "2024-06-17T11:29:40.000Z",
       "cashChange": 0,
@@ -1749,6 +1699,16 @@
       "stockSymbol": "SMCI.US",
       "openPrice": 0,
       "cashWithdrawalOrDeposit": null
+    },
+    {
+      "id": "565134320",
+      "date": "2024-06-17T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
     },
     {
       "id": "564665835",
@@ -1911,16 +1871,6 @@
       "cashWithdrawalOrDeposit": null
     },
     {
-      "id": "564117286",
-      "date": "2024-06-14T05:04:26.000Z",
-      "cashChange": -100.63,
-      "type": "cash",
-      "stocksVolumeChange": 0.0694,
-      "stockSymbol": "SMSN.UK",
-      "openPrice": 1450,
-      "cashWithdrawalOrDeposit": null
-    },
-    {
       "id": "564117118",
       "date": "2024-06-14T05:04:25.000Z",
       "cashChange": -6.28,
@@ -1991,16 +1941,6 @@
       "cashWithdrawalOrDeposit": null
     },
     {
-      "id": "563435289",
-      "date": "2024-06-13T07:27:29.000Z",
-      "cashChange": 1900,
-      "type": "cash",
-      "stocksVolumeChange": 0,
-      "stockSymbol": null,
-      "openPrice": 0,
-      "cashWithdrawalOrDeposit": 1900
-    },
-    {
       "id": "563118018",
       "date": "2024-06-12T15:06:02.000Z",
       "cashChange": 431.76,
@@ -2019,6 +1959,16 @@
       "stockSymbol": "AAPL.US",
       "openPrice": 215.88,
       "cashWithdrawalOrDeposit": null
+    },
+    {
+      "id": "561079754",
+      "date": "2024-06-10T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
     },
     {
       "id": "559041495",
@@ -2041,14 +1991,14 @@
       "cashWithdrawalOrDeposit": null
     },
     {
-      "id": "554532934",
-      "date": "2024-05-28T11:40:30.000Z",
-      "cashChange": -660,
+      "id": "556645465",
+      "date": "2024-06-03T07:00:00.000Z",
+      "cashChange": 75.0,
       "type": "cash",
       "stocksVolumeChange": 0,
       "stockSymbol": null,
       "openPrice": 0,
-      "cashWithdrawalOrDeposit": -660
+      "cashWithdrawalOrDeposit": 75.0
     },
     {
       "id": "554249449",
@@ -2069,6 +2019,16 @@
       "stockSymbol": "IUIT.UK",
       "openPrice": 29.28,
       "cashWithdrawalOrDeposit": null
+    },
+    {
+      "id": "553836008",
+      "date": "2024-05-27T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
     },
     {
       "id": "553441191",
@@ -2111,6 +2071,26 @@
       "cashWithdrawalOrDeposit": null
     },
     {
+      "id": "548217881",
+      "date": "2024-05-20T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
+      "id": "548217880",
+      "date": "2024-05-13T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
       "id": "543746651",
       "date": "2024-05-07T01:51:51.000Z",
       "cashChange": -0.01,
@@ -2129,6 +2109,16 @@
       "stockSymbol": null,
       "openPrice": 0,
       "cashWithdrawalOrDeposit": null
+    },
+    {
+      "id": "542550228",
+      "date": "2024-05-06T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
     },
     {
       "id": "541353816",
@@ -2151,16 +2141,6 @@
       "cashWithdrawalOrDeposit": null
     },
     {
-      "id": "541352426",
-      "date": "2024-05-02T07:53:16.000Z",
-      "cashChange": 400,
-      "type": "cash",
-      "stocksVolumeChange": 0,
-      "stockSymbol": null,
-      "openPrice": 0,
-      "cashWithdrawalOrDeposit": 400
-    },
-    {
       "id": "539297206",
       "date": "2024-04-29T10:42:05.000Z",
       "cashChange": -0.02,
@@ -2169,6 +2149,16 @@
       "stockSymbol": "GOOGL.US",
       "openPrice": 0,
       "cashWithdrawalOrDeposit": null
+    },
+    {
+      "id": "538999303",
+      "date": "2024-04-29T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
     },
     {
       "id": "538701400",
@@ -2199,6 +2189,126 @@
       "stockSymbol": "GOOGL.US",
       "openPrice": 172.06,
       "cashWithdrawalOrDeposit": null
+    },
+    {
+      "id": "516613043",
+      "date": "2024-04-22T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
+      "id": "516613042",
+      "date": "2024-04-15T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
+      "id": "516613041",
+      "date": "2024-04-08T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
+      "id": "516613040",
+      "date": "2024-04-01T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
+      "id": "516613039",
+      "date": "2024-03-25T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
+      "id": "516613038",
+      "date": "2024-03-18T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
+      "id": "516613037",
+      "date": "2024-03-11T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
+      "id": "516613036",
+      "date": "2024-03-04T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
+      "id": "516613035",
+      "date": "2024-02-26T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
+      "id": "516613034",
+      "date": "2024-02-19T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
+      "id": "516613033",
+      "date": "2024-02-12T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
+    },
+    {
+      "id": "516613032",
+      "date": "2024-02-05T07:00:00.000Z",
+      "cashChange": 75.0,
+      "type": "cash",
+      "stocksVolumeChange": 0,
+      "stockSymbol": null,
+      "openPrice": 0,
+      "cashWithdrawalOrDeposit": 75.0
     },
     {
       "id": "494577942",
@@ -2387,19 +2497,19 @@
     },
     {
       "id": "1478218745",
-      "date": "2024-10-01T17:03:33.000Z",
+      "date": "2024-10-02T13:47:33.000Z",
       "stocksVolumeChange": 2,
       "type": "stockOpenEvent",
       "stockSymbol": "SMCI.US",
-      "openPrice": 4.081
+      "openPrice": 40.81
     },
     {
       "id": "1478218739",
-      "date": "2024-10-01T17:03:32.000Z",
+      "date": "2024-10-02T13:47:32.000Z",
       "stocksVolumeChange": 0.4497,
       "type": "stockOpenEvent",
       "stockSymbol": "SMCI.US",
-      "openPrice": 4.082
+      "openPrice": 40.82
     },
     {
       "id": "1356055719",
@@ -2512,14 +2622,6 @@
       "type": "stockOpenEvent",
       "stockSymbol": "IUIT.UK",
       "openPrice": 32.12
-    },
-    {
-      "id": "1355430152",
-      "date": "2024-06-14T05:04:26.000Z",
-      "stocksVolumeChange": 0.0694,
-      "type": "stockOpenEvent",
-      "stockSymbol": "SMSN.UK",
-      "openPrice": 1450
     },
     {
       "id": "1398027069",
@@ -2946,15 +3048,6 @@
       "closePrice": 32.12
     },
     {
-      "id": "1355430152",
-      "date": "2024-11-04T08:30:48.000Z",
-      "stocksVolumeChange": 0.0694,
-      "type": "stockCloseEvent",
-      "stockSymbol": "SMSN.UK",
-      "profitOrLoss": -26.72,
-      "closePrice": 1065
-    },
-    {
       "id": "1398027069",
       "date": "2024-11-04T08:30:40.000Z",
       "stocksVolumeChange": 0.2514,
@@ -3001,20 +3094,20 @@
     },
     {
       "id": "1437611010",
-      "date": "2024-10-01T05:20:47.000Z",
+      "date": "2024-09-30T19:50:47.000Z",
       "stocksVolumeChange": 0.2346,
       "type": "stockCloseEvent",
       "stockSymbol": "SMCI.US",
-      "profitOrLoss": 0,
+      "profitOrLoss": -5.26,
       "closePrice": 41.64
     },
     {
       "id": "1354504083",
-      "date": "2024-10-01T05:20:32.000Z",
+      "date": "2024-09-30T19:50:32.000Z",
       "stocksVolumeChange": 0.4453,
       "type": "stockCloseEvent",
       "stockSymbol": "SMCI.US",
-      "profitOrLoss": 0,
+      "profitOrLoss": -167.19,
       "closePrice": 41.64
     },
     {

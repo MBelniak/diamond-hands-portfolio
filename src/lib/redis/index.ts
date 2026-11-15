@@ -15,13 +15,22 @@ export abstract class AbstractRedisClient {
 @injectable()
 export class RedisClient implements AbstractRedisClient {
   private redisClient: RedisClientType;
+  private connectPromise: Promise<unknown> | null = null;
 
   constructor() {
     this.redisClient = createClient({ url: process.env.REDIS_URL });
+    this.redisClient.on("error", (err) => console.error("Redis client error:", err));
   }
 
   initialize(): Promise<unknown> {
-    return this.redisClient.connect();
+    if (this.redisClient.isOpen) return Promise.resolve();
+    if (!this.connectPromise) {
+      this.connectPromise = this.redisClient.connect().catch((err) => {
+        this.connectPromise = null;
+        throw err;
+      });
+    }
+    return this.connectPromise;
   }
 
   getRedisClient(): RedisClientType {
@@ -29,6 +38,7 @@ export class RedisClient implements AbstractRedisClient {
   }
 
   async getCachedMarketData(ticker: string, startDate: Date): Promise<TickerMarketData | null> {
+    await this.initialize();
     if (await this.redisClient.exists(this.getStockPricesRedisKey(ticker, startDate))) {
       return JSON.parse((await this.redisClient.get(this.getStockPricesRedisKey(ticker, startDate))) as string);
     } else {
@@ -37,6 +47,7 @@ export class RedisClient implements AbstractRedisClient {
   }
 
   async cacheMarketData(ticker: string, startDate: Date, tickerMarketData: TickerMarketData): Promise<void> {
+    await this.initialize();
     await this.redisClient.set(
       this.getStockPricesRedisKey(ticker, startDate),
       JSON.stringify(tickerMarketData),
@@ -45,6 +56,7 @@ export class RedisClient implements AbstractRedisClient {
   }
 
   async getCachedExchangeRates(date: Date, baseCurrency: PortfolioCurrency): Promise<ExchangeRates | null> {
+    await this.initialize();
     if (await this.redisClient.exists(this.getExchangeRatesRedisKey(date, baseCurrency))) {
       return JSON.parse((await this.redisClient.get(this.getExchangeRatesRedisKey(date, baseCurrency))) as string);
     } else {
@@ -53,6 +65,7 @@ export class RedisClient implements AbstractRedisClient {
   }
 
   async cacheExchangeRates(date: Date, baseCurrency: PortfolioCurrency, exchangeRates: ExchangeRates): Promise<void> {
+    await this.initialize();
     await this.redisClient.set(
       this.getExchangeRatesRedisKey(date, baseCurrency),
       JSON.stringify(exchangeRates),
