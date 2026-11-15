@@ -3,6 +3,7 @@
 import React, { useMemo } from "react";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
 import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
 import { TimePeriod } from "@/app/(analysis)/performance/_types/TimePeriod";
@@ -127,11 +128,9 @@ export const Benchmarks: React.FC = () => {
   }
 
   return (
-    <div className="w-full space-y-4 relative">
-      <div className="space-y-2">
-        <h2 className="text-2xl font-bold">Total Return vs Benchmarks</h2>
-      </div>
-      <Table className="w-full border">
+    <Card>
+      <CardHeader title="Total return vs benchmarks" description="Portfolio return compared with major indices" />
+      <Table className="w-full">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -153,6 +152,6 @@ export const Benchmarks: React.FC = () => {
           ))}
         </TableBody>
       </Table>
-    </div>
+    </Card>
   );
 };

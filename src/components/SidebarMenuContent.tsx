@@ -1,11 +1,13 @@
 "use client";
-import { ArrowLeftRight, ShieldAlert, TrendingUp, Wallet } from "lucide-react";
+import { ArrowLeftRight, Gem, Moon, ShieldAlert, TrendingUp, Wallet } from "lucide-react";
 import React, { useState } from "react";
 
 import {
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -56,49 +58,53 @@ export const SidebarMenuContent = () => {
 
   return (
     <>
-      <SidebarGroup>
-        <SidebarGroupLabel>Diamond hands portfolio</SidebarGroupLabel>
+      <SidebarHeader className="h-16 flex-row items-center gap-3 border-b px-4 py-0">
+        <span className="flex size-8 shrink-0 items-center justify-center border">
+          <Gem className="size-4" />
+        </span>
+        <div className="flex min-w-0 flex-col leading-tight">
+          <span className="truncate text-sm font-medium">Diamond Hands</span>
+          <span className="text-muted-foreground truncate text-xs">Portfolio analytics</span>
+        </div>
+      </SidebarHeader>
+
+      <SidebarGroup className="px-3 py-4">
+        <SidebarGroupLabel>Analysis</SidebarGroupLabel>
         <SidebarGroupContent>
-          <SidebarMenu>
-            {items.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <Link
-                    className={"rounded-sm"}
-                    href={item.url}
-                    onClick={() => {
-                      if (pathname !== item.url) setIsNavigating(true);
-                    }}
-                  >
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+          <SidebarMenu className="gap-1.5">
+            {items.map((item) => {
+              // Asset detail pages (/assets/XYZ) keep "Assets" highlighted
+              const isActive = pathname === item.url || pathname.startsWith(`${item.url}/`);
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive}>
+                    <Link
+                      href={item.url}
+                      aria-current={isActive ? "page" : undefined}
+                      onClick={() => {
+                        if (pathname !== item.url) setIsNavigating(true);
+                      }}
+                    >
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
-      <SidebarGroup className={"mt-[auto] mb-2"}>
-        <SidebarGroupContent>
-          <div style={{ marginTop: "auto", padding: "1rem 0 0 0" }}>
-            <div style={{ borderTop: "1px solid #e5e7eb", marginBottom: "1rem", opacity: 0.5 }} />
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                fontSize: "0.95rem",
-                cursor: "pointer",
-                opacity: 0.8,
-              }}
-            >
-              <Switch checked={isDark} onCheckedChange={handleThemeToggle} />
-              Dark mode
-            </label>
-          </div>
-        </SidebarGroupContent>
-      </SidebarGroup>
+
+      <SidebarFooter className="mt-auto border-t p-3">
+        <label className="hover:bg-surface-strong flex h-11 cursor-pointer items-center justify-between gap-3 px-3 text-[0.9375rem] transition-colors">
+          <span className="text-foreground/75 flex items-center gap-3">
+            <Moon className="size-[1.125rem]" />
+            Dark mode
+          </span>
+          <Switch checked={isDark} onCheckedChange={handleThemeToggle} />
+        </label>
+      </SidebarFooter>
     </>
   );
 };

@@ -11,6 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useStore } from "@/lib/store";
 import { useAssetChart } from "@/app/(analysis)/assets/[asset]/useAssetChart";
 import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function AssetChartPage({ params }: { params: Promise<{ asset: string }> }) {
   const { asset } = use(params);
@@ -62,22 +63,28 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
         </Button>
       </div>
       {priceHistory.length === 0 && (
-        <div className="bg-white/10 backdrop-blur-lg rounded-sm shadow-2xl p-8 w-full text-center">
-          <h2 className="text-2xl font-bold drop-shadow-lg mb-2">{assetFullName}</h2>
-          <p className="text-sm opacity-80 mb-6">No price history is available for this asset.</p>
-        </div>
+        <Card>
+          <CardHeader title={assetFullName} />
+          <CardContent>
+            <p className="text-muted-foreground text-sm">No price history is available for this asset.</p>
+          </CardContent>
+        </Card>
       )}
       {priceHistory.length > 0 && (
-        <div className="bg-white/10 backdrop-blur-lg rounded-sm shadow-2xl p-8 w-full">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold drop-shadow-lg">{assetFullName}</h2>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <Switch checked={showMarkers} onCheckedChange={setShowMarkers} />
-              Show operations
-            </label>
-          </div>
-          <div id={ASSET_CHART_CONTAINER_ID} className={"w-full px-[1.5rem] h-[60svh]"} />
-        </div>
+        <Card>
+          <CardHeader
+            title={assetFullName}
+            actions={
+              <label className="text-muted-foreground flex cursor-pointer items-center gap-2 text-sm">
+                <Switch checked={showMarkers} onCheckedChange={setShowMarkers} />
+                Show operations
+              </label>
+            }
+          />
+          <CardContent>
+            <div id={ASSET_CHART_CONTAINER_ID} className={"h-[60svh] w-full"} />
+          </CardContent>
+        </Card>
       )}
     </div>
   );

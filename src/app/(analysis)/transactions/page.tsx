@@ -9,6 +9,7 @@ import { useTransactions } from "@/app/(analysis)/transactions/_hooks/useTransac
 import { TransactionFilters } from "@/app/(analysis)/transactions/_components/TransactionFilters";
 import { TransactionsTable } from "@/app/(analysis)/transactions/_components/TransactionsTable";
 import { TransactionType } from "@/app/(analysis)/transactions/_types";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function TransactionsPage() {
   const { data: portfolioData, error, isLoading } = usePortfolioData();
@@ -56,12 +57,10 @@ export default function TransactionsPage() {
 
   return (
     <div className="w-full max-w-6xl space-y-4" ref={containerRef}>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold">Transactions</h1>
-        <p className="text-sm text-muted-foreground">
-          {filteredTransactions.length} of {allTransactions.length} transactions
-        </p>
-      </div>
+      <PageHeader
+        title="Transactions"
+        description={`${filteredTransactions.length} of ${allTransactions.length} transactions`}
+      />
 
       <TransactionFilters
         selectedTypes={selectedTypes}

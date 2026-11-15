@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { ChartCandlestick, ChartSpline } from "lucide-react";
 import { useCurrentChartType } from "@/client/hooks/useCurrentChartType";
 
@@ -11,32 +11,24 @@ export const ChartTypeSelector = () => {
     <div className={"grid grid-cols-2 gap-1 p-2 items-center w-full"}>
       <span className={"whitespace-nowrap"}>Chart type:</span>
       <div className={"justify-self-center flex gap-4"}>
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Submit"
-          className={
-            chartType === "line"
-              ? "bg-slate-700 text-gray-100 dark:bg-slate-200 dark:hover:bg-slate-300 dark:text-accent"
-              : "text-muted-foreground"
-          }
+        <button
+          type="button"
+          aria-label="Line chart"
+          aria-pressed={chartType === "line"}
+          className={cn("chip size-9 justify-center p-0", chartType === "line" && "chip-selected")}
           onClick={() => setCurrentChartType("line")}
         >
           <ChartSpline />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Submit"
-          className={
-            chartType === "candle"
-              ? "bg-slate-700 text-gray-100 dark:bg-slate-200 dark:hover:bg-slate-300 dark:text-accent"
-              : "text-muted-foreground"
-          }
+        </button>
+        <button
+          type="button"
+          aria-label="Candlestick chart"
+          aria-pressed={chartType === "candle"}
+          className={cn("chip size-9 justify-center p-0", chartType === "candle" && "chip-selected")}
           onClick={() => setCurrentChartType("candle")}
         >
           <ChartCandlestick />
-        </Button>
+        </button>
       </div>
     </div>
   );

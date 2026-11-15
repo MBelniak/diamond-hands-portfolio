@@ -16,7 +16,7 @@ export const PerformanceKeyFigures = () => {
   }
 
   return (
-    <div className="bg-white/5 backdrop-blur-lg rounded-sm shadow-xl w-full flex-col flex flex-wrap lg:flex-row lg:justify-around relative">
+    <div className="grid w-full gap-4 lg:grid-cols-3">
       <PortfolioValueSummary portfolioAnalysis={portfolioAnalysis} />
       <PortfolioCapitalSummary portfolioAnalysis={portfolioAnalysis} />
       <PerformanceBenchmarkIndexSummary portfolioAnalysis={portfolioAnalysis} />

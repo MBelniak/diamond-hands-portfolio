@@ -2,6 +2,7 @@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CogIcon } from "lucide-react";
 import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { SettingsPopover } from "@/components/settings/SettingsPopover";
 
 export const SettingsDropdownMenu: React.FC = () => {
@@ -10,13 +11,15 @@ export const SettingsDropdownMenu: React.FC = () => {
   return (
     <Popover open={isOpen}>
       <PopoverTrigger title={"Settings"} asChild>
-        <button type="button" className={"cursor-pointer"} onClick={() => setIsOpen((open) => !open)}>
-          <div
-            className={"rounded-[50%] aspect-square w-9 flex items-center justify-center bg-white/10 hover:bg-white/20"}
-          >
-            <CogIcon />
-          </div>
-        </button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="size-8"
+          aria-label="Settings"
+          onClick={() => setIsOpen((open) => !open)}
+        >
+          <CogIcon />
+        </Button>
       </PopoverTrigger>
       <PopoverContent>
         <SettingsPopover onRequestClose={() => setIsOpen(false)} />

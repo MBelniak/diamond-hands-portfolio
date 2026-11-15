@@ -6,13 +6,15 @@ const formatLabel = (l: unknown) => `Date: ${l}`;
 
 const contentStyle: React.CSSProperties = {
   background: "var(--tooltip-background)",
-  borderRadius: "0.75rem",
+  borderRadius: 0,
   color: "var(--foreground)",
-  border: "1px solid #a5b4fc",
+  border: "1px solid var(--border)",
   padding: "0.5rem 0.75rem",
+  fontSize: "0.8125rem",
+  backdropFilter: "blur(8px)",
 };
 
-const labelStyle: React.CSSProperties = { color: "var(--foreground)", fontWeight: 600, marginBottom: 6 };
+const labelStyle: React.CSSProperties = { color: "var(--muted-foreground)", fontWeight: 500, marginBottom: 6 };
 
 export const CustomTooltip = ({ active, payload, label }: Partial<TooltipContentProps<string | number, string>>) => {
   const filteredKeys = useMemo(
@@ -31,8 +33,7 @@ export const CustomTooltip = ({ active, payload, label }: Partial<TooltipContent
             <span
               style={{
                 width: 10,
-                height: 10,
-                borderRadius: 2,
+                height: 2,
                 background: entry.color ?? entry.stroke ?? "transparent",
                 display: "inline-block",
               }}

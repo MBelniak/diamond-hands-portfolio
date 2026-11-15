@@ -4,8 +4,8 @@ import { DualRangeSlider } from "@/components/ui/dual-range-slider";
 import { MIN_WINDOW_SIZE, useDateRange } from "@/client/hooks/useDateRange";
 import { useStore } from "@/lib/store";
 import { PortfolioAnalysis, PortfolioCurrencyToSymbol } from "@/lib/types";
-import { useEffect, useState } from "react";
-import { Area, AreaChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useEffect, useMemo, useState } from "react";
+import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CustomTooltip } from "./PerformanceChartTooltip";
 import { TimePeriodZoom } from "@/app/(analysis)/performance/_components/PerformanceChart/TimePeriodZoom";
 import { useTimePeriodChange } from "@/app/(analysis)/performance/_components/PerformanceChart/hooks/useTimePeriodChange";
@@ -14,6 +14,10 @@ import {
   ChartLineKey,
   useChartLines,
 } from "@/app/(analysis)/performance/_components/PerformanceChart/hooks/useChartLines";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { DATE_AXIS_MIN_TICK_GAP, formatCompactNumber, getDateTickFormatter } from "@/lib/chartFormatters";
+
+const axisTick = { fontSize: 12, fill: "var(--muted-foreground)" };
 
 export function PerformanceChart() {
   const { useWithdrawnCash, selectedBenchmark, selectedPortfolio } = useStore();
@@ -63,81 +67,102 @@ export function PerformanceChart() {
   const [period, handlePeriodChange] = useTimePeriodChange(portfolioTimeline, handleRangeChange);
 
   const windowedData = portfolioTimeline.slice(range[0], range[1] + 1);
+  const firstDate = windowedData[0]?.date;
+  const lastDate = windowedData.at(-1)?.date;
+  const dateTickFormatter = useMemo(() => getDateTickFormatter(firstDate, lastDate), [firstDate, lastDate]);
 
   return (
-    <div className="flex flex-col bg-white/5 backdrop-blur-lg rounded-sm shadow-xl w-full p-6 gap-4 relative">
-      <h2 className="text-2xl font-bold mb-2 text-center">
-        Portfolio value over time ({PortfolioCurrencyToSymbol[selectedPortfolio]})
-      </h2>
-      <div className={"ml-8"}>
-        <TimePeriodZoom selectedPeriod={period} handlePeriodChange={handlePeriodChange} />
-      </div>
-      <div className={"w-full pr-4 h-[350px]"}>
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={windowedData}>
-            <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--foreground)" }} />
-            <YAxis tick={{ fontSize: 12, fill: "var(--foreground)" }} />
-            <Tooltip content={<CustomTooltip />} />
+    <Card>
+      <CardHeader
+        title={`Portfolio value over time (${PortfolioCurrencyToSymbol[selectedPortfolio]})`}
+        actions={<TimePeriodZoom selectedPeriod={period} handlePeriodChange={handlePeriodChange} />}
+      />
+      <CardContent className="flex flex-col gap-6">
+        <div className={"h-[350px] w-full"}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={windowedData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+              <CartesianGrid stroke="var(--border)" strokeDasharray="2 4" vertical={false} />
+              <XAxis
+                dataKey="date"
+                tick={axisTick}
+                tickFormatter={dateTickFormatter}
+                minTickGap={DATE_AXIS_MIN_TICK_GAP}
+                interval="preserveStartEnd"
+                tickLine={false}
+                axisLine={{ stroke: "var(--border)" }}
+                tickMargin={10}
+              />
+              <YAxis tick={axisTick} tickFormatter={formatCompactNumber} tickLine={false} axisLine={false} width={48} />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }}
+              />
 
-            {enabledLines.profitOrLoss && (
-              <>
-                <Area
-                  isAnimationActive={false}
-                  type="monotone"
-                  dataKey="profit"
-                  stroke="none"
-                  baseValue={0}
-                  fill="rgba(34,197,94,0.18)"
-                  name="Profit"
-                />
-                <Area
-                  isAnimationActive={false}
-                  type="monotone"
-                  dataKey="loss"
-                  stroke="none"
-                  baseValue={0}
-                  fill="rgba(239,68,68,0.18)"
-                  name="Loss"
-                />
-              </>
-            )}
-
-            {/* Render only enabled lines */}
-            {chartLines.map(
-              (line) =>
-                enabledLines[line.key] && (
-                  <Line
-                    key={line.key}
+              {enabledLines.profitOrLoss && (
+                <>
+                  <Area
                     isAnimationActive={false}
                     type="monotone"
-                    dataKey={line.key === "benchmarkData" ? `benchmarkData.${selectedBenchmark}.stockValue` : line.key}
-                    stroke={line.color}
-                    strokeWidth={2}
-                    dot={false}
-                    name={line.label}
+                    dataKey="profit"
+                    stroke="none"
+                    baseValue={0}
+                    fill="rgba(34,197,94,0.14)"
+                    name="Profit"
                   />
-                ),
-            )}
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-      <ChartLegend chartLines={chartLines} enabledLines={enabledLines} handleLinesChange={setEnabledLines} />
-      <div className={"w-full mt-4 flex flex-col gap-8 px-8"}>
-        {windowedData.length > 0 && (
-          <label className=" font-semibold">
-            Date range: {windowedData[0].date.slice(0, 10)} - {windowedData[windowedData.length - 1].date.slice(0, 10)}
-          </label>
-        )}
-        <DualRangeSlider
-          min={0}
-          max={portfolioTimeline.length - 1}
-          value={range}
-          step={1}
-          minStepsBetweenThumbs={MIN_WINDOW_SIZE - 1}
-          onValueChange={handleRangeChange}
-          style={{ width: "100%" }}
-        />
-      </div>
-    </div>
+                  <Area
+                    isAnimationActive={false}
+                    type="monotone"
+                    dataKey="loss"
+                    stroke="none"
+                    baseValue={0}
+                    fill="rgba(239,68,68,0.14)"
+                    name="Loss"
+                  />
+                </>
+              )}
+
+              {/* Render only enabled lines */}
+              {chartLines.map(
+                (line) =>
+                  enabledLines[line.key] && (
+                    <Line
+                      key={line.key}
+                      isAnimationActive={false}
+                      type="monotone"
+                      dataKey={
+                        line.key === "benchmarkData" ? `benchmarkData.${selectedBenchmark}.stockValue` : line.key
+                      }
+                      stroke={line.color}
+                      strokeWidth={1.75}
+                      dot={false}
+                      name={line.label}
+                    />
+                  ),
+              )}
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <ChartLegend chartLines={chartLines} enabledLines={enabledLines} handleLinesChange={setEnabledLines} />
+        <div className={"flex w-full flex-col gap-4 border-t pt-6"}>
+          {windowedData.length > 0 && (
+            <div className="flex items-baseline justify-between gap-4 text-sm">
+              <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Date range</span>
+              <span className="tabular-nums">
+                {windowedData[0].date.slice(0, 10)} – {windowedData[windowedData.length - 1].date.slice(0, 10)}
+              </span>
+            </div>
+          )}
+          <DualRangeSlider
+            min={0}
+            max={portfolioTimeline.length - 1}
+            value={range}
+            step={1}
+            minStepsBetweenThumbs={MIN_WINDOW_SIZE - 1}
+            onValueChange={handleRangeChange}
+            style={{ width: "100%" }}
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 }

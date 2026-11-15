@@ -20,10 +20,10 @@ const TYPE_LABELS: Record<TransactionType, string> = {
 };
 
 const TYPE_BADGE_CLASS: Record<TransactionType, string> = {
-  buy: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
-  sell: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
-  deposit: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-  withdrawal: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
+  buy: "border-green-600/60 text-green-700 dark:border-green-400/50 dark:text-green-400",
+  sell: "border-red-600/60 text-red-700 dark:border-red-400/50 dark:text-red-400",
+  deposit: "border-blue-600/60 text-blue-700 dark:border-blue-400/50 dark:text-blue-400",
+  withdrawal: "border-orange-600/60 text-orange-700 dark:border-orange-400/50 dark:text-orange-400",
 };
 
 export const transactionColumns: ColumnDef<TransactionRow>[] = [
@@ -31,7 +31,7 @@ export const transactionColumns: ColumnDef<TransactionRow>[] = [
     accessorKey: "date",
     header: "Date",
     cell: (info) => (
-      <span className="whitespace-nowrap text-sm text-muted-foreground">
+      <span className="whitespace-nowrap text-sm text-muted-foreground figure">
         {format(new Date(info.getValue() as string), "yyyy-MM-dd HH:mm")}
       </span>
     ),
@@ -45,7 +45,7 @@ export const transactionColumns: ColumnDef<TransactionRow>[] = [
       return (
         <span
           className={cn(
-            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+            "inline-flex items-center border bg-transparent px-2 py-0.5 text-xs font-medium",
             TYPE_BADGE_CLASS[type],
           )}
         >
@@ -65,7 +65,7 @@ export const transactionColumns: ColumnDef<TransactionRow>[] = [
 
       const name = info.row.original.name;
       const badge = (
-        <Badge variant="outline" className="font-mono text-xs">
+        <Badge variant="outline" className="text-xs">
           <span role={"button"} className={"cursor-pointer"} onClick={() => router.push(`/assets/${ticker}`)}>
             {ticker}
           </span>
@@ -93,7 +93,7 @@ export const transactionColumns: ColumnDef<TransactionRow>[] = [
     cell: (info) => {
       const v = info.getValue() as number | null;
       return (
-        <div className="text-right font-mono text-sm">
+        <div className="text-right figure text-sm">
           {v !== null ? v.toFixed(4) : <span className="text-muted-foreground">—</span>}
         </div>
       );
@@ -106,7 +106,7 @@ export const transactionColumns: ColumnDef<TransactionRow>[] = [
     cell: (info) => {
       const v = info.getValue() as number | null;
       return (
-        <div className="text-right font-mono text-sm">
+        <div className="text-right figure text-sm">
           {v !== null && v !== 0 ? v.toFixed(2) : <span className="text-muted-foreground">—</span>}
         </div>
       );
@@ -124,7 +124,7 @@ export const transactionColumns: ColumnDef<TransactionRow>[] = [
       return (
         <div
           className={cn(
-            "text-right font-mono text-sm font-medium",
+            "text-right figure text-sm",
             v > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400",
           )}
         >

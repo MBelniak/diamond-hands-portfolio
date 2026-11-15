@@ -21,7 +21,7 @@ export function AssetsDonut({ data }: { data: Slice[] }) {
   }
 
   return (
-    <div className="w-full h-[90svh]">
+    <div className="h-[480px] w-full">
       <ResponsiveContainer className={"w-full h-full"}>
         <PieChart>
           <Pie
@@ -32,7 +32,8 @@ export function AssetsDonut({ data }: { data: Slice[] }) {
             cy="50%"
             innerRadius="40%"
             outerRadius="65%"
-            paddingAngle={2}
+            paddingAngle={1}
+            stroke="var(--background)"
             label={({ percent, name }) => `${name} ${Math.round(((percent || 0) as number) * 100)}%`}
             labelLine={true}
           >
@@ -40,7 +41,16 @@ export function AssetsDonut({ data }: { data: Slice[] }) {
               <Cell key={`cell-${idx}`} fill={colors[idx % colors.length]} />
             ))}
           </Pie>
-          <Tooltip formatter={(value: number) => value.toFixed(2)} />
+          <Tooltip
+            formatter={(value: number) => value.toFixed(2)}
+            contentStyle={{
+              borderRadius: 0,
+              border: "1px solid var(--border)",
+              background: "var(--tooltip-background)",
+              color: "var(--foreground)",
+            }}
+            itemStyle={{ color: "var(--foreground)" }}
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>

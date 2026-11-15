@@ -171,7 +171,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className={`${sidebarBackground}  backdrop-blur-lg rounded-2xl shadow-2xl text-white w-(--sidebar-width) p-0 [&>button]:hidden`}
+          className={`${sidebarBackground} backdrop-blur-lg text-foreground w-(--sidebar-width) p-0 [&>button]:hidden`}
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -213,10 +213,10 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          `fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex ${sidebarBackground} backdrop-blur-lg shadow-2xl `,
+          `fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex ${sidebarBackground} backdrop-blur-lg `,
           side === "left"
-            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] border-r dark:border-black"
-            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] border-l dark:border-black",
+            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] border-r"
+            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] border-l",
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
@@ -330,17 +330,15 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-const darkSidebarMenuButtonVariants =
-  "dark:active:text-white dark:hover:bg-slate-800 dark:active:bg-slate-900 dark:hover:text-white";
-
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring" +
-    " transition-[width,height,padding] focus-visible:ring-2 hover:bg-gray-200 active:bg-gray-300" +
+  "peer/menu-button flex w-full items-center gap-3 overflow-hidden border border-transparent px-3 text-left outline-hidden ring-sidebar-ring" +
+    " text-foreground/75 transition-colors focus-visible:ring-2" +
+    " hover:border-border hover:bg-surface-strong hover:text-foreground active:bg-surface-strong" +
     " disabled:pointer-events-none disabled:opacity-50" +
-    " group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-slate-900" +
-    " data-[active=true]:font-medium data-[active=true]:text-white data-[state=open]:hover:bg-slate-800 data-[state=open]:hover:text-white" +
-    " group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0" +
-    darkSidebarMenuButtonVariants,
+    " group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50" +
+    " data-[active=true]:border-border data-[active=true]:bg-surface-strong data-[active=true]:text-foreground" +
+    " data-[active=true]:shadow-[inset_2px_0_0_var(--foreground)]" +
+    " group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-[1.125rem] [&>svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -349,7 +347,7 @@ const sidebarMenuButtonVariants = cva(
           "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-slate-800 hover:text-white hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
       },
       size: {
-        default: "h-8 text-sm",
+        default: "h-11 text-[0.9375rem]",
         sm: "h-7 text-xs",
         lg: "h-12 text-sm group-data-[collapsible=icon]:p-0!",
       },
@@ -409,7 +407,7 @@ function SidebarGroupLabel({
       data-slot="sidebar-group-label"
       data-sidebar="group-label"
       className={cn(
-        "text-foreground/70 ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+        "text-muted-foreground ring-sidebar-ring flex h-8 shrink-0 items-center px-3 text-[0.6875rem] font-medium tracking-wider uppercase outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
         className,
       )}

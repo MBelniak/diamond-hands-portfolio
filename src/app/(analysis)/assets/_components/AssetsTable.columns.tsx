@@ -61,7 +61,7 @@ export const getColumns = (currency: PortfolioCurrency): ColumnDef<AssetTableDat
       const cls = getProfitLossTextClass(profit, info.row.original.profitScale);
 
       return marketValue != null ? (
-        <div className={"flex flex-col font-mono"}>
+        <div className={"flex flex-col figure"}>
           {marketValue.toFixed(2) + (marketValue != 0 ? ` (${(allocation * 100).toFixed(2)}%)` : "")}
           {marketValue != 0 && (
             <div className={cn(cls, "text-xs")}>{`${profit.toFixed(2)} (${profitAsPercentage.toFixed(2)}%)`}</div>
@@ -78,7 +78,7 @@ export const getColumns = (currency: PortfolioCurrency): ColumnDef<AssetTableDat
     header: "Shares Owned",
     cell: (info) => {
       const v = info.getValue() as number;
-      return v != null ? <div className="font-mono">{v.toFixed(2)}</div> : "-";
+      return v != null ? <div className="figure">{v.toFixed(2)}</div> : "-";
     },
     enableSorting: true,
   },
@@ -89,7 +89,7 @@ export const getColumns = (currency: PortfolioCurrency): ColumnDef<AssetTableDat
     cell: (info) => {
       const v = info.getValue() as number;
       const cls = getProfitLossTextClass(v, info.row.original.profitScale);
-      return <div className={cn(cls, "text-right font-mono")}>{v.toFixed(2)}</div>;
+      return <div className={cn(cls, "text-right figure")}>{v.toFixed(2)}</div>;
     },
     enableSorting: true,
   },
@@ -100,7 +100,7 @@ export const getColumns = (currency: PortfolioCurrency): ColumnDef<AssetTableDat
     cell: (info) => {
       const v = info.getValue() as number;
       const cls = getProfitLossTextClass(v, info.row.original.profitScale);
-      return <div className={cn(cls, "text-right font-mono")}>{v.toFixed(2)}</div>;
+      return <div className={cn(cls, "text-right figure")}>{v.toFixed(2)}</div>;
     },
     enableSorting: true,
   },

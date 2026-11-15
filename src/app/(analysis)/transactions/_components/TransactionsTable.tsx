@@ -43,7 +43,7 @@ export function TransactionsTable({ rows }: TransactionsTableProps) {
   }, [rows.length]);
 
   return (
-    <div className="overflow-hidden rounded-xs border">
+    <div className="bg-surface overflow-hidden border backdrop-blur-lg">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

@@ -31,7 +31,7 @@ export const MainHeader = ({
   };
 
   return (
-    <header className="flex items-center p-4 gap-4 h-16">
+    <header className="flex h-16 items-center gap-4 border-b px-8">
       {withSidebar && <SidebarTrigger className="md:hidden" />}
       <div className="ml-auto flex items-center gap-4">
         <SettingsDropdownMenu />

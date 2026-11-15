@@ -1,16 +1,13 @@
-import { getProfitLossClass } from "@/lib/utils";
-import { clsx } from "clsx";
-import React, { type PropsWithChildren } from "react";
+import { formatMoney, formatPercent, getProfitLossClass } from "@/lib/utils";
+import React from "react";
 import { PortfolioAnalysis, PortfolioCurrencyToSymbol } from "@/lib/types";
 import { ProfitMetrics } from "./ProfitMetrics";
 import { useStore } from "@/lib/store";
 import { TimePeriod } from "@/app/(analysis)/performance/_types/TimePeriod";
 import { getReturnOnTimeline, ReturnMetricsOnBenchmark } from "@/app/(analysis)/performance/_logic/getReturnOnTimeline";
 import { omit } from "lodash-es";
-
-const MainFigureValue: React.FC<PropsWithChildren> = ({ children }) => {
-  return <p className={"text-4xl font-bold"}>{children}</p>;
-};
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { MetricRow, StatLabel, StatValue } from "./KeyFigure";
 
 export const PortfolioValueSummary: React.FC<{
   portfolioAnalysis: PortfolioAnalysis;
@@ -21,6 +18,7 @@ export const PortfolioValueSummary: React.FC<{
     return null;
   }
 
+  const currencySymbol = PortfolioCurrencyToSymbol[selectedPortfolio];
   const last = portfolioTimeline.at(-1)!;
   const totalCapitalInvested = last.totalCapitalInvested;
 
@@ -52,28 +50,36 @@ export const PortfolioValueSummary: React.FC<{
   const totalProfit = returnOnPortfolio[TimePeriod.All].totalProfit;
 
   return (
-    <div className="p-8 flex flex-col items-start">
-      <strong className=" text-lg mb-2">Total portfolio value</strong>
-      <MainFigureValue>
-        {PortfolioCurrencyToSymbol[selectedPortfolio]}
-        {totalPortfolioValue.toFixed(2)}
-      </MainFigureValue>
-      <div className={"grid grid-cols-[auto_1fr] gap-x-4 mt-3"}>
-        <p className="text-sm text-gray-800 dark:text-gray-200">
-          {totalProfit > 0 ? "Total profit: " : "Total loss: "}
-        </p>
-        <span className={clsx(getProfitLossClass(totalProfit), "text-end")}>
-          {PortfolioCurrencyToSymbol[selectedPortfolio]}
-          {totalProfit.toFixed(2)} ({returnOnPortfolio[TimePeriod.All].return.toFixed(2)}%)
-        </span>
-        <p className="text-sm  text-gray-800 dark:text-gray-200">{"Cashed in: "}</p>
-        <span className={clsx(getProfitLossClass(realizedProfitOrLoss), "text-end")}>
-          {PortfolioCurrencyToSymbol[selectedPortfolio]}
-          {realizedProfitOrLoss.toFixed(2)} ({realizedPercentage.toFixed(2)}%)
-        </span>
-        <p className="text-sm  text-gray-800 dark:text-gray-200">Open:</p>
-        <ProfitMetrics returns={omit(returnOnPortfolio, [TimePeriod.All]) as ReturnMetricsOnBenchmark} />
-      </div>
-    </div>
+    <Card>
+      <CardHeader title="Total portfolio value" />
+      <CardContent className="flex flex-1 flex-col gap-6">
+        <div className="flex flex-col gap-1.5">
+          <StatValue size="lg">{formatMoney(totalPortfolioValue, currencySymbol)}</StatValue>
+          <p className="text-sm tabular-nums">
+            <span className={getProfitLossClass(totalProfit)}>
+              {formatMoney(totalProfit, currencySymbol, { signed: true })} (
+              {formatPercent(returnOnPortfolio[TimePeriod.All].return, { signed: true })})
+            </span>
+            <span className="text-muted-foreground ml-2">{totalProfit >= 0 ? "total profit" : "total loss"}</span>
+          </p>
+        </div>
+        <dl className="border-y">
+          <MetricRow
+            label="Cashed in"
+            valueClassName={getProfitLossClass(realizedProfitOrLoss)}
+            value={
+              <>
+                {formatMoney(realizedProfitOrLoss, currencySymbol, { signed: true })}
+                <span className="ml-2 opacity-80">({formatPercent(realizedPercentage, { signed: true })})</span>
+              </>
+            }
+          />
+        </dl>
+        <div className="flex flex-col">
+          <StatLabel>Open positions</StatLabel>
+          <ProfitMetrics returns={omit(returnOnPortfolio, [TimePeriod.All]) as ReturnMetricsOnBenchmark} />
+        </div>
+      </CardContent>
+    </Card>
   );
 };

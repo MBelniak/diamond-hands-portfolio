@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { usePageEntrance } from "@/client/hooks/usePageEntrance";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   RiskMetricCard,
   sharpeRating,
@@ -59,23 +60,25 @@ export default function RiskPage() {
   return (
     <div className="flex flex-col gap-6 w-full" ref={containerRef}>
       {/* Header + period selector */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Risk Analysis</h1>
-        <div className="flex gap-1 bg-white/5 backdrop-blur-lg rounded-sm p-1">
-          {periods.map(({ label, value }) => (
-            <button
-              key={value}
-              onClick={() => setPeriod(value)}
-              className={cn(
-                "cursor-pointer px-4 py-1.5 text-sm rounded-sm transition-colors",
-                period === value ? "bg-white/20 font-semibold" : "opacity-60 hover:opacity-90",
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <PageHeader
+        title="Risk analysis"
+        description="Risk-adjusted performance of your portfolio"
+        actions={
+          <div className="flex gap-1.5" role="group" aria-label="Period">
+            {periods.map(({ label, value }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setPeriod(value)}
+                aria-pressed={period === value}
+                className={cn("chip px-4", period === value && "chip-selected")}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        }
+      />
 
       {/* Core metrics grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

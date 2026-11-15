@@ -1,29 +1,37 @@
 import { PortfolioCurrencyToSymbol } from "@/lib/types";
-import { getProfitLossClass } from "@/lib/utils";
+import { formatMoney, formatPercent, getProfitLossClass } from "@/lib/utils";
 import React from "react";
 import { useStore } from "@/lib/store";
 import { TimePeriod, timePeriodEnumToLabel } from "@/app/(analysis)/performance/_types/TimePeriod";
 import { ReturnMetricsOnBenchmark } from "@/app/(analysis)/performance/_logic/getReturnOnTimeline";
+import { MetricRow } from "./KeyFigure";
 
 export function ProfitMetrics({ returns }: { returns: ReturnMetricsOnBenchmark }) {
   const { selectedPortfolio } = useStore();
+  const currencySymbol = PortfolioCurrencyToSymbol[selectedPortfolio];
 
   return (
-    <div className="flex flex-col text-xs dark:text-gray-200 mt-1 space-y-0.5 w-full">
+    <dl className="divide-border/60 mt-1 w-full divide-y">
       {Object.keys(returns).map((period) => {
         const label = timePeriodEnumToLabel[period as TimePeriod];
         const { totalProfit } = returns[period as TimePeriod];
         const percentage = returns[period as TimePeriod].return;
         return (
-          <div key={label} className={"flex gap-3 justify-between w-full"}>
-            <span>{label}:</span>
-            <span className={getProfitLossClass(totalProfit)}>
-              {PortfolioCurrencyToSymbol[selectedPortfolio]}
-              {totalProfit.toFixed(2)} ({percentage.toFixed(2)}%)
-            </span>
-          </div>
+          <MetricRow
+            key={label}
+            label={label}
+            valueClassName={getProfitLossClass(totalProfit)}
+            value={
+              <>
+                {formatMoney(totalProfit, currencySymbol, { signed: true })}
+                <span className="ml-2 inline-block min-w-16 text-right opacity-80">
+                  {formatPercent(percentage, { signed: true })}
+                </span>
+              </>
+            }
+          />
         );
       })}
-    </div>
+    </dl>
   );
 }

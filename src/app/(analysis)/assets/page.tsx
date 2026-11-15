@@ -11,6 +11,8 @@ import { getColumns } from "./_components/AssetsTable.columns";
 import { AssetsDonut } from "./_components/AssetsDonut";
 import { Asset, AssetTableData } from "./_types";
 import { useStore } from "@/lib/store";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card, CardHeader } from "@/components/ui/card";
 
 export default function AssetsPage() {
   const { data: portfolioAnalysis, error, isLoading } = usePortfolioAnalysis();
@@ -86,16 +88,16 @@ export default function AssetsPage() {
   return (
     <div className="w-full max-w-6xl space-y-4" ref={containerRef}>
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold">Assets</h1>
+        <PageHeader title="Assets" description={`${assetsBreakdown.length} assets in portfolio`} />
         <AssetsTable columns={getColumns(selectedPortfolio)} data={tableDataScaled} totals={totalsRow} />
       </div>
-      <div>
-        <h2 className={"text-xl mt-10"}>Currently owned assets allocation</h2>
-        <div className={"w-full grid grid-cols-[repeat(auto-fit,minmax(500px,1fr))] gap-8"}>
+      <Card className="mt-6">
+        <CardHeader title="Allocation" description="Currently owned assets by market value" />
+        <div className={"grid w-full grid-cols-[repeat(auto-fit,minmax(min(100%,500px),1fr))] lg:divide-x"}>
           <AssetsDonut data={allocationTypeBreakdown} />
           <AssetsDonut data={instrumentTypeBreakdown} />
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
 import { PortfolioAnalysis } from "@/lib/types";
 import { getAverageDailyReturnForRange, getAverageBenchmarkDailyReturnForRange, getRangeForPeriod } from "@/lib/utils";
 import { useMemo } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { chartTooltipStyle } from "@/lib/chartFormatters";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export function AverageDailyReturnsBarChart({
@@ -36,22 +38,33 @@ export function AverageDailyReturnsBarChart({
   }, [analysis.portfolioTimeline, periodRange]);
 
   return (
-    <div className="flex flex-col gap-4 rounded-sm border border-white/10 bg-white/5 p-5 backdrop-blur-lg">
-      <div>
-        <h2 className="text-lg font-semibold">Average daily return</h2>
-        <p className="text-sm opacity-70">Average daily return across the selected period</p>
-      </div>
-      <div className="h-[300px] w-full">
+    <Card>
+      <CardHeader title="Average daily return" description="Average daily return across the selected period" />
+      <CardContent className="h-[340px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={averageReturns}>
-            <CartesianGrid stroke="rgba(255,255,255,0.1)" vertical={false} />
-            <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--foreground)" }} />
-            <YAxis tick={{ fontSize: 12, fill: "var(--foreground)" }} tickFormatter={(value) => `${value}%`} />
-            <Tooltip formatter={(value) => [`${Number(value).toFixed(2)}%`, "Average daily return"]} />
-            <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="#8b5cf6" />
+            <CartesianGrid stroke="var(--border)" strokeDasharray="2 4" vertical={false} />
+            <XAxis
+              dataKey="name"
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+              tickLine={false}
+              axisLine={{ stroke: "var(--border)" }}
+            />
+            <YAxis
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+              tickFormatter={(value) => `${value}%`}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip
+              cursor={{ fill: "var(--surface-strong)" }}
+              contentStyle={chartTooltipStyle}
+              formatter={(value) => [`${Number(value).toFixed(2)}%`, "Average daily return"]}
+            />
+            <Bar dataKey="value" fill="#8b5cf6" maxBarSize={48} />
           </BarChart>
         </ResponsiveContainer>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

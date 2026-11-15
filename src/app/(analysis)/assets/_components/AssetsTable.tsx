@@ -45,7 +45,7 @@ export function AssetsTable({ columns, data, totals }: AssetsDataTableProps) {
   });
 
   return (
-    <div className="overflow-hidden rounded-xs border">
+    <div className="bg-surface overflow-hidden border backdrop-blur-lg">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -90,7 +90,7 @@ export function AssetsTable({ columns, data, totals }: AssetsDataTableProps) {
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   className={cn(
-                    isTotal ? "bg-muted font-bold" : undefined,
+                    isTotal ? "bg-muted font-medium" : undefined,
                     isLoading === row.id ? "opacity-50 cursor-progress" : undefined,
                     isLoading === false ? "cursor-pointer" : undefined,
                   )}

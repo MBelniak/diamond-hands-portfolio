@@ -80,6 +80,19 @@ export function getProfitLossClass(profitOrLoss: number) {
   return "text-gray-900 dark:text-gray-200";
 }
 
+const moneyFormatter = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/** Formats an amount as e.g. "$1,234.56" / "-$31.65"; pass `signed` to prefix positive values with "+". */
+export function formatMoney(value: number, currencySymbol: string, { signed = false }: { signed?: boolean } = {}) {
+  const sign = value < 0 ? "-" : signed && value > 0 ? "+" : "";
+  return `${sign}${currencySymbol}${moneyFormatter.format(Math.abs(value))}`;
+}
+
+/** Formats a percentage as e.g. "12.34%"; pass `signed` to prefix positive values with "+". */
+export function formatPercent(value: number, { signed = false }: { signed?: boolean } = {}) {
+  return `${signed && value > 0 ? "+" : ""}${value.toFixed(2)}%`;
+}
+
 export const isBrowser = () => typeof window !== "undefined";
 
 export function formatDate(date: Date): string {

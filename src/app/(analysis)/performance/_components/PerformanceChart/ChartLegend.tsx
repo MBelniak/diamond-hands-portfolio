@@ -1,4 +1,5 @@
 import React, { Dispatch, SetStateAction } from "react";
+import { cn } from "@/lib/utils";
 
 type ChartLegendLine<LineKey extends string> = {
   key: LineKey;
@@ -25,30 +26,28 @@ export function ChartLegend<LineKey extends string>({
   };
 
   return (
-    <div className="flex flex-wrap gap-4 justify-center mt-4">
-      {chartLines.map((line) => (
-        <button
-          key={line.key}
-          onClick={() => toggleLine(line.key)}
-          className={`flex items-center gap-2 px-3 py-1 rounded-md font-medium transition cursor-pointer
-              ${enabledLines[line.key] ? "button-selected" : "button-unselected"}
-               `}
-          style={{ borderColor: line.color }}
-          type="button"
-        >
-          <span
-            style={{
-              display: "inline-block",
-              width: 16,
-              height: 4,
-              background: line.color,
-              borderRadius: 2,
-              opacity: enabledLines[line.key] ? 1 : 0.4,
-            }}
-          />
-          {line.label}
-        </button>
-      ))}
+    <div className="flex flex-wrap justify-center gap-2">
+      {chartLines.map((line) => {
+        const enabled = enabledLines[line.key];
+        return (
+          <button
+            key={line.key}
+            onClick={() => toggleLine(line.key)}
+            className={cn("chip", enabled && "chip-selected")}
+            // The selected chip is outlined with the series colour
+            style={{ "--chip-accent": line.color } as React.CSSProperties}
+            aria-pressed={enabled}
+            type="button"
+          >
+            <span
+              aria-hidden
+              className="inline-block h-0.5 w-3.5 transition-opacity"
+              style={{ background: line.color, opacity: enabled ? 1 : 0.35 }}
+            />
+            {line.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

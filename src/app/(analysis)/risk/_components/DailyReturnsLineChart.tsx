@@ -8,6 +8,8 @@ import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
 import { PortfolioAnalysis } from "@/lib/types";
 import { getBenchmarkDailyReturnsForRange, getFilteredTimeline, getRangeForPeriod } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { chartTooltipStyle, DATE_AXIS_MIN_TICK_GAP, getDateTickFormatter } from "@/lib/chartFormatters";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 type DailyReturnsLineKey = "portfolio" | BenchmarkIndex;
@@ -101,55 +103,73 @@ export function DailyReturnsLineChart({
     });
   }, [analysis.portfolioTimeline, filteredTimeline, range]);
 
+  const firstDate = lineChartData[0]?.date;
+  const lastDate = lineChartData.at(-1)?.date;
+  const dateTickFormatter = useMemo(() => getDateTickFormatter(firstDate, lastDate), [firstDate, lastDate]);
+
   return (
-    <div className="flex flex-col gap-4 rounded-sm border border-white/10 bg-white/5 p-5 backdrop-blur-lg">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="text-lg font-semibold">Daily return comparison</h2>
-          <p className="text-sm opacity-70">Portfolio performance versus all tracked benchmarks</p>
+    <Card>
+      <CardHeader title="Daily return comparison" description="Portfolio performance versus all tracked benchmarks" />
+      <CardContent className="flex flex-col gap-6">
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={lineChartData}>
+              <CartesianGrid stroke="var(--border)" strokeDasharray="2 4" vertical={false} />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+                tickFormatter={dateTickFormatter}
+                minTickGap={DATE_AXIS_MIN_TICK_GAP}
+                interval="preserveStartEnd"
+                tickLine={false}
+                axisLine={{ stroke: "var(--border)" }}
+                tickMargin={10}
+              />
+              <YAxis
+                tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+                tickFormatter={(value) => `${value}%`}
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip
+                contentStyle={chartTooltipStyle}
+                separator=""
+                formatter={(value) => [`${Number(value).toFixed(2)}%`, ""]}
+              />
+              {chartLines.map(
+                (line) =>
+                  enabledLines[line.key] && (
+                    <Line
+                      key={line.key}
+                      type="monotone"
+                      dataKey={line.key}
+                      name={line.label}
+                      stroke={line.color}
+                      strokeWidth={1.75}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                      connectNulls
+                      isAnimationActive={false}
+                    />
+                  ),
+              )}
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-      </div>
 
-      <div className="h-[300px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={lineChartData}>
-            <CartesianGrid stroke="rgba(255,255,255,0.1)" vertical={false} />
-            <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--foreground)" }} minTickGap={24} />
-            <YAxis tick={{ fontSize: 12, fill: "var(--foreground)" }} tickFormatter={(value) => `${value}%`} />
-            <Tooltip formatter={(value) => [`${Number(value).toFixed(2)}%`, ""]} />
-            {chartLines.map(
-              (line) =>
-                enabledLines[line.key] && (
-                  <Line
-                    key={line.key}
-                    type="monotone"
-                    dataKey={line.key}
-                    name={line.label}
-                    stroke={line.color}
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                    connectNulls
-                    isAnimationActive={false}
-                  />
-                ),
-            )}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      <ChartLegend chartLines={chartLines} enabledLines={enabledLines} handleLinesChange={setEnabledLines} />
-      <div className="pt-2">
-        <DualRangeSlider
-          min={0}
-          max={Math.max(0, timelineLength - 1)}
-          value={[range[0], range[1]]}
-          step={1}
-          minStepsBetweenThumbs={MIN_WINDOW_SIZE - 1}
-          onValueChange={handleRangeChange}
-          style={{ width: "100%" }}
-        />
-      </div>
-    </div>
+        <ChartLegend chartLines={chartLines} enabledLines={enabledLines} handleLinesChange={setEnabledLines} />
+        <div className="border-t pt-6">
+          <DualRangeSlider
+            min={0}
+            max={Math.max(0, timelineLength - 1)}
+            value={[range[0], range[1]]}
+            step={1}
+            minStepsBetweenThumbs={MIN_WINDOW_SIZE - 1}
+            onValueChange={handleRangeChange}
+            style={{ width: "100%" }}
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 }

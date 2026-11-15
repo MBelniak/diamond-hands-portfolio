@@ -1,17 +1,15 @@
 "use client";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { CircleQuestionMark } from "lucide-react";
-import { clsx } from "clsx";
-import { getProfitLossClass } from "@/lib/utils";
+import { formatMoney, formatPercent, getProfitLossClass } from "@/lib/utils";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { InfoTooltip, StatLabel, StatValue } from "./KeyFigure";
 import React from "react";
 import { useStore } from "@/lib/store";
 import { PortfolioAnalysis, PortfolioCurrencyToSymbol } from "@/lib/types";
-import { ProfitMetrics } from "@/app/(analysis)/performance/_components/PerformanceKeyFigures/ProfitMetrics";
+import { BenchmarkComparison } from "./BenchmarkComparison";
 import { BenchmarkIndexToName } from "@/lib/benchmarks";
 import Link from "next/link";
-import { getReturnOnTimeline, ReturnMetricsOnBenchmark } from "@/app/(analysis)/performance/_logic/getReturnOnTimeline";
+import { getReturnOnTimeline } from "@/app/(analysis)/performance/_logic/getReturnOnTimeline";
 import { TimePeriod } from "@/app/(analysis)/performance/_types/TimePeriod";
-import { omit } from "lodash-es";
 import { getCashFlowForBenchmarkComparison } from "@/lib/returnMetrics";
 
 export const PerformanceBenchmarkIndexSummary: React.FC<{
@@ -33,52 +31,76 @@ export const PerformanceBenchmarkIndexSummary: React.FC<{
 
   const benchmarkCashFlow = getCashFlowForBenchmarkComparison(portfolioAnalysis.cashFlow);
 
+  const periods = [
+    TimePeriod.All,
+    TimePeriod.OneWeek,
+    TimePeriod.OneMonth,
+    TimePeriod.ThreeMonths,
+    TimePeriod.SixMonths,
+    TimePeriod.OneYear,
+  ];
+
   const returnOnBenchmark = getReturnOnTimeline(
     benchmarkTimeline,
     benchmarkCashFlow,
     totalCapitalInvested,
-    [
-      TimePeriod.All,
-      TimePeriod.OneWeek,
-      TimePeriod.OneMonth,
-      TimePeriod.ThreeMonths,
-      TimePeriod.SixMonths,
-      TimePeriod.OneYear,
-    ],
+    periods,
     selectedReturnMetric,
   );
 
+  // Portfolio return over the same periods, shown next to the benchmark as "(vs. x%)"
+  const returnOnPortfolio = getReturnOnTimeline(
+    portfolioTimeline.map((el) => ({ ...el, value: el.portfolioValue })),
+    portfolioAnalysis.cashFlow,
+    totalCapitalInvested,
+    periods,
+    selectedReturnMetric,
+  );
+
+  const currencySymbol = PortfolioCurrencyToSymbol[selectedPortfolio];
+  const benchmarkName = BenchmarkIndexToName[selectedBenchmark];
+
   return (
-    <div className="p-8 flex flex-col items-start">
-      <strong className=" text-lg ">
-        If invested in{" "}
-        <Link href={`/assets/${selectedBenchmark}`} className={"underline"}>
-          {BenchmarkIndexToName[selectedBenchmark]}
-        </Link>{" "}
-        <Tooltip>
-          <TooltipTrigger>
-            <CircleQuestionMark size={20} />
-          </TooltipTrigger>
-          <TooltipContent side="bottom" align="center">
-            <p>
-              If invested all deposited cash into {BenchmarkIndexToName[selectedBenchmark]} index without withdrawals
-            </p>
-          </TooltipContent>
-        </Tooltip>
-      </strong>
-      <p className={"text-2xl font-bold"}>
-        {PortfolioCurrencyToSymbol[selectedPortfolio]}
-        {last.benchmarkData[selectedBenchmark].stockValue.toFixed(2)}
-      </p>
-      <p className={"text-sm text-gray-800 dark:text-gray-200 mt-2 w-full flex justify-between"}>
-        {benchmarkProfitOrLoss >= 0 ? "Potential profit: " : "Potential loss: "}
-        <span className={clsx("text-sm", getProfitLossClass(benchmarkProfitOrLoss))}>
-          {PortfolioCurrencyToSymbol[selectedPortfolio]}
-          {returnOnBenchmark[TimePeriod.All].totalProfit.toFixed(2)} (
-          {returnOnBenchmark[TimePeriod.All].return.toFixed(2)}%)
-        </span>
-      </p>
-      <ProfitMetrics returns={omit(returnOnBenchmark, [TimePeriod.All]) as ReturnMetricsOnBenchmark} />
-    </div>
+    <Card>
+      <CardHeader
+        title={
+          <>
+            If invested in
+            <Link
+              href={`/assets/${selectedBenchmark}`}
+              className="decoration-muted-foreground/60 hover:decoration-foreground underline underline-offset-4 transition-colors"
+            >
+              {benchmarkName}
+            </Link>
+            <InfoTooltip>If invested all deposited cash into {benchmarkName} index without withdrawals</InfoTooltip>
+          </>
+        }
+      />
+      <CardContent className="flex flex-1 flex-col gap-6">
+        <div className="flex flex-col gap-1.5">
+          <StatValue size="md">
+            {formatMoney(last.benchmarkData[selectedBenchmark].stockValue, currencySymbol)}
+          </StatValue>
+          <p className="text-sm tabular-nums">
+            <span className={getProfitLossClass(benchmarkProfitOrLoss)}>
+              {formatMoney(returnOnBenchmark[TimePeriod.All].totalProfit, currencySymbol, { signed: true })} (
+              {formatPercent(returnOnBenchmark[TimePeriod.All].return, { signed: true })})
+            </span>
+            <span className="text-muted-foreground ml-2">
+              {benchmarkProfitOrLoss >= 0 ? "potential profit" : "potential loss"}
+            </span>
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 border-t pt-5">
+          <StatLabel>Portfolio vs {benchmarkName}</StatLabel>
+          <BenchmarkComparison
+            benchmarkName={benchmarkName}
+            periods={[...periods.filter((p) => p !== TimePeriod.All), TimePeriod.All]}
+            benchmarkReturns={returnOnBenchmark}
+            portfolioReturns={returnOnPortfolio}
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 };

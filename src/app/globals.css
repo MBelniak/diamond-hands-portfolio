@@ -37,10 +37,17 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* Sharp corners everywhere: every rounded-* utility except rounded-full resolves to 0 */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
   --muted: oklch(0.8 0 0);
   --muted-foreground: oklch(0.5 0 0);
   --active: var(--color-slate-100);
@@ -48,7 +55,9 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0px;
+  --surface: rgb(255 255 255 / 0.72);
+  --surface-strong: rgb(255 255 255 / 0.9);
   --background: oklch(1 0 0);
   --foreground: oklch(0.285 0 0);
   --card: oklch(1 0 0);
@@ -66,8 +75,8 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --border: oklch(0.885 0 0);
+  --input: oklch(0.885 0 0);
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -86,6 +95,8 @@
 }
 
 .dark {
+  --surface: rgb(255 255 255 / 0.03);
+  --surface-strong: rgb(255 255 255 / 0.06);
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.825 0 0);
   --card: oklch(0.205 0 0);
@@ -103,7 +114,7 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
@@ -163,16 +174,36 @@
   background-image: linear-gradient(var(--tw-gradient-stops));
 }
 
-@utility button-selected {
-  background: var(--active);
-  color: var(--active-foreground);
+/* Chips: state is communicated by the outline colour, never by a filled background */
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 1.875rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+  &:hover {
+    border-color: color-mix(in oklab, var(--foreground) 45%, transparent);
+    color: var(--foreground);
+  }
 }
 
-@utility button-unselected {
-  background: var(--muted);
-  color: var(--muted-foreground);
+@utility chip-selected {
+  border-color: var(--chip-accent, var(--foreground));
+  color: var(--foreground);
   &:hover {
-    background: var(--active);
+    border-color: var(--chip-accent, var(--foreground));
   }
 }
 
@@ -184,4 +215,12 @@
 
 .cl-userButtonTrigger:focus-visible {
   outline: revert;
+}
+
+/* Numeric figures: same treatment as the hero values (sans, light weight, tabular digits) */
+@utility figure {
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }

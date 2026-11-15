@@ -3,6 +3,7 @@ import React, { type PropsWithChildren } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CircleQuestionMark } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 type RatingLevel = "excellent" | "good" | "moderate" | "poor" | "severe" | "neutral";
 
@@ -30,6 +31,7 @@ interface RiskMetricCardProps {
   rating: RatingLevel;
   tooltip: string;
   subtitle?: string;
+  className?: string;
 }
 
 export const RiskMetricCard: React.FC<PropsWithChildren<RiskMetricCardProps>> = ({
@@ -38,28 +40,39 @@ export const RiskMetricCard: React.FC<PropsWithChildren<RiskMetricCardProps>> = 
   rating,
   tooltip,
   subtitle,
+  className,
   children,
 }) => {
   return (
-    <div className="p-6 flex flex-col gap-1 bg-white/5 backdrop-blur-lg rounded-sm shadow-md">
-      <div className="flex items-center gap-2">
-        <strong className="text-base">{title}</strong>
-        <Tooltip>
-          <TooltipTrigger>
-            <CircleQuestionMark size={16} className="opacity-60" />
-          </TooltipTrigger>
-          <TooltipContent side="top" align="start" className="max-w-xs">
-            <p>{tooltip}</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
-      <p className={cn("text-3xl font-bold mt-1", ratingClasses[rating])}>{value}</p>
-      <p className="text-xs font-medium mt-0.5 opacity-70">
-        {ratingLabels[rating]}
-        {subtitle ? ` · ${subtitle}` : ""}
-      </p>
-      {children}
-    </div>
+    <Card className={className}>
+      <CardHeader
+        className="px-5 py-3"
+        title={
+          <>
+            {title}
+            <Tooltip>
+              <TooltipTrigger
+                className="text-muted-foreground hover:text-foreground cursor-help transition-colors"
+                aria-label="More information"
+              >
+                <CircleQuestionMark size={14} />
+              </TooltipTrigger>
+              <TooltipContent side="top" align="start" className="max-w-xs">
+                <p>{tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          </>
+        }
+      />
+      <CardContent className="flex flex-col gap-1 px-5 py-4">
+        <p className={cn("text-3xl font-light tracking-tight tabular-nums", ratingClasses[rating])}>{value}</p>
+        <p className="text-muted-foreground text-xs">
+          <span className={cn("font-medium", ratingClasses[rating])}>{ratingLabels[rating]}</span>
+          {subtitle ? ` · ${subtitle}` : ""}
+        </p>
+        {children}
+      </CardContent>
+    </Card>
   );
 };
 

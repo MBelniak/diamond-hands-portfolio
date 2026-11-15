@@ -1,4 +1,5 @@
 import React from "react";
+import { cn } from "@/lib/utils";
 import { TimePeriod } from "@/app/(analysis)/performance/_types/TimePeriod";
 
 export const TimePeriodZoom: React.FC<{
@@ -6,13 +7,13 @@ export const TimePeriodZoom: React.FC<{
   handlePeriodChange: (p: TimePeriod) => void;
 }> = ({ selectedPeriod, handlePeriodChange }) => {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5" role="group" aria-label="Time period">
       {Object.values(TimePeriod).map((period) => (
         <button
           key={period}
           onClick={() => handlePeriodChange(period)}
-          className={`px-2 py-[0.1rem] rounded-lg font-medium transition cursor-pointer
-                ${selectedPeriod === period ? "button-selected" : "button-unselected"}`}
+          className={cn("chip px-2.5", selectedPeriod === period && "chip-selected")}
+          aria-pressed={selectedPeriod === period}
           type="button"
         >
           {period}
