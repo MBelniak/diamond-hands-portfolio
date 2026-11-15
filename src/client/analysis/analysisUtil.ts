@@ -1,6 +1,15 @@
 import { BenchmarkIndex } from "@/lib/benchmarks";
-import { AssetsHistoricalData, BenchmarkData, CashEvent, CashFlow, PortfolioEvent, PortfolioValue } from "@/lib/types";
+import {
+  AssetsHistoricalData,
+  BenchmarkData,
+  CashEvent,
+  CashFlow,
+  PortfolioEvent,
+  PortfolioValue,
+  StockMarketData,
+} from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { getSplitFactor } from "@/lib/splits";
 import { STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT } from "@/lib/xlsx-parser/consts";
 import merge from "lodash-es/merge";
 
@@ -53,13 +62,19 @@ export function getDailyReturn(
   }
 }
 
+/**
+ * Builds per-asset open/close history. Prices on the events are already split-adjusted (see `adjustEventPrices`),
+ * so volumes are split-adjusted here too, keeping volume × price equal to the traded value.
+ */
 export function buildAssetsEventHistory(
   stockClosedPositionsOpenEvents: PortfolioEvent[],
   stockCloseEvents: PortfolioEvent[],
+  stockMarketData?: StockMarketData,
 ): AssetsHistoricalData {
   return stockClosedPositionsOpenEvents.concat(stockCloseEvents).reduce((acc, stockEvent) => {
     const stockSymbol = "stockSymbol" in stockEvent ? stockEvent.stockSymbol : null;
     if (!stockSymbol) return acc;
+    const splitFactor = getSplitFactor(stockMarketData?.[stockSymbol]?.splits, stockEvent.date);
 
     if (!acc[stockSymbol]) {
       acc[stockSymbol] = {
@@ -76,7 +91,7 @@ export function buildAssetsEventHistory(
             ...(acc[stockSymbol]?.openEvents || []),
             {
               date: formatDate(new Date(stockEvent.date)),
-              volume: stockEvent.stocksVolumeChange,
+              volume: stockEvent.stocksVolumeChange * splitFactor,
               stockPriceOnBuy: stockEvent.openPrice,
             },
           ],
@@ -91,7 +106,7 @@ export function buildAssetsEventHistory(
             ...(acc[stockSymbol]?.closeEvents || []),
             {
               date: formatDate(new Date(stockEvent.date)),
-              volume: stockEvent.stocksVolumeChange,
+              volume: stockEvent.stocksVolumeChange * splitFactor,
               stockPriceOnSell: stockEvent.closePrice,
               profitOrLoss: stockEvent.profitOrLoss,
             },
@@ -104,8 +119,10 @@ export function buildAssetsEventHistory(
   }, {} as AssetsHistoricalData);
 }
 
+/** Derives the currently open lots (FIFO) from cash buy/sell operations, with split-adjusted volumes. */
 export function deriveOpenPositionsFromCashEvents(
   cashEvents: CashEvent[],
+  stockMarketData?: StockMarketData,
 ): Record<string, AssetsHistoricalData[string]["openPositions"]> {
   const buysBySymbol: Record<string, { volume: number; price: number; date: string }[]> = {};
   const sellVolumeBySymbol: Record<string, number> = {};
@@ -113,18 +130,20 @@ export function deriveOpenPositionsFromCashEvents(
   for (const event of cashEvents) {
     const symbol = event.stockSymbol;
     if (!symbol || !event.stocksVolumeChange) continue;
+    // Adjust both buys and sells, so FIFO matching compares like with like across a split
+    const volume = event.stocksVolumeChange * getSplitFactor(stockMarketData?.[symbol]?.splits, event.date);
 
-    if (event.stocksVolumeChange > 0) {
+    if (volume > 0) {
       if (!buysBySymbol[symbol]) {
         buysBySymbol[symbol] = [];
       }
       buysBySymbol[symbol].push({
-        volume: event.stocksVolumeChange,
+        volume,
         price: event.openPrice ?? 0,
         date: formatDate(new Date(event.date)),
       });
     } else {
-      sellVolumeBySymbol[symbol] = (sellVolumeBySymbol[symbol] ?? 0) + Math.abs(event.stocksVolumeChange);
+      sellVolumeBySymbol[symbol] = (sellVolumeBySymbol[symbol] ?? 0) + Math.abs(volume);
     }
   }
 

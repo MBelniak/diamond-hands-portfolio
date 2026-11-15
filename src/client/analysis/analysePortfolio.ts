@@ -7,6 +7,7 @@ import {
   PortfolioEvent,
   PortfolioValue,
   Stock,
+  StockMarketData,
   StockMarketDataMap,
 } from "@/lib/types";
 import { isSameDay } from "date-fns";
@@ -279,9 +280,14 @@ function getAssetsAnalysis(
   cashEvents: CashEvent[],
   stockClosedPositionsOpenEvents: PortfolioEvent[],
   stockCloseEvents: PortfolioEvent[],
+  stockMarketData: StockMarketData,
 ): AssetsHistoricalData {
-  const assetsHistoricalData = buildAssetsEventHistory(stockClosedPositionsOpenEvents, stockCloseEvents);
-  const openPositionsBySymbol = deriveOpenPositionsFromCashEvents(cashEvents);
+  const assetsHistoricalData = buildAssetsEventHistory(
+    stockClosedPositionsOpenEvents,
+    stockCloseEvents,
+    stockMarketData,
+  );
+  const openPositionsBySymbol = deriveOpenPositionsFromCashEvents(cashEvents, stockMarketData);
 
   for (const [symbol, openPositions] of Object.entries(openPositionsBySymbol)) {
     if (!assetsHistoricalData[symbol]) {
@@ -381,7 +387,12 @@ export const analysePortfolio = (portfolioData: PortfolioData): PortfolioAnalysi
   const allEvents = [...cashEvents, ...closedStocksCloseEvents];
   const portfolioTimeline = getPortfolioValueData(allEvents, new Map(Object.entries(portfolioData.stockMarketData)));
 
-  const assetsAnalysis = getAssetsAnalysis(cashEvents, closedStocksOpenEvents, closedStocksCloseEvents);
+  const assetsAnalysis = getAssetsAnalysis(
+    cashEvents,
+    closedStocksOpenEvents,
+    closedStocksCloseEvents,
+    portfolioData.stockMarketData,
+  );
   const cashFlow = getCashFlow(cashEvents);
 
   const riskMetrics = calculateRiskMetrics(portfolioTimeline);

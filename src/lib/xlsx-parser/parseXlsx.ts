@@ -1,7 +1,6 @@
 // @ts-expect-error no typings for this file
 import XLSX from "xlsx/xlsx.js";
-import { isSameDay } from "date-fns";
-import { isBefore } from "date-fns/isBefore";
+import { isSplitApplicable } from "@/lib/splits";
 import {
   CashEvent,
   ExchangeRates,
@@ -167,9 +166,6 @@ function parseSplits(splits?: Record<string, { date: number; numerator: number; 
     split_factor: split.numerator / split.denominator,
   }));
 }
-
-const isSplitApplicable = (split: Split, date: Date): boolean =>
-  isBefore(date, new Date(split.effective_date)) || isSameDay(date, new Date(split.effective_date));
 
 const applySplits = <PTickerQuote extends Partial<TickerQuote>>(
   tickerQuote: PTickerQuote,
@@ -411,6 +407,11 @@ const convertMarketDataToCurrency = (
   }
 };
 
+/**
+ * Converts the raw (as-exported by XTB, instrument-currency, as-traded) event prices into the portfolio currency
+ * and adjusts them for splits, so they're comparable with split-adjusted quotes. Volumes are left as traded:
+ * the portfolio timeline multiplies them by unadjusted prices; the asset views adjust them with `getSplitFactor`.
+ */
 const adjustEventPrices = (
   events: PortfolioData["portfolioEvents"],
   exchangeRates: ExchangeRates,
