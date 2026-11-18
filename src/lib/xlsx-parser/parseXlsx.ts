@@ -50,12 +50,7 @@ const isRowStockBuy = (row: Record<string, string | number>) => String(row[XlsxC
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getCashEvents(workbook: any): CashEvent[] {
-  const cashDataAsObjectArray = XlsxHelper.parseSheetToJson(workbook, CASH_OPERATION_HISTORY);
-  if (cashDataAsObjectArray.length === 0) {
-    return [];
-  }
-
-  return cashDataAsObjectArray
+  return XlsxHelper.parseSheetToJson(workbook, CASH_OPERATION_HISTORY)
     .filter((row) => row[XlsxColumn.TIME])
     .map((row) => {
       const { volume, price } = parseStockVolumeAndPriceFromComment(String(row[XlsxColumn.COMMENT] || ""));
@@ -101,16 +96,14 @@ function getClosedPositionRows(workbook: any): { id: string; row: Record<string,
 function getClosedStocksOpenEvents(workbook: any): PortfolioEvent[] {
   return getClosedPositionRows(workbook)
     .filter(({ row }) => row[XlsxColumn.OPEN_TIME])
-    .map(({ id, row }) => {
-      return {
-        id,
-        date: XlsxHelper.parseXLSXDate(row[XlsxColumn.OPEN_TIME]).toISOString(),
-        stocksVolumeChange: Number(row[XlsxColumn.VOLUME] || 0),
-        type: STOCK_OPEN_EVENT,
-        stockSymbol: String(row[XlsxColumn.TICKER]) || null,
-        openPrice: Number(row[XlsxColumn.OPEN_PRICE] || 0),
-      };
-    });
+    .map(({ id, row }) => ({
+      id,
+      date: XlsxHelper.parseXLSXDate(row[XlsxColumn.OPEN_TIME]).toISOString(),
+      stocksVolumeChange: Number(row[XlsxColumn.VOLUME] || 0),
+      type: STOCK_OPEN_EVENT,
+      stockSymbol: String(row[XlsxColumn.TICKER]) || null,
+      openPrice: Number(row[XlsxColumn.OPEN_PRICE] || 0),
+    }));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -126,59 +119,29 @@ function getClosedStocksCloseEvents(workbook: any): PortfolioEvent[] {
   }));
 }
 
-/**
- * Parses the sheet and tracks the value of cash and stocks over time.
- * Returns an array of objects { date, cash, stocks } sorted ascending by date.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getCashAndStocksEvents(workbook: any): PortfolioEvents {
-  // Collect all cash operations
-  const cashEvents = getCashEvents(workbook);
-  // Collect all stock open positions
-  // const openPositions = getStockOpenPositions(workbook);
-  // Collect all open events from closed positions (stocks)
-  const closedStocksOpenEvents = getClosedStocksOpenEvents(workbook);
-  // Collect all stock close positions
-  const closedStocksCloseEvents = getClosedStocksCloseEvents(workbook);
-
-  return {
-    cashEvents,
-    closedStocksOpenEvents,
-    closedStocksCloseEvents,
-  };
-}
-
 export function getStockTickersFromEvents(events: PortfolioEvent[]): Set<string> {
-  return events.reduce((acc, next) => {
-    if (
-      [STOCK_OPEN_EVENT, STOCK_OPEN_POSITION].includes(
-        next.type as typeof STOCK_OPEN_EVENT | typeof STOCK_OPEN_POSITION,
-      )
-    ) {
-      acc.add(
-        (next as PortfolioEvent & { type: typeof STOCK_OPEN_EVENT | typeof STOCK_OPEN_POSITION }).stockSymbol as string,
-      );
+  const tickers = new Set<string>();
+  for (const event of events) {
+    // Cash buy operations cover currently open positions
+    const isBuy =
+      event.type === STOCK_OPEN_EVENT ||
+      event.type === STOCK_OPEN_POSITION ||
+      (event.type === CASH_EVENT && (event.stocksVolumeChange ?? 0) > 0);
+    if (isBuy && event.stockSymbol) {
+      tickers.add(event.stockSymbol);
     }
-    // Also collect symbols from cash buy operations (covers currently open positions)
-    if (next.type === CASH_EVENT && next.stockSymbol && next.stocksVolumeChange && next.stocksVolumeChange > 0) {
-      acc.add(next.stockSymbol);
-    }
-
-    return acc;
-  }, new Set<string>());
+  }
+  return tickers;
 }
 
 const parsePortfolioEvents = (xlsxArrayBuffer: ArrayBuffer): PortfolioData["portfolioEvents"] => {
   console.log("Parsing portfolio from xlsx file");
   const workbook = XLSX.read(new Uint8Array(xlsxArrayBuffer), { type: "array" });
-  return getCashAndStocksEvents(workbook);
-};
-
-const getPortfolioEvents = async (
-  user: User,
-  selectedPortfolio: PortfolioCurrency,
-): Promise<PortfolioEvents | null> => {
-  return await UserPortfolioRepository.getPortfolioFromDB(user, selectedPortfolio);
+  return {
+    cashEvents: getCashEvents(workbook),
+    closedStocksOpenEvents: getClosedStocksOpenEvents(workbook),
+    closedStocksCloseEvents: getClosedStocksCloseEvents(workbook),
+  };
 };
 
 /**
@@ -195,34 +158,28 @@ const adjustEventPrices = (
   const { cashEvents, closedStocksOpenEvents, closedStocksCloseEvents } = events;
 
   for (const event of [...cashEvents, ...closedStocksOpenEvents, ...closedStocksCloseEvents]) {
-    if (!event.stockSymbol) continue;
-
-    const stockSymbol = event.stockSymbol;
-    const marketData = stockMarketData[stockSymbol];
-
+    const marketData = event.stockSymbol ? stockMarketData[event.stockSymbol] : undefined;
     if (!marketData) continue;
 
-    const date = formatDate(new Date(event.date));
-    if (event.type === STOCK_OPEN_EVENT || event.type === CASH_EVENT) {
-      if (!event.openPrice) continue;
-
-      event.openPrice =
-        convertToCurrency(event.openPrice, getRatesForDate(exchangeRates, date), marketData.currency, toCurrency) ??
-        event.openPrice;
-
-      event.openPrice = applyReciprocalSplits({ open: event.openPrice }, marketData.splits, new Date(event.date)).open;
-    }
-
-    if (event.type === STOCK_CLOSE_EVENT) {
-      event.closePrice =
-        convertToCurrency(event.closePrice, getRatesForDate(exchangeRates, date), marketData.currency, toCurrency) ??
-        event.closePrice;
-
-      event.closePrice = applyReciprocalSplits(
-        { close: event.closePrice },
+    const adjust = (price: number) =>
+      applyReciprocalSplits(
+        {
+          close:
+            convertToCurrency(
+              price,
+              getRatesForDate(exchangeRates, formatDate(new Date(event.date))),
+              marketData.currency,
+              toCurrency,
+            ) ?? price,
+        },
         marketData.splits,
         new Date(event.date),
       ).close;
+
+    if ((event.type === STOCK_OPEN_EVENT || event.type === CASH_EVENT) && event.openPrice) {
+      event.openPrice = adjust(event.openPrice);
+    } else if (event.type === STOCK_CLOSE_EVENT) {
+      event.closePrice = adjust(event.closePrice);
     }
   }
 };
@@ -234,13 +191,8 @@ export async function uploadPortfolioData(
 ): Promise<void> {
   await iocContainer.get(AbstractRedisClient).initialize();
   const events = parsePortfolioEvents(xlsxArrayBuffer);
-  const existingEvents = await getPortfolioEvents(user, selectedPortfolio);
-  let finalEvents = events;
-
-  if (existingEvents) {
-    finalEvents = mergePortfolioEvents(existingEvents, events);
-  }
-
+  const existingEvents = await UserPortfolioRepository.getPortfolioFromDB(user, selectedPortfolio);
+  const finalEvents = existingEvents ? mergePortfolioEvents(existingEvents, events) : events;
   await UserPortfolioRepository.savePortfolioToDB(finalEvents, user, selectedPortfolio);
 }
 
@@ -260,10 +212,7 @@ export async function buildPortfolioEventsResponse(
 
   if (!allEvents.length) return null;
 
-  const stockTickers = getStockTickersFromEvents(allEvents);
-  Object.values(BenchmarkIndex).forEach((value) => {
-    stockTickers.add(value);
-  });
+  const stockTickers = new Set([...getStockTickersFromEvents(allEvents), ...Object.values(BenchmarkIndex)]);
 
   // Also warms the market data and exchange rates caches before the client asks for each ticker
   const { stockMarketData, exchangeRates } = await getStockMarketData(stockTickers, portfolioCurrency);
@@ -280,9 +229,6 @@ export async function getPortfolioEventsForUser(
   user: User,
   selectedPortfolio: PortfolioCurrency,
 ): Promise<PortfolioEventsResponse | null> {
-  const userEvents = await getPortfolioEvents(user, selectedPortfolio);
-  if (userEvents == null) {
-    return null;
-  }
-  return buildPortfolioEventsResponse(userEvents, selectedPortfolio);
+  const userEvents = await UserPortfolioRepository.getPortfolioFromDB(user, selectedPortfolio);
+  return userEvents && buildPortfolioEventsResponse(userEvents, selectedPortfolio);
 }

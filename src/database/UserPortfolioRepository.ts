@@ -1,11 +1,10 @@
-import { CashEvent, PortfolioCurrency, PortfolioData, type PortfolioEvent } from "@/lib/types";
+import { PortfolioCurrency, PortfolioData } from "@/lib/types";
 import iocContainer from "@/iocContainer";
 import { AbstractDatabaseClient } from "@/database/index";
 import { Models, Query, TablesDB } from "node-appwrite";
 import { User } from "@clerk/nextjs/server";
 import { CURRENCY_COLUMN, STORAGE_FILE_ID, USER_FILES_TABLE, USER_ID_COLUMN } from "@/database/consts";
 import { v4 } from "uuid";
-import Row = Models.Row;
 
 export class UserPortfolioRepository {
   static async savePortfolioToDB(
@@ -28,18 +27,17 @@ export class UserPortfolioRepository {
     );
 
     const result = await storage.createFile({
-      bucketId: process.env.APPWRITE_BUCKET_ID!,
+      bucketId: db.getBucketId(),
       fileId: v4(),
       file: eventsAsFile,
     });
 
-    const userId = user.id;
     await dbClient.createRow({
       databaseId: db.getDatabaseId(),
       tableId: USER_FILES_TABLE,
       rowId: v4(),
       data: {
-        [USER_ID_COLUMN]: userId,
+        [USER_ID_COLUMN]: user.id,
         [STORAGE_FILE_ID]: result.$id,
         [CURRENCY_COLUMN]: currency,
       },
@@ -84,15 +82,7 @@ export class UserPortfolioRepository {
       fileId: newestRow[STORAGE_FILE_ID],
     });
 
-    // convert result to JSON
-    const nodeBuffer = Buffer.from(result);
-    const str = nodeBuffer.toString("utf-8");
-    return JSON.parse(str) as {
-      cashEvents: CashEvent[];
-      openPositions: PortfolioEvent[];
-      closedStocksOpenEvents: PortfolioEvent[];
-      closedStocksCloseEvents: PortfolioEvent[];
-    };
+    return JSON.parse(Buffer.from(result).toString("utf-8")) as PortfolioData["portfolioEvents"];
   }
 
   private static async getNewestUserFileRecord(
@@ -100,19 +90,8 @@ export class UserPortfolioRepository {
     dbClient: TablesDB,
     databaseId: string,
     currency: PortfolioCurrency,
-  ): Promise<
-    | (Models.Row & {
-        user_id: string;
-        storage_file_id: string;
-      })
-    | null
-  > {
-    const rows = await dbClient.listRows<
-      Row & {
-        [USER_ID_COLUMN]: string;
-        [STORAGE_FILE_ID]: string;
-      }
-    >({
+  ) {
+    const rows = await dbClient.listRows<Models.Row & { [USER_ID_COLUMN]: string; [STORAGE_FILE_ID]: string }>({
       databaseId,
       tableId: USER_FILES_TABLE,
       queries: [
@@ -123,12 +102,6 @@ export class UserPortfolioRepository {
       ],
     });
 
-    const newestRow = rows.rows.at(0);
-
-    if (!newestRow) {
-      return null;
-    }
-
-    return newestRow;
+    return rows.rows.at(0) ?? null;
   }
 }

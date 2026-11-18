@@ -17,13 +17,10 @@ import { getRatesForDate } from "@/lib/exchange-rates/rateWindows";
 import iocContainer from "@/iocContainer";
 
 /** Market data is fetched from this date on, for every ticker. */
-export const MARKET_DATA_START_DATE = new Date(2022, 0, 0);
+const MARKET_DATA_START_DATE = new Date(2022, 0, 0);
 
 function parseSplits(splits?: Record<string, { date: number; numerator: number; denominator: number }>): Split[] {
-  if (!splits) {
-    return [];
-  }
-  return Object.values(splits).map((split) => ({
+  return Object.values(splits ?? {}).map((split) => ({
     effective_date: new Date(split.date * 1000).toISOString().slice(0, 10),
     effective_time: new Date(split.date * 1000).toISOString(),
     split_factor: split.numerator / split.denominator,
@@ -77,22 +74,10 @@ function populatePriceMapForDate(date: Date, tickerQuote: TickerQuote, splits: S
 async function fetchStockClosePriceRange(symbol: string, startDate: Date): Promise<TickerMarketData | null> {
   const endDate = new Date();
   const data = await YahooAPIHelper.fetchHistoricalTickerMarketData(symbol, startDate, endDate);
-  if (!data) {
-    return null;
-  }
-  const result = data.chart?.result;
-  if (!result || result.length === 0) {
-    return null;
-  }
-
-  const quote = result[0].indicators?.quote?.[0];
-  if (!quote) {
-    return null;
-  }
-
-  const timestamp = result[0].timestamp;
-
-  if (!timestamp) {
+  const result = data?.chart?.result;
+  const quote = result?.[0]?.indicators?.quote?.[0];
+  const timestamp = result?.[0]?.timestamp;
+  if (!result || !quote || !timestamp) {
     return null;
   }
 
@@ -106,7 +91,7 @@ async function fetchStockClosePriceRange(symbol: string, startDate: Date): Promi
     currency,
     tickerQuoteByDateString: {},
     splitAdjustedTickerQuoteByDateString: {},
-    regularMarketPrice: result[0].meta?.regularMarketPrice ?? 0,
+    regularMarketPrice: regularMarketPrice ?? 0,
     longName,
     instrumentType,
     splits,
@@ -190,34 +175,17 @@ const convertMarketDataToCurrency = (
   exchangeRates: ExchangeRates,
   portfolioCurrency: PortfolioCurrency,
 ) => {
-  for (const [symbol, priceRecord] of Object.entries(stockMarketData)) {
-    stockMarketData[symbol].regularMarketPrice = convertToCurrency(
-      priceRecord.regularMarketPrice,
-      getRatesForDate(exchangeRates, new Date()),
-      priceRecord.currency,
-      portfolioCurrency,
-    )!;
-    for (const [date, tickerQuote] of Object.entries(priceRecord.tickerQuoteByDateString)) {
-      Object.keys(getPricesFromTickerQuote(tickerQuote)).forEach((key) => {
-        const _key = key as keyof TickerQuote;
-        stockMarketData[symbol].tickerQuoteByDateString[date][_key] = convertToCurrency(
-          tickerQuote[_key],
-          getRatesForDate(exchangeRates, date),
-          priceRecord.currency,
-          portfolioCurrency,
-        )!;
-      });
-    }
-    for (const [date, tickerQuote] of Object.entries(priceRecord.splitAdjustedTickerQuoteByDateString)) {
-      Object.keys(getPricesFromTickerQuote(tickerQuote)).forEach((key) => {
-        const _key = key as keyof TickerQuote;
-        stockMarketData[symbol].splitAdjustedTickerQuoteByDateString[date][_key] = convertToCurrency(
-          tickerQuote[_key],
-          getRatesForDate(exchangeRates, date),
-          priceRecord.currency,
-          portfolioCurrency,
-        )!;
-      });
+  for (const marketData of Object.values(stockMarketData)) {
+    const convert = (price: number | undefined, date: Date | string) =>
+      convertToCurrency(price, getRatesForDate(exchangeRates, date), marketData.currency, portfolioCurrency)!;
+
+    marketData.regularMarketPrice = convert(marketData.regularMarketPrice, new Date());
+    for (const quotes of [marketData.tickerQuoteByDateString, marketData.splitAdjustedTickerQuoteByDateString]) {
+      for (const [date, tickerQuote] of Object.entries(quotes)) {
+        for (const key of Object.keys(getPricesFromTickerQuote(tickerQuote)) as (keyof TickerQuote)[]) {
+          tickerQuote[key] = convert(tickerQuote[key], date);
+        }
+      }
     }
   }
 };

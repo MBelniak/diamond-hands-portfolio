@@ -1,7 +1,7 @@
 import { CachedExchangeRates, ISODateString, PortfolioCurrency, TickerMarketData } from "@/lib/types";
 import { format } from "date-fns";
 import { injectable } from "inversify";
-import { createClient, RedisClientType, SetOptions } from "redis";
+import { createClient, RedisClientType } from "redis";
 
 export abstract class AbstractRedisClient {
   abstract initialize(): Promise<unknown>;
@@ -50,20 +50,15 @@ export class RedisClient implements AbstractRedisClient {
 
   async getCachedMarketData(ticker: string, startDate: Date): Promise<TickerMarketData | null> {
     await this.initialize();
-    if (await this.redisClient.exists(this.getStockPricesRedisKey(ticker, startDate))) {
-      return JSON.parse((await this.redisClient.get(this.getStockPricesRedisKey(ticker, startDate))) as string);
-    } else {
-      return null;
-    }
+    const cached = await this.redisClient.get(this.getStockPricesRedisKey(ticker, startDate));
+    return cached ? JSON.parse(cached) : null;
   }
 
   async cacheMarketData(ticker: string, startDate: Date, tickerMarketData: TickerMarketData): Promise<void> {
     await this.initialize();
-    await this.redisClient.set(
-      this.getStockPricesRedisKey(ticker, startDate),
-      JSON.stringify(tickerMarketData),
-      REDIS_EXPIRE_IN_HOUR,
-    );
+    await this.redisClient.set(this.getStockPricesRedisKey(ticker, startDate), JSON.stringify(tickerMarketData), {
+      expiration: { type: "EX", value: 60 * 60 },
+    });
   }
 
   async getCachedExchangeRates(
@@ -103,10 +98,3 @@ export class RedisClient implements AbstractRedisClient {
     return `exchangeRates-${baseCurrency}${quoteCurrency}-${windowStart}`;
   }
 }
-
-export const REDIS_EXPIRE_IN_HOUR: SetOptions = {
-  expiration: {
-    type: "EX",
-    value: 60 * 60, // 1 hour in seconds
-  },
-};

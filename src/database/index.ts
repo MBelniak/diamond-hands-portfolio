@@ -17,32 +17,22 @@ export class DatabaseClient implements AbstractDatabaseClient {
   private bucketId: string;
 
   constructor() {
-    if (!process.env.APPWRITE_PROJECT_ID) {
-      throw new Error("No APPWRITE_PROJECT_ID env variable found. Cannot initialize database client.");
-    }
-    if (!process.env.APPWRITE_API_KEY) {
-      throw new Error("Cannot find env variable APPWRITE_API_KEY. Database connection failed.");
-    }
-    if (!process.env.APPWRITE_ENDPOINT) {
-      throw new Error("Cannot find env variable APPWRITE_ENDPOINT. Database connection failed.");
-    }
-    if (!process.env.APPWRITE_DATABASE_ID) {
-      throw new Error("Cannot find env variable APPWRITE_DATABASE_ID. Database connection failed.");
-    }
-    if (!process.env.APPWRITE_BUCKET_ID) {
-      throw new Error("Cannot find env variable APPWRITE_BUCKET_ID. Database connection failed.");
-    }
+    const env = (name: string) => {
+      const value = process.env[name];
+      if (!value) throw new Error(`Cannot find env variable ${name}. Database connection failed.`);
+      return value;
+    };
 
     client
-      .setEndpoint(process.env.APPWRITE_ENDPOINT)
-      .setProject(process.env.APPWRITE_PROJECT_ID)
-      .setKey(process.env.APPWRITE_API_KEY)
+      .setEndpoint(env("APPWRITE_ENDPOINT"))
+      .setProject(env("APPWRITE_PROJECT_ID"))
+      .setKey(env("APPWRITE_API_KEY"))
       .setSelfSigned(true);
 
     this.tablesDB = new TablesDB(client);
     this.storage = new Storage(client);
-    this.databaseId = process.env.APPWRITE_DATABASE_ID;
-    this.bucketId = process.env.APPWRITE_BUCKET_ID;
+    this.databaseId = env("APPWRITE_DATABASE_ID");
+    this.bucketId = env("APPWRITE_BUCKET_ID");
   }
 
   getDBClient(): TablesDB {
@@ -61,5 +51,3 @@ export class DatabaseClient implements AbstractDatabaseClient {
     return this.bucketId;
   }
 }
-
-export default DatabaseClient;

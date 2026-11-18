@@ -12,55 +12,45 @@ import {
 import { formatDate } from "@/lib/utils";
 import { getSplitFactor } from "@/lib/splits";
 import { STOCK_CLOSE_EVENT, STOCK_OPEN_EVENT } from "@/lib/xlsx-parser/consts";
-import merge from "lodash-es/merge";
 
-export const getInitialPortfolioState = (day: Date) =>
-  ({
-    date: formatDate(day),
-    cash: 0,
-    balance: 0,
-    totalCapitalInvested: 0,
-    oneDayProfit: 0,
-    dailyReturn: 0,
-    accPortfolioValue: 0,
-    stocks: {},
-    portfolioValue: 0,
-    realizedProfitOrLoss: 0,
-    profit: 0,
-    loss: 0,
-    profitOrLoss: 0,
-    benchmarkData: Object.values(BenchmarkIndex).reduce(
-      (all, index) => ({
-        ...all,
-        [index]: { stock: { volume: 0 }, stockValue: 0, oneDayProfit: 0, dailyReturn: 0 },
-      }),
-      {} as Record<BenchmarkIndex, BenchmarkData>,
-    ),
-  }) as PortfolioValue;
+const getEmptyBenchmarkData = () =>
+  Object.fromEntries(
+    Object.values(BenchmarkIndex).map((index) => [
+      index,
+      { stock: { volume: 0 }, stockValue: 0, oneDayProfit: 0, dailyReturn: 0 },
+    ]),
+  ) as Record<BenchmarkIndex, BenchmarkData>;
 
-export const initialBenchmarkData = Object.values(BenchmarkIndex).reduce(
-  (all, index) => ({
-    ...all,
-    [index]: { stock: { volume: 0 }, stockValue: 0, oneDayProfit: 0, dailyReturn: 0 },
-  }),
-  {} as Record<BenchmarkIndex, BenchmarkData>,
-);
+export const getInitialPortfolioState = (day: Date): PortfolioValue => ({
+  date: formatDate(day),
+  cash: 0,
+  balance: 0,
+  totalCapitalInvested: 0,
+  oneDayProfit: 0,
+  dailyReturn: 0,
+  accPortfolioValue: 0,
+  stocks: {},
+  portfolioValue: 0,
+  realizedProfitOrLoss: 0,
+  profit: 0,
+  loss: 0,
+  profitOrLoss: 0,
+  benchmarkData: getEmptyBenchmarkData(),
+});
+
+export const initialBenchmarkData = getEmptyBenchmarkData();
 
 export function getDailyReturn(
   previousAccPortfolioValue: number,
   current: { oneDayProfit: number; date: Date },
 ): number {
-  if (previousAccPortfolioValue === 0) {
+  if (previousAccPortfolioValue === 0) return 0;
+  const dailyReturn = current.oneDayProfit / previousAccPortfolioValue;
+  if (Math.abs(dailyReturn) > 0.2) {
+    console.warn(`Unusually large one-day profit/loss detected on ${current.date}: ${dailyReturn * 100}%`);
     return 0;
-  } else {
-    const odp = current.oneDayProfit / previousAccPortfolioValue;
-    if (odp > 0.2 || odp < -0.2) {
-      console.warn(`Unusually large one-day profit/loss detected on ${current.date}: ${odp * 100}%`);
-      return 0;
-    } else {
-      return current.oneDayProfit / previousAccPortfolioValue;
-    }
   }
+  return dailyReturn;
 }
 
 /**
@@ -72,52 +62,27 @@ export function buildAssetsEventHistory(
   stockCloseEvents: PortfolioEvent[],
   stockMarketData?: StockMarketData,
 ): AssetsHistoricalData {
-  return stockClosedPositionsOpenEvents.concat(stockCloseEvents).reduce((acc, stockEvent) => {
-    const stockSymbol = "stockSymbol" in stockEvent ? stockEvent.stockSymbol : null;
-    if (!stockSymbol) return acc;
-    const splitFactor = getSplitFactor(stockMarketData?.[stockSymbol]?.splits, stockEvent.date);
-
-    if (!acc[stockSymbol]) {
-      acc[stockSymbol] = {
-        openPositions: [],
-        closeEvents: [],
-        openEvents: [],
-      };
-    }
+  const history: AssetsHistoricalData = {};
+  for (const stockEvent of stockClosedPositionsOpenEvents.concat(stockCloseEvents)) {
+    if (!stockEvent.stockSymbol) continue;
+    const asset = (history[stockEvent.stockSymbol] ??= { openPositions: [], closeEvents: [], openEvents: [] });
+    const date = formatDate(new Date(stockEvent.date));
+    const volume =
+      (stockEvent.stocksVolumeChange ?? 0) *
+      getSplitFactor(stockMarketData?.[stockEvent.stockSymbol]?.splits, stockEvent.date);
 
     if (stockEvent.type === STOCK_OPEN_EVENT) {
-      return merge(acc, {
-        [stockSymbol]: {
-          openEvents: [
-            ...(acc[stockSymbol]?.openEvents || []),
-            {
-              date: formatDate(new Date(stockEvent.date)),
-              volume: stockEvent.stocksVolumeChange * splitFactor,
-              stockPriceOnBuy: stockEvent.openPrice,
-            },
-          ],
-        },
+      asset.openEvents.push({ date, volume, stockPriceOnBuy: stockEvent.openPrice });
+    } else if (stockEvent.type === STOCK_CLOSE_EVENT) {
+      asset.closeEvents.push({
+        date,
+        volume,
+        stockPriceOnSell: stockEvent.closePrice,
+        profitOrLoss: stockEvent.profitOrLoss,
       });
     }
-
-    if (stockEvent.type === STOCK_CLOSE_EVENT) {
-      return merge(acc, {
-        [stockSymbol]: {
-          closeEvents: [
-            ...(acc[stockSymbol]?.closeEvents || []),
-            {
-              date: formatDate(new Date(stockEvent.date)),
-              volume: stockEvent.stocksVolumeChange * splitFactor,
-              stockPriceOnSell: stockEvent.closePrice,
-              profitOrLoss: stockEvent.profitOrLoss,
-            },
-          ],
-        },
-      });
-    }
-
-    return acc;
-  }, {} as AssetsHistoricalData);
+  }
+  return history;
 }
 
 type OpenLots = AssetsHistoricalData[string]["openPositions"];
@@ -229,11 +194,7 @@ export function deriveOpenPositionsFromCashEvents(
   return result;
 }
 
-export const getCashFlow = (cashEvents: CashEvent[]): CashFlow => {
-  return cashEvents.reduce((acc, event) => {
-    if (event.cashWithdrawalOrDeposit) {
-      return [...acc, { date: formatDate(new Date(event.date)), amount: event.cashWithdrawalOrDeposit }];
-    }
-    return acc;
-  }, [] as CashFlow);
-};
+export const getCashFlow = (cashEvents: CashEvent[]): CashFlow =>
+  cashEvents
+    .filter((event) => event.cashWithdrawalOrDeposit)
+    .map((event) => ({ date: formatDate(new Date(event.date)), amount: event.cashWithdrawalOrDeposit! }));

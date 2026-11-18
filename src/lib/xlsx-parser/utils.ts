@@ -52,7 +52,7 @@ export function parseStockVolumeAndPriceFromComment(comment: string): { volume: 
   return { volume: 0, price: 0 };
 }
 
-export const CLOSED_POSITION_ID_SEPARATOR = ":";
+const CLOSED_POSITION_ID_SEPARATOR = ":";
 
 /**
  * Builds ids for "Closed Positions" rows that are unique within a report and stable across reports:
@@ -88,33 +88,22 @@ export function isLegacyClosedPositionEventId(eventId: string): boolean {
   return !eventId.includes(CLOSED_POSITION_ID_SEPARATOR);
 }
 
-export function symbolToYahooSuffix(symbol: string): string {
-  if (symbol.endsWith(".UK")) {
-    return ".L";
-  }
-  if (symbol.endsWith(".NL")) {
-    return ".AS";
-  }
-  if (symbol.endsWith(".US")) {
-    return "";
-  }
-  return symbol.includes(".") ? "." + symbol.split(".").at(-1)! : "";
-}
+const YAHOO_SUFFIX_BY_XTB_SUFFIX: Record<string, string> = { UK: ".L", NL: ".AS", US: "" };
+
+const YAHOO_SYMBOL_BY_XTB_SYMBOL: Record<string, string> = {
+  OIL: "CL=F", // WTI Crude Oil Futures
+  GOLD: "GC=F", // Gold Futures
+  DE40: "^GDAXI", // DAX index
+  US100: "^NDX", // US 100 index
+};
 
 export function getStockAPISymbol(symbol: string) {
-  if (symbol === "OIL") {
-    return "CL=F"; // WTI Crude Oil Futures
+  if (symbol in YAHOO_SYMBOL_BY_XTB_SYMBOL) {
+    return YAHOO_SYMBOL_BY_XTB_SYMBOL[symbol];
   }
-  if (symbol === "GOLD") {
-    return "GC=F"; // Gold Futures
-  }
-  if (symbol === "DE40") {
-    return "^GDAXI"; //DAX index
-  }
-  if (symbol === "US100") {
-    return "^NDX"; // us 100 index
-  }
-  return symbol.split(".")[0] + symbolToYahooSuffix(symbol);
+  const parts = symbol.split(".");
+  const suffix = parts.length > 1 ? parts.at(-1)! : "";
+  return parts[0] + (YAHOO_SUFFIX_BY_XTB_SUFFIX[suffix] ?? (suffix && "." + suffix));
 }
 
 /**

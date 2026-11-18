@@ -10,6 +10,7 @@ import { TimePeriod } from "@/app/(analysis)/performance/_types/TimePeriod";
 import { useStore } from "@/lib/store";
 import { getReturnOnTimeline } from "@/app/(analysis)/performance/_logic/getReturnOnTimeline";
 import { getCashFlowForBenchmarkComparison } from "@/lib/returnMetrics";
+import { CashFlow } from "@/lib/types";
 import { BenchmarkRow } from "@/app/(analysis)/performance/_components/Benchmarks/Benchmark.types";
 import { benchmarkColumns } from "@/app/(analysis)/performance/_components/Benchmarks/Banchmarks.columns";
 
@@ -23,103 +24,44 @@ export const Benchmarks: React.FC = () => {
     }
 
     const timeline = portfolioAnalysis.portfolioTimeline;
-    const last = timeline.at(-1)!;
-    const totalCapitalInvested = last.totalCapitalInvested;
-
-    const portfolioTimeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
-      ...el,
-      value: el.portfolioValue,
-      oneDayProfit: el.oneDayProfit,
-    }));
-
+    const totalCapitalInvested = timeline.at(-1)!.totalCapitalInvested;
     const benchmarkCashFlow = getCashFlowForBenchmarkComparison(portfolioAnalysis.cashFlow);
-
-    const sp500Timeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
-      ...el,
-      value: el.benchmarkData[BenchmarkIndex.SP_500].stockValue,
-      oneDayProfit: el.benchmarkData[BenchmarkIndex.SP_500].oneDayProfit,
-    }));
-
-    const nasdaqTimeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
-      ...el,
-      value: el.benchmarkData[BenchmarkIndex.NASDAQ].stockValue,
-      oneDayProfit: el.benchmarkData[BenchmarkIndex.NASDAQ].oneDayProfit,
-    }));
-
-    const dowJonesTimeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
-      ...el,
-      value: el.benchmarkData[BenchmarkIndex.DOW_JONES].stockValue,
-      oneDayProfit: el.benchmarkData[BenchmarkIndex.DOW_JONES].oneDayProfit,
-    }));
-
-    const nyseTimeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
-      ...el,
-      value: el.benchmarkData[BenchmarkIndex.NYSE].stockValue,
-      oneDayProfit: el.benchmarkData[BenchmarkIndex.NYSE].oneDayProfit,
-    }));
+    const getReturns = (valueTimeline: Parameters<typeof getReturnOnTimeline>[0], cashFlow: CashFlow) =>
+      getReturnOnTimeline(
+        valueTimeline,
+        cashFlow,
+        totalCapitalInvested,
+        Object.values(TimePeriod),
+        selectedReturnMetric,
+      );
 
     const rows: BenchmarkRow[] = [
       {
         benchmark: "Portfolio",
-        ...getReturnOnTimeline(
-          portfolioTimeline,
+        ...getReturns(
+          timeline.map((el) => ({ ...el, value: el.portfolioValue })),
           portfolioAnalysis.cashFlow,
-          totalCapitalInvested,
-          Object.values(TimePeriod),
-          selectedReturnMetric,
         ),
       },
-      {
-        benchmark: BenchmarkIndexToName[BenchmarkIndex.SP_500],
-        ...getReturnOnTimeline(
-          sp500Timeline,
+      ...Object.values(BenchmarkIndex).map((index) => ({
+        benchmark: BenchmarkIndexToName[index],
+        ...getReturns(
+          timeline.map((el) => ({
+            ...el,
+            value: el.benchmarkData[index].stockValue,
+            oneDayProfit: el.benchmarkData[index].oneDayProfit,
+          })),
           benchmarkCashFlow,
-          totalCapitalInvested,
-          Object.values(TimePeriod),
-          selectedReturnMetric,
         ),
-      },
-      {
-        benchmark: BenchmarkIndexToName[BenchmarkIndex.NASDAQ],
-
-        ...getReturnOnTimeline(
-          nasdaqTimeline,
-          benchmarkCashFlow,
-          totalCapitalInvested,
-          Object.values(TimePeriod),
-          selectedReturnMetric,
-        ),
-      },
-      {
-        benchmark: BenchmarkIndexToName[BenchmarkIndex.DOW_JONES],
-        ...getReturnOnTimeline(
-          dowJonesTimeline,
-          benchmarkCashFlow,
-          totalCapitalInvested,
-          Object.values(TimePeriod),
-          selectedReturnMetric,
-        ),
-      },
-      {
-        benchmark: BenchmarkIndexToName[BenchmarkIndex.NYSE],
-        ...getReturnOnTimeline(
-          nyseTimeline,
-          benchmarkCashFlow,
-          totalCapitalInvested,
-          Object.values(TimePeriod),
-          selectedReturnMetric,
-        ),
-      },
+      })),
     ];
 
     return rows;
   }, [portfolioAnalysis, selectedReturnMetric]);
 
-  const columns = useMemo(() => benchmarkColumns, []);
-
   const table = useReactTable({
     data: benchmarkData,
-    columns,
+    columns: benchmarkColumns,
     getCoreRowModel: getCoreRowModel(),
   });
 
