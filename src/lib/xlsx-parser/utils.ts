@@ -26,10 +26,66 @@ export class XlsxHelper {
       console.warn(`${sheetName} sheet is missing headers. Skipping cash events parsing.`);
       return [];
     }
-    return jsonData
-      .slice(5, jsonData.length - 1)
-      .map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index]])));
+    // Data starts right after the headers. The sheets are padded with blank rows and "Cash Operations" has a
+    // "Total" row that isn't necessarily last, so don't drop rows by position - callers filter out rows
+    // without a date, which covers both blank and "Total" rows.
+    return jsonData.slice(5).map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index]])));
   }
+}
+
+/**
+ * Extracts traded volume and price from a "Cash Operations" comment. Supported formats:
+ * - "OPEN BUY 3/3.5669 @ 79.4290" (older reports: partial volume / total volume)
+ * - "OPEN BUY IONQ.US 8/8.4244 @ 31.02" (newer reports include the ticker)
+ * - "CLOSE BUY 0.8915 @ 224.34", "CLOSE BUY IGLN.UK 0.7734 @ 77.1350"
+ * - "Correction: BUY 0.2346 @ 438.42"
+ */
+export function parseStockVolumeAndPriceFromComment(comment: string): { volume: number; price: number } {
+  const match = /(?:OPEN|CLOSE) BUY (?:\S+ )?(\d+(?:\.\d+)?)(?:\/\d+(?:\.\d+)?)? @ (\d+(?:\.\d+)?)/.exec(comment);
+  if (match) {
+    return { volume: Number(match[1]), price: Number(match[2]) };
+  }
+  const correctionMatch = /BUY (?:\S+ )?(\d+(?:\.\d+)?) @ (\d+(?:\.\d+)?)/.exec(comment);
+  if (correctionMatch) {
+    return { volume: Number(correctionMatch[1]), price: Number(correctionMatch[2]) };
+  }
+  return { volume: 0, price: 0 };
+}
+
+export const CLOSED_POSITION_ID_SEPARATOR = ":";
+
+/**
+ * Builds ids for "Closed Positions" rows that are unique within a report and stable across reports:
+ * `<Position ID>:<close time in whole seconds>:<volume>`, with `:<n>` appended to the n-th repeat of an
+ * otherwise identical row. The close time is taken from the raw Excel date serial, so the id doesn't depend on
+ * the server's time zone.
+ *
+ * The Position ID alone isn't unique - XTB splits a position into several rows (whole and fractional shares,
+ * partial closes).
+ */
+export function getClosedPositionRowIds(
+  rows: { positionId: string | number | undefined; closeTime: string | number; volume: string | number | undefined }[],
+): string[] {
+  const occurrences = new Map<string, number>();
+  return rows.map(({ positionId, closeTime, volume }) => {
+    const closeTimeInSeconds = Math.round(Number(closeTime) * 24 * 60 * 60);
+    const baseId = [String(positionId ?? ""), closeTimeInSeconds, Number(volume || 0)].join(
+      CLOSED_POSITION_ID_SEPARATOR,
+    );
+    const occurrence = occurrences.get(baseId) ?? 0;
+    occurrences.set(baseId, occurrence + 1);
+    return occurrence === 0 ? baseId : `${baseId}${CLOSED_POSITION_ID_SEPARATOR}${occurrence}`;
+  });
+}
+
+/** Position ID of a closed position event - works for both current and legacy (Position ID only) ids. */
+export function getPositionIdFromClosedPositionEventId(eventId: string): string {
+  return eventId.split(CLOSED_POSITION_ID_SEPARATOR)[0];
+}
+
+/** Events stored before closed position rows got unique ids were identified by the bare Position ID. */
+export function isLegacyClosedPositionEventId(eventId: string): boolean {
+  return !eventId.includes(CLOSED_POSITION_ID_SEPARATOR);
 }
 
 export function symbolToYahooSuffix(symbol: string): string {

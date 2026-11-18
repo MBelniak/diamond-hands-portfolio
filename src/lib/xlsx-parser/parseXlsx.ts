@@ -27,12 +27,18 @@ import {
   STOCK_OPEN_EVENT,
   STOCK_OPEN_POSITION,
 } from "@/lib/xlsx-parser/consts";
-import { convertToCurrency, getPricesFromTickerQuote, XlsxHelper } from "@/lib/xlsx-parser/utils";
+import {
+  convertToCurrency,
+  getClosedPositionRowIds,
+  getPricesFromTickerQuote,
+  parseStockVolumeAndPriceFromComment,
+  XlsxHelper,
+} from "@/lib/xlsx-parser/utils";
+import { mergePortfolioEvents } from "@/lib/xlsx-parser/mergePortfolioEvents";
 import { formatDate } from "@/lib/utils";
 import { UserPortfolioRepository } from "@/database/UserPortfolioRepository";
 import { User } from "@clerk/nextjs/server";
 import { BenchmarkIndex } from "@/lib/benchmarks";
-import { uniqBy } from "lodash-es";
 import { YahooAPIHelper } from "@/lib/yahoo-api/YahooAPIHelper";
 import { ExchangeRatesHelper } from "@/lib/exchange-rates/ExchangeRatesHelper";
 import iocContainer from "@/iocContainer";
@@ -47,24 +53,6 @@ const isRowStockSell = (row: Record<string, string | number>) =>
   ["Stock sell", "Commission"].includes(String(row[XlsxColumn.TYPE]));
 const isRowStockBuy = (row: Record<string, string | number>) => String(row[XlsxColumn.TYPE]) === "Stock purchase";
 
-const parseStockVolumeAndPriceFromCashOperations = (row: Record<string, string | number>) => {
-  const rowText = String(row[XlsxColumn.COMMENT] || "");
-  const match = /(OPEN|CLOSE) BUY (\d+(\.\d+)?)(\/(\d+(\.\d+)?))? @ (\d+(\.\d+)?)/.exec(rowText);
-  if (match) {
-    const volume = Number(match[2]);
-    const price = Number(match[7]);
-    return { volume, price };
-  } else {
-    const correctionMatch = /BUY (\d+(\.\d+)?) @ (\d+(\.\d+)?)/.exec(rowText);
-    if (correctionMatch) {
-      const volume = Number(correctionMatch[1]);
-      const price = Number(correctionMatch[3]);
-      return { volume, price };
-    }
-  }
-  return { volume: 0, price: 0 };
-};
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getCashEvents(workbook: any): CashEvent[] {
   const cashDataAsObjectArray = XlsxHelper.parseSheetToJson(workbook, CASH_OPERATION_HISTORY);
@@ -75,7 +63,7 @@ function getCashEvents(workbook: any): CashEvent[] {
   return cashDataAsObjectArray
     .filter((row) => row[XlsxColumn.TIME])
     .map((row) => {
-      const { volume, price } = parseStockVolumeAndPriceFromCashOperations(row);
+      const { volume, price } = parseStockVolumeAndPriceFromComment(String(row[XlsxColumn.COMMENT] || ""));
 
       return {
         id: String(row[XlsxColumn.CASH_OPERATION_ID] || ""),
@@ -94,18 +82,32 @@ function getCashEvents(workbook: any): CashEvent[] {
     });
 }
 
+/**
+ * Rows of the "Closed Positions" sheet, each with an id that's unique within the report. A single position
+ * (Position ID) is often split into several rows - e.g. its whole and fractional shares, or partial closes.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getClosedPositionRows(workbook: any): { id: string; row: Record<string, string | number> }[] {
+  const rows = XlsxHelper.parseSheetToJson(workbook, CLOSED_POSITION_HISTORY).filter(
+    (row) => row[XlsxColumn.CLOSE_TIME],
+  );
+  const ids = getClosedPositionRowIds(
+    rows.map((row) => ({
+      positionId: row[XlsxColumn.POSITION_ID],
+      closeTime: row[XlsxColumn.CLOSE_TIME],
+      volume: row[XlsxColumn.VOLUME],
+    })),
+  );
+  return rows.map((row, index) => ({ id: ids[index], row }));
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getClosedStocksOpenEvents(workbook: any): PortfolioEvent[] {
-  const closedData = XlsxHelper.parseSheetToJson(workbook, CLOSED_POSITION_HISTORY);
-  if (closedData.length === 0) {
-    return [];
-  }
-
-  return closedData
-    .filter((row) => row[XlsxColumn.OPEN_TIME])
-    .map((row) => {
+  return getClosedPositionRows(workbook)
+    .filter(({ row }) => row[XlsxColumn.OPEN_TIME])
+    .map(({ id, row }) => {
       return {
-        id: String(row[XlsxColumn.POSITION_ID] ?? ""),
+        id,
         date: XlsxHelper.parseXLSXDate(row[XlsxColumn.OPEN_TIME]).toISOString(),
         stocksVolumeChange: Number(row[XlsxColumn.VOLUME] || 0),
         type: STOCK_OPEN_EVENT,
@@ -117,22 +119,15 @@ function getClosedStocksOpenEvents(workbook: any): PortfolioEvent[] {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getClosedStocksCloseEvents(workbook: any): PortfolioEvent[] {
-  const closedData = XlsxHelper.parseSheetToJson(workbook, CLOSED_POSITION_HISTORY);
-  if (closedData.length === 0) {
-    return [];
-  }
-
-  return closedData
-    .filter((row) => row[XlsxColumn.CLOSE_TIME])
-    .map((row) => ({
-      id: String(row[XlsxColumn.POSITION_ID] ?? ""),
-      date: XlsxHelper.parseXLSXDate(row[XlsxColumn.CLOSE_TIME]).toISOString(),
-      stocksVolumeChange: Number(row[XlsxColumn.VOLUME] || 0),
-      type: STOCK_CLOSE_EVENT,
-      stockSymbol: String(row[XlsxColumn.TICKER]) || null,
-      profitOrLoss: Number(row[XlsxColumn.GROSS_PL] || 0),
-      closePrice: Number(row[XlsxColumn.CLOSE_PRICE] || 0),
-    }));
+  return getClosedPositionRows(workbook).map(({ id, row }) => ({
+    id,
+    date: XlsxHelper.parseXLSXDate(row[XlsxColumn.CLOSE_TIME]).toISOString(),
+    stocksVolumeChange: Number(row[XlsxColumn.VOLUME] || 0),
+    type: STOCK_CLOSE_EVENT,
+    stockSymbol: String(row[XlsxColumn.TICKER]) || null,
+    profitOrLoss: Number(row[XlsxColumn.GROSS_PL] || 0),
+    closePrice: Number(row[XlsxColumn.CLOSE_PRICE] || 0),
+  }));
 }
 
 /**
@@ -453,32 +448,6 @@ const adjustEventPrices = (
   }
 };
 
-const filterById =
-  <T extends { id: string }>(events: T[]) =>
-  (event: PortfolioEvent) =>
-    !events.some((e) => e.id === event.id);
-
-const mergeEvents = (existingEvents: PortfolioEvents, events: PortfolioEvents): PortfolioEvents => {
-  return {
-    cashEvents: uniqBy(
-      events.cashEvents.concat(...existingEvents.cashEvents.filter(filterById(events.cashEvents))),
-      "id",
-    ),
-    closedStocksOpenEvents: uniqBy(
-      events.closedStocksOpenEvents.concat(
-        ...existingEvents.closedStocksOpenEvents.filter(filterById(events.closedStocksOpenEvents)),
-      ),
-      "id",
-    ),
-    closedStocksCloseEvents: uniqBy(
-      events.closedStocksCloseEvents.concat(
-        ...existingEvents.closedStocksCloseEvents.filter(filterById(events.closedStocksCloseEvents)),
-      ),
-      "id",
-    ),
-  };
-};
-
 export async function uploadPortfolioData(
   user: User,
   selectedPortfolio: PortfolioCurrency,
@@ -490,7 +459,7 @@ export async function uploadPortfolioData(
   let finalEvents = events;
 
   if (existingEvents) {
-    finalEvents = mergeEvents(existingEvents, events);
+    finalEvents = mergePortfolioEvents(existingEvents, events);
   }
 
   await UserPortfolioRepository.savePortfolioToDB(finalEvents, user, selectedPortfolio);
