@@ -14,7 +14,7 @@ export type ChartLine<LineKey extends string = ChartLineKey> = {
   color: string;
 };
 
-export const chartKeys: Record<ChartLineKey, string> = {
+const chartKeys: Record<ChartLineKey, string> = {
   portfolioValue: "Portfolio value",
   accPortfolioValue: "Accumulated portfolio value",
   realizedProfitOrLoss: "Realized profit/loss",

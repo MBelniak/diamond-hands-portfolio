@@ -1,9 +1,7 @@
 import { CashFlow, TWRValueTimeline, ValueTimeline } from "@/lib/types";
-import { addDays } from "date-fns/addDays";
 import { formatDate } from "@/lib/utils";
 import { xirr } from "node-irr";
-import { isAfter, isSameDay, startOfDay } from "date-fns";
-import { isBefore } from "date-fns/isBefore";
+import { addDays, isAfter, isBefore, isSameDay, startOfDay } from "date-fns";
 
 export enum ReturnMetric {
   SIMPLE_RETURN = "SR",
@@ -11,13 +9,24 @@ export enum ReturnMetric {
   TIME_WEIGHTED_RETURN = "TWR",
 }
 
-const getCashFlowForPeriod = (cashFlow: CashFlow, windowStartDate: Date, windowEndDate: Date) => {
-  return cashFlow
-    .filter(({ date }) => {
-      const eventDate = startOfDay(new Date(date));
-      return !isBefore(eventDate, startOfDay(windowStartDate)) && !isAfter(eventDate, startOfDay(windowEndDate));
-    })
-    .map((operation) => ({ ...operation, amount: -operation.amount }));
+/** Cash flows within the window, signed for IRR: start value as an outflow, deposits negated, end value as an inflow. */
+const getCashFlowForPeriod = (
+  cashFlow: CashFlow,
+  portfolioTimeline: ValueTimeline,
+  windowStartDate: Date,
+  windowEndDate: Date,
+): CashFlow => {
+  const valueOn = (day: Date) => portfolioTimeline.find((el) => isSameDay(el.date, day))?.value ?? 0;
+  return [
+    { date: formatDate(windowStartDate), amount: -valueOn(windowStartDate) },
+    ...cashFlow
+      .filter(({ date }) => {
+        const eventDate = startOfDay(new Date(date));
+        return !isBefore(eventDate, startOfDay(windowStartDate)) && !isAfter(eventDate, startOfDay(windowEndDate));
+      })
+      .map((operation) => ({ ...operation, amount: -operation.amount })),
+    { date: formatDate(windowEndDate), amount: valueOn(windowEndDate) },
+  ];
 };
 
 export const getCashFlowForBenchmarkComparison = (cashFlow: CashFlow) => {
@@ -30,19 +39,10 @@ export const getProfitOrLossForPeriod = (
   windowStartDate: Date,
   windowEndDate: Date,
 ): number => {
-  const cashOperations = getCashFlowForPeriod(cashFlow, windowStartDate, windowEndDate);
-
-  cashOperations.unshift({
-    date: formatDate(windowStartDate),
-    amount: -(portfolioTimeline.find((el) => isSameDay(el.date, windowStartDate))?.value ?? 0),
-  });
-
-  cashOperations.push({
-    date: formatDate(windowEndDate),
-    amount: portfolioTimeline.find((el) => isSameDay(el.date, windowEndDate))?.value ?? 0,
-  });
-
-  return cashOperations.reduce((sum, cf) => sum + cf.amount, 0);
+  return getCashFlowForPeriod(cashFlow, portfolioTimeline, windowStartDate, windowEndDate).reduce(
+    (sum, cf) => sum + cf.amount,
+    0,
+  );
 };
 
 /**
@@ -82,19 +82,6 @@ export function calculateTWR(timeline: TWRValueTimeline, daysAgo: number): numbe
  */
 export function calculateMWR(portfolioTimeline: ValueTimeline, cashFlow: CashFlow, daysAgo: number): number {
   const today = new Date();
-  const windowStartDate = addDays(today, -daysAgo);
-  const cashFlowWindow = getCashFlowForPeriod(cashFlow, windowStartDate, today);
-
-  cashFlowWindow.unshift({
-    date: formatDate(windowStartDate),
-    amount: -(portfolioTimeline.find((el) => isSameDay(el.date, windowStartDate))?.value ?? 0),
-  });
-
-  cashFlowWindow.push({
-    date: formatDate(today),
-    amount: portfolioTimeline.find((el) => isSameDay(el.date, today))?.value ?? 0,
-  });
-
-  const rate = xirr(cashFlowWindow).rate;
+  const rate = xirr(getCashFlowForPeriod(cashFlow, portfolioTimeline, addDays(today, -daysAgo), today)).rate;
   return (1 + rate) ** 365 - 1;
 }

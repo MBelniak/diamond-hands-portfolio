@@ -48,8 +48,7 @@ export function getAverageDailyReturnForRange<T extends { dailyReturn: number }>
   timeline: T[],
   range: readonly [number, number],
 ): number {
-  const values = timeline.slice(range[0], range[1] + 1).map((item) => item.dailyReturn);
-  return getAverage(values);
+  return getAverage(getFilteredTimeline(timeline, range).map((item) => item.dailyReturn));
 }
 
 export function getBenchmarkDailyReturnsForRange(
@@ -57,13 +56,7 @@ export function getBenchmarkDailyReturnsForRange(
   range: readonly [number, number],
   benchmark: BenchmarkIndex,
 ): number[] {
-  const returns: number[] = [];
-
-  for (let index = range[0]; index <= range[1]; index++) {
-    returns.push(timeline[index].benchmarkData[benchmark].dailyReturn);
-  }
-
-  return returns;
+  return getFilteredTimeline(timeline, range).map((entry) => entry.benchmarkData[benchmark].dailyReturn);
 }
 
 export function getAverageBenchmarkDailyReturnForRange(
@@ -99,7 +92,7 @@ export function formatDate(date: Date): string {
   return format(date, "yyyy-MM-dd");
 }
 
-export const CFDIndices: Record<string, { lotSize: number }> = {
+const CFDIndices: Record<string, { lotSize: number }> = {
   GOLD: {
     lotSize: 100, // leverage is already included in the volume in xtb report.
   },
@@ -134,8 +127,7 @@ export function getStockMarketValue(
   assetsAnalysis?: AssetsHistoricalData,
   stockMarketData?: StockMarketData,
 ): { marketValue: number; volume: number; currentPrice: number | undefined } {
-  const assetEvents = assetsAnalysis?.[stock];
-  const openPositions = assetEvents?.openPositions ?? [];
+  const openPositions = assetsAnalysis?.[stock]?.openPositions ?? [];
   const lotSize = getLotSize(stock);
   const currentPrice = stockMarketData?.[stock]?.regularMarketPrice;
 
@@ -145,7 +137,4 @@ export function getStockMarketValue(
   return { marketValue, volume, currentPrice };
 }
 
-export const isPathNested = (path: string): boolean => {
-  const segments = path.split("/").filter(Boolean);
-  return segments.length > 1;
-};
+export const isPathNested = (path: string): boolean => path.split("/").filter(Boolean).length > 1;

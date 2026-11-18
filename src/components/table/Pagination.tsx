@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight } from "lucide-react";
 import React from "react";
 
-export interface PaginationProps {
+interface PaginationProps {
   currentPage: number;
   pageCount: number;
   pageSize: number;

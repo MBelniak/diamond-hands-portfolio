@@ -4,7 +4,6 @@ export const STOCK_CLOSE_EVENT = "stockCloseEvent" as const;
 export const CASH_EVENT = "cash" as const;
 export const CLOSED_POSITION_HISTORY = "Closed Positions" as const;
 export const CASH_OPERATION_HISTORY = "Cash Operations" as const;
-export const OPEN_POSITION = "Open Positions" as const;
 export const CASH_DEPOSIT = "Deposit" as const;
 export const CASH_WITHDRAWAL = "Withdrawal" as const;
 export const CASH_TRANSFER = "Transfer" as const;

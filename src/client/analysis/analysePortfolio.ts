@@ -80,13 +80,9 @@ function getStocksWithLatestQuotes(
 
 function getEventsOnDay(eventsCopy: PortfolioEvent[], day: Date): PortfolioEvent[] {
   const dayEvents: PortfolioEvent[] = [];
-  let event = eventsCopy.length > 0 && isSameDay(eventsCopy[0].date, day) ? eventsCopy.shift() : undefined;
-
-  while (event) {
-    dayEvents.push(event);
-    event = eventsCopy.length > 0 && isSameDay(eventsCopy[0].date, day) ? eventsCopy.shift() : undefined;
+  while (eventsCopy.length > 0 && isSameDay(eventsCopy[0].date, day)) {
+    dayEvents.push(eventsCopy.shift()!);
   }
-
   return dayEvents;
 }
 
@@ -174,66 +170,30 @@ function getBenchmarkDataForDate(
   stockMarketData: StockMarketDataMap,
   previousState?: PortfolioValue,
   currentBenchmarkStockData?: Record<BenchmarkIndex, BenchmarkData>, // Provided if different than in previousState
-): Record<BenchmarkIndex, { stock: Stock; stockValue: number; oneDayProfit: number; dailyReturn: number }> {
-  const dateKey = formatDate(date);
-
-  return Object.values(BenchmarkIndex).reduce(
-    (all, index) => {
+): Record<BenchmarkIndex, BenchmarkData> {
+  return Object.fromEntries(
+    Object.values(BenchmarkIndex).map((index) => {
       const volume =
         currentBenchmarkStockData?.[index].stock.volume ?? (previousState?.benchmarkData[index].stock.volume || 0);
       const benchmarkStock = { [index]: { volume } };
       const todaysValue = getStocksValueCached(benchmarkStock, date, stockMarketData);
       const previousValue = getStocksValueCached(benchmarkStock, addDays(date, -1), stockMarketData);
 
-      return {
-        ...all,
-        [index]: {
-          stock: {
-            volume,
-            price: stockMarketData.get(index)?.tickerQuoteByDateString[dateKey],
-          },
+      return [
+        index,
+        {
+          stock: { volume },
           stockValue: todaysValue,
           oneDayProfit: todaysValue - previousValue,
           dailyReturn: previousValue === 0 ? 0 : todaysValue / previousValue - 1,
         },
-      };
-    },
-    {} as Record<BenchmarkIndex, BenchmarkData>,
-  );
-}
-
-function getNextDayPortfolioValue(
-  previousState: PortfolioValue,
-  date: Date,
-  stockMarketData: StockMarketDataMap,
-): PortfolioValue {
-  const portfolioValue = previousState.cash + getStocksValueCached(previousState.stocks, date, stockMarketData);
-  const accPortfolioValue = portfolioValue + (previousState.totalCapitalInvested - previousState.balance);
-  const oneDayProfit = portfolioValue - previousState.portfolioValue;
-  const profitOrLoss = portfolioValue - previousState.balance;
-
-  return {
-    date: formatDate(date),
-    cash: previousState.cash,
-    balance: previousState.balance,
-    oneDayProfit,
-    dailyReturn: getDailyReturn(previousState.accPortfolioValue, {
-      oneDayProfit,
-      date,
+      ];
     }),
-    totalCapitalInvested: previousState.totalCapitalInvested,
-    stocks: getStocksWithLatestQuotes(previousState.stocks, date, stockMarketData),
-    portfolioValue,
-    accPortfolioValue,
-    profit: Math.max(profitOrLoss, 0),
-    loss: Math.min(profitOrLoss, 0),
-    profitOrLoss,
-    realizedProfitOrLoss: previousState.realizedProfitOrLoss,
-    benchmarkData: getBenchmarkDataForDate(date, stockMarketData, previousState),
-  };
+  ) as Record<BenchmarkIndex, BenchmarkData>;
 }
 
-function getPortfolioValueOnEventDay(
+/** Portfolio value on `date` for the given holdings; without `currentBenchmarkData` the previous day's is carried. */
+function getPortfolioValue(
   {
     cash,
     balance,
@@ -241,20 +201,17 @@ function getPortfolioValueOnEventDay(
     stocks,
   }: Pick<PortfolioValue, "cash" | "balance" | "totalCapitalInvested" | "stocks">,
   realizedProfitOrLoss: number,
-  currentBenchmarkData: Record<BenchmarkIndex, BenchmarkData>,
   date: Date,
   stockMarketData: StockMarketDataMap,
   previousState?: PortfolioValue,
+  currentBenchmarkData?: Record<BenchmarkIndex, BenchmarkData>,
 ): PortfolioValue {
   const portfolioValue = cash + getStocksValueCached(stocks, date, stockMarketData);
-  const accPortfolioValue = portfolioValue + (totalCapitalInvested - balance);
-  const oneDayProfit = previousState
-    ? portfolioValue - balance - (previousState.portfolioValue - previousState.balance)
-    : 0;
   const profitOrLoss = portfolioValue - balance;
+  const oneDayProfit = previousState ? profitOrLoss - (previousState.portfolioValue - previousState.balance) : 0;
 
   return {
-    cash: cash >= 0 ? cash : 0,
+    cash: Math.max(cash, 0),
     balance,
     profit: Math.max(profitOrLoss, 0),
     loss: Math.min(profitOrLoss, 0),
@@ -262,16 +219,11 @@ function getPortfolioValueOnEventDay(
     realizedProfitOrLoss,
     totalCapitalInvested,
     oneDayProfit,
-    dailyReturn: previousState
-      ? getDailyReturn(previousState.accPortfolioValue, {
-          oneDayProfit,
-          date,
-        })
-      : 0,
+    dailyReturn: previousState ? getDailyReturn(previousState.accPortfolioValue, { oneDayProfit, date }) : 0,
     date: formatDate(date),
     stocks: getStocksWithLatestQuotes(stocks, date, stockMarketData),
     portfolioValue,
-    accPortfolioValue,
+    accPortfolioValue: portfolioValue + (totalCapitalInvested - balance),
     benchmarkData: getBenchmarkDataForDate(date, stockMarketData, previousState, currentBenchmarkData),
   };
 }
@@ -310,71 +262,55 @@ function getPortfolioValueData(
     return [];
   }
 
-  let cash = 0;
-  let balance = 0;
-  let totalCapitalInvested = 0;
+  const portfolioState: Pick<PortfolioValue, "cash" | "balance" | "totalCapitalInvested" | "stocks"> = {
+    cash: 0,
+    balance: 0,
+    totalCapitalInvested: 0,
+    stocks: {},
+  };
   let realizedProfitOrLoss = 0;
-
-  const stocks = {} as Record<string, Stock>;
   const eventsCopy = cloneDeep(portfolioEvents).toSorted(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
-
-  // Date range
-  const startDate = addDays(new Date(eventsCopy[0].date), -3);
-  const allDates = getDateRange(startDate, new Date());
-
-  // For each date, find the portfolio state (cash, stocks) and fetch the close price
   const result: PortfolioValue[] = [];
 
-  for (const day of allDates) {
+  for (const day of getDateRange(addDays(new Date(eventsCopy[0].date), -3), new Date())) {
     const dayEvents = getEventsOnDay(eventsCopy, day);
+    const previousState = result.at(-1);
 
     if (dayEvents.length === 0) {
-      const previousState = result.at(-1);
-      if (!previousState) {
-        result.push(getInitialPortfolioState(day));
-        continue;
-      }
-
-      result.push(getNextDayPortfolioValue(previousState, day, stockMarketData));
-    } else {
-      const portfolioState: Pick<PortfolioValue, "cash" | "balance" | "totalCapitalInvested" | "stocks"> = {
-        cash,
-        balance,
-        totalCapitalInvested,
-        stocks,
-      };
-
-      for (const event of dayEvents) {
-        if (event.type === CASH_EVENT) {
-          applyCashEvent(event, portfolioState);
-        } else if (event.type === STOCK_CLOSE_EVENT && event.stockSymbol) {
-          applyStockCloseEvent(event, portfolioState.stocks);
-          realizedProfitOrLoss += event.profitOrLoss || 0;
-        }
-      }
-
-      cash = portfolioState.cash;
-      balance = portfolioState.balance;
-      totalCapitalInvested = portfolioState.totalCapitalInvested;
-
-      const currentBenchmarkData = result.at(-1)?.benchmarkData ?? initialBenchmarkData;
-      if (dayEvents.some((e) => e.type === CASH_EVENT)) {
-        updateBenchmarkDataForCashEvents(dayEvents, currentBenchmarkData, day, stockMarketData);
-      }
-
       result.push(
-        getPortfolioValueOnEventDay(
-          portfolioState,
-          realizedProfitOrLoss,
-          currentBenchmarkData,
-          day,
-          stockMarketData,
-          result.at(-1),
-        ),
+        previousState
+          ? getPortfolioValue(previousState, previousState.realizedProfitOrLoss, day, stockMarketData, previousState)
+          : getInitialPortfolioState(day),
       );
+      continue;
     }
+
+    for (const event of dayEvents) {
+      if (event.type === CASH_EVENT) {
+        applyCashEvent(event, portfolioState);
+      } else if (event.type === STOCK_CLOSE_EVENT && event.stockSymbol) {
+        applyStockCloseEvent(event, portfolioState.stocks);
+        realizedProfitOrLoss += event.profitOrLoss || 0;
+      }
+    }
+
+    const currentBenchmarkData = previousState?.benchmarkData ?? initialBenchmarkData;
+    if (dayEvents.some((e) => e.type === CASH_EVENT)) {
+      updateBenchmarkDataForCashEvents(dayEvents, currentBenchmarkData, day, stockMarketData);
+    }
+
+    result.push(
+      getPortfolioValue(
+        portfolioState,
+        realizedProfitOrLoss,
+        day,
+        stockMarketData,
+        previousState,
+        currentBenchmarkData,
+      ),
+    );
   }
 
   return result;

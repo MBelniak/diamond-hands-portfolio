@@ -1,13 +1,9 @@
 import { type PortfolioValue, type RiskMetrics } from "@/lib/types";
 import { BenchmarkIndex } from "@/lib/benchmarks";
 import { addDays, isAfter, parseISO } from "date-fns";
+import { getAverage as mean } from "@/lib/utils";
 
 const TRADING_DAYS_PER_YEAR = 252;
-
-function mean(values: number[]): number {
-  if (!values.length) return 0;
-  return values.reduce((s, v) => s + v, 0) / values.length;
-}
 
 function stdDev(values: number[]): number {
   if (values.length < 2) return 0;
@@ -95,20 +91,15 @@ export function getTimelineWindow(timeline: PortfolioValue[], daysAgo: number): 
 
 export function calculateRiskMetrics(timeline: PortfolioValue[], annualRiskFreeRate = 0.04): RiskMetrics {
   const dailyReturns = timeline.map((entry) => entry.dailyReturn);
-  const benchmarkDailyReturns = Object.values(BenchmarkIndex).reduce(
-    (acc, index) => ({
-      ...acc,
-      [index]: timeline.map((entry) => entry.benchmarkData[index].dailyReturn),
-    }),
-    {} as Record<BenchmarkIndex, number[]>,
-  );
-  const beta = Object.values(BenchmarkIndex).reduce(
-    (acc, index) => ({
-      ...acc,
-      [index]: calculateBeta(dailyReturns, benchmarkDailyReturns[index]),
-    }),
-    {} as Record<BenchmarkIndex, number>,
-  );
+  const benchmarkDailyReturns = Object.fromEntries(
+    Object.values(BenchmarkIndex).map((index) => [
+      index,
+      timeline.map((entry) => entry.benchmarkData[index].dailyReturn),
+    ]),
+  ) as Record<BenchmarkIndex, number[]>;
+  const beta = Object.fromEntries(
+    Object.values(BenchmarkIndex).map((index) => [index, calculateBeta(dailyReturns, benchmarkDailyReturns[index])]),
+  ) as Record<BenchmarkIndex, number>;
 
   const {
     value: maxDrawdown,

@@ -1,4 +1,5 @@
 import {
+  getStockAPISymbol,
   getClosedPositionRowIds,
   getPositionIdFromClosedPositionEventId,
   isLegacyClosedPositionEventId,
@@ -76,4 +77,12 @@ describe("parseStockVolumeAndPriceFromComment", () => {
       expect(parseStockVolumeAndPriceFromComment(comment)).toEqual({ volume: 0, price: 0 });
     },
   );
+});
+
+describe("getStockAPISymbol", () => {
+  it("maps XTB symbols to Yahoo symbols", () => {
+    expect(
+      ["AAPL.US", "IGLN.UK", "ASML.NL", "SAP.DE", "OIL", "US100", "BRK.B.US", "XYZ"].map(getStockAPISymbol),
+    ).toEqual(["AAPL", "IGLN.L", "ASML.AS", "SAP.DE", "CL=F", "^NDX", "BRK", "XYZ"]);
+  });
 });
