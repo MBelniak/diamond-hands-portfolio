@@ -68,7 +68,8 @@ Filterable, sortable history of buys, sells, deposits and withdrawals.
 ## 🛠️ Engineering highlights
 
 - **Heavy computation off the main thread:** the portfolio analysis (daily timeline, returns, risk metrics) runs in a **Web Worker** with request cancellation, so the UI stays responsive on large histories.
-- **Layered caching:** market data and FX rates are cached in **Redis** (refreshed daily), user data is persisted in **Appwrite**, and parsed portfolios are cached client-side in **IndexedDB**. Server state is managed with **TanStack Query**.
+- **Lean API payloads:** the user's portfolio events and the market data are served by separate endpoints. Market data comes in one bulk request in a compact, columnar, close-only format (as-traded prices are derived on the client from the splits), and full candles are fetched only when an asset chart is opened. For the 31-ticker demo portfolio, market data went from ~10 MB to ~1.2 MB (~250 KB gzipped).
+- **Layered caching:** market data is cached in **Redis** (refreshed hourly); exchange rates are cached per currency pair and 365-day window, with past windows kept for good, so the rates API is called at most hourly. User data is persisted in **Appwrite**, and parsed portfolios are cached client-side in **IndexedDB**. Server state is managed with **TanStack Query**.
 - **Financial maths implemented from scratch:** TWR and IRR-based MWR, Sharpe/Sortino, drawdown, historical VaR and beta, all unit-tested with **Vitest**.
 - **Corporate actions handled:** historical prices are adjusted for **stock splits** fetched from Yahoo Finance.
 - **Dependency injection** with **Inversify** for server-side clients (database, Redis), keeping them swappable and testable.
@@ -77,13 +78,13 @@ Filterable, sortable history of buys, sells, deposits and withdrawals.
 
 ## 🧰 Tech stack
 
-| Area           | Tools                                                                      |
-| -------------- | -------------------------------------------------------------------------- |
-| Framework      | Next.js 15 (App Router, Turbopack), React 19, TypeScript                   |
-| UI             | Tailwind CSS 4, Radix UI, lucide-react, GSAP                               |
-| Data & state   | TanStack Query, TanStack Table, Zustand, IndexedDB (`idb`)                 |
-| Charts         | Recharts, TradingView Lightweight Charts                                   |
-| Backend & data | Next.js route handlers, Appwrite, Redis, Inversify                         |
+| Area           | Tools                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------- |
+| Framework      | Next.js 15 (App Router, Turbopack), React 19, TypeScript                              |
+| UI             | Tailwind CSS 4, Radix UI, lucide-react, GSAP                                          |
+| Data & state   | TanStack Query, TanStack Table, Zustand, IndexedDB (`idb`)                            |
+| Charts         | Recharts, TradingView Lightweight Charts                                              |
+| Backend & data | Next.js route handlers, Appwrite, Redis, Inversify                                    |
 | External APIs  | Yahoo Finance (prices and splits), Frankfurter (ECB exchange rates), logo.dev (logos) |
-| Auth & ops     | Clerk, Sentry, Vercel Analytics                                            |
-| Quality        | Vitest, ESLint, Prettier                                                   |
+| Auth & ops     | Clerk, Sentry, Vercel Analytics                                                       |
+| Quality        | Vitest, ESLint, Prettier                                                              |
