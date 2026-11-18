@@ -17,10 +17,12 @@ function buildMarkers(priceHistory: ChartData[]): SeriesMarker<Time>[] {
   const markers: SeriesMarker<Time>[] = [];
 
   for (const data of priceHistory) {
+    // Anchor the dots at the traded price, not above/below the bar
     if (data.openMarker != null) {
       markers.push({
         time: data.date as Time,
-        position: "belowBar",
+        position: "atPriceMiddle",
+        price: data.openMarker,
         color: "#22c55e",
         shape: "circle",
         text: `Buy ${data.volumeMarker?.toFixed(2)} @ ${data.openMarker?.toFixed(2)}`,
@@ -29,7 +31,8 @@ function buildMarkers(priceHistory: ChartData[]): SeriesMarker<Time>[] {
     if (data.closeMarker != null) {
       markers.push({
         time: data.date as Time,
-        position: "aboveBar",
+        position: "atPriceMiddle",
+        price: data.closeMarker,
         color: "#ef4444",
         shape: "circle",
         text: `Sell ${data.volumeMarker?.toFixed(2)} @ ${data.closeMarker?.toFixed(2)}`,

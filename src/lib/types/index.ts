@@ -60,7 +60,13 @@ export type TWRValueTimeline = {
   totalCapitalInvested: number;
 }[];
 
-export type Split = { effective_date: ISODateString; split_factor: number };
+export type Split = {
+  effective_date: ISODateString;
+  // Exact moment the split took effect (market open of the first post-split session). Missing on cached data
+  // fetched before it was stored.
+  effective_time?: ISODateTimeString;
+  split_factor: number;
+};
 
 export const enum XlsxColumn {
   TIME = "Time",
@@ -90,6 +96,8 @@ export type PortfolioEvent = {
       stocksVolumeChange?: number;
       stockSymbol?: string | null;
       openPrice?: number;
+      // XTB position the operation belongs to. Missing on events stored before it was parsed.
+      positionId?: string | null;
     }
   | ({
       stocksVolumeChange: number;
