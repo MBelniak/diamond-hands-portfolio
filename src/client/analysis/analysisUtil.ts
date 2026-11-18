@@ -6,6 +6,7 @@ import {
   CashFlow,
   PortfolioEvent,
   PortfolioValue,
+  Split,
   StockMarketData,
 } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -119,61 +120,113 @@ export function buildAssetsEventHistory(
   }, {} as AssetsHistoricalData);
 }
 
-/** Derives the currently open lots (FIFO) from cash buy/sell operations, with split-adjusted volumes. */
-export function deriveOpenPositionsFromCashEvents(
-  cashEvents: CashEvent[],
-  stockMarketData?: StockMarketData,
-): Record<string, AssetsHistoricalData[string]["openPositions"]> {
-  const buysBySymbol: Record<string, { volume: number; price: number; date: string }[]> = {};
-  const sellVolumeBySymbol: Record<string, number> = {};
+type OpenLots = AssetsHistoricalData[string]["openPositions"];
 
-  for (const event of cashEvents) {
-    const symbol = event.stockSymbol;
-    if (!symbol || !event.stocksVolumeChange) continue;
-    // Adjust both buys and sells, so FIFO matching compares like with like across a split
-    const volume = event.stocksVolumeChange * getSplitFactor(stockMarketData?.[symbol]?.splits, event.date);
+const VOLUME_EPSILON = 1e-6;
 
+/**
+ * Open lots of one symbol, matching sells to buys by XTB position. XTB never changes the volume of a position (on a
+ * split it cashes the position out or compensates in cash), so a position's buys and sells are netted in as-traded
+ * shares - converting them with split factors of different dates would leave phantom shares behind.
+ */
+function deriveOpenLotsByPosition(events: CashEvent[], splits: Split[] | undefined): OpenLots {
+  const positions = new Map<string, { net: number; buyVolume: number; buyValue: number; firstEventTime: number }>();
+
+  for (const event of events) {
+    const time = new Date(event.date).getTime();
+    const position = positions.get(event.positionId!) ?? {
+      net: 0,
+      buyVolume: 0,
+      buyValue: 0,
+      firstEventTime: time,
+    };
+    const volume = event.stocksVolumeChange!;
+    position.net += volume;
+    position.firstEventTime = Math.min(position.firstEventTime, time);
     if (volume > 0) {
-      if (!buysBySymbol[symbol]) {
-        buysBySymbol[symbol] = [];
-      }
-      buysBySymbol[symbol].push({
-        volume,
-        price: event.openPrice ?? 0,
-        date: formatDate(new Date(event.date)),
-      });
-    } else {
-      sellVolumeBySymbol[symbol] = (sellVolumeBySymbol[symbol] ?? 0) + Math.abs(volume);
+      position.buyVolume += volume;
+      position.buyValue += volume * (event.openPrice ?? 0);
+    }
+    positions.set(event.positionId!, position);
+  }
+
+  // XTB sometimes books a sell against a sibling position of the same order (e.g. the whole vs the fractional part
+  // of a purchase). Offset such over-closed positions against the open ones opened closest in time.
+  for (const overClosed of positions.values()) {
+    for (const sibling of [...positions.values()]
+      .filter((position) => position.net > VOLUME_EPSILON)
+      .sort(
+        (a, b) =>
+          Math.abs(a.firstEventTime - overClosed.firstEventTime) -
+          Math.abs(b.firstEventTime - overClosed.firstEventTime),
+      )) {
+      if (overClosed.net >= -VOLUME_EPSILON) break;
+      const matched = Math.min(sibling.net, -overClosed.net);
+      sibling.net -= matched;
+      overClosed.net += matched;
     }
   }
 
-  return Object.entries(buysBySymbol).reduce(
-    (acc, [symbol, buys]) => {
-      let remainingSellVolume = sellVolumeBySymbol[symbol] ?? 0;
-      const openLots: AssetsHistoricalData[string]["openPositions"] = [];
+  return [...positions.values()]
+    .filter((position) => position.net > VOLUME_EPSILON && position.buyVolume > 0)
+    .sort((a, b) => a.firstEventTime - b.firstEventTime)
+    .map((position) => ({
+      // Prices are split-adjusted already, so adjust the volume too (volume × price = traded value)
+      volume: position.net * getSplitFactor(splits, new Date(position.firstEventTime)),
+      stockPriceOnBuy: position.buyValue / position.buyVolume,
+      date: formatDate(new Date(position.firstEventTime)),
+    }));
+}
 
-      for (const buy of buys.sort((a, b) => a.date.localeCompare(b.date))) {
-        if (remainingSellVolume >= buy.volume - 1e-9) {
-          remainingSellVolume = Math.max(0, remainingSellVolume - buy.volume);
-          continue;
-        }
+/** FIFO fallback for events stored before the XTB position id was parsed. */
+function deriveOpenLotsFifo(events: CashEvent[], splits: Split[] | undefined): OpenLots {
+  const buys: { volume: number; price: number; date: string }[] = [];
+  let remainingSellVolume = 0;
 
-        openLots.push({
-          volume: buy.volume - remainingSellVolume,
-          stockPriceOnBuy: buy.price,
-          date: buy.date,
-        });
-        remainingSellVolume = 0;
-      }
+  for (const event of events) {
+    // Adjust both buys and sells, so FIFO matching compares like with like across a split
+    const volume = event.stocksVolumeChange! * getSplitFactor(splits, event.date);
+    if (volume > 0) {
+      buys.push({ volume, price: event.openPrice ?? 0, date: formatDate(new Date(event.date)) });
+    } else {
+      remainingSellVolume += Math.abs(volume);
+    }
+  }
 
-      if (openLots.length > 0) {
-        acc[symbol] = openLots;
-      }
+  const openLots: OpenLots = [];
+  for (const buy of buys.sort((a, b) => a.date.localeCompare(b.date))) {
+    if (remainingSellVolume >= buy.volume - 1e-9) {
+      remainingSellVolume = Math.max(0, remainingSellVolume - buy.volume);
+      continue;
+    }
+    openLots.push({ volume: buy.volume - remainingSellVolume, stockPriceOnBuy: buy.price, date: buy.date });
+    remainingSellVolume = 0;
+  }
+  return openLots;
+}
 
-      return acc;
-    },
-    {} as Record<string, AssetsHistoricalData[string]["openPositions"]>,
-  );
+/** Derives the currently open lots from cash buy/sell operations, with split-adjusted volumes. */
+export function deriveOpenPositionsFromCashEvents(
+  cashEvents: CashEvent[],
+  stockMarketData?: StockMarketData,
+): Record<string, OpenLots> {
+  const tradesBySymbol: Record<string, CashEvent[]> = {};
+  for (const event of cashEvents) {
+    if (!event.stockSymbol || !event.stocksVolumeChange) continue;
+    (tradesBySymbol[event.stockSymbol] ??= []).push(event);
+  }
+
+  const result: Record<string, OpenLots> = {};
+  for (const [symbol, trades] of Object.entries(tradesBySymbol)) {
+    const splits = stockMarketData?.[symbol]?.splits;
+    const openLots = trades.every((event) => event.positionId)
+      ? deriveOpenLotsByPosition(trades, splits)
+      : deriveOpenLotsFifo(trades, splits);
+    if (openLots.length > 0) {
+      result[symbol] = openLots;
+    }
+  }
+  return result;
 }
 
 export const getCashFlow = (cashEvents: CashEvent[]): CashFlow => {

@@ -31,3 +31,16 @@ describe("getSplitFactor", () => {
     expect(getSplitFactor([], "2024-06-13T11:30:03.000Z")).toBe(1);
   });
 });
+
+describe("getSplitFactor with the exact split time", () => {
+  const splits = [{ effective_date: "2024-10-01", effective_time: "2024-10-01T13:30:00.000Z", split_factor: 10 }];
+
+  it("applies the split to events earlier on the effective day", () => {
+    expect(getSplitFactor(splits, "2024-10-01T07:20:00.000Z")).toBe(10);
+  });
+
+  it("does not apply the split to events later on the effective day", () => {
+    expect(getSplitFactor(splits, "2024-10-01T19:03:00.000Z")).toBe(1);
+    expect(getSplitFactor(splits, "2024-10-01T13:30:00.000Z")).toBe(1);
+  });
+});

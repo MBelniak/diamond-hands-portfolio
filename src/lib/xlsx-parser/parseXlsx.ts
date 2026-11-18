@@ -73,6 +73,7 @@ function getCashEvents(workbook: any): CashEvent[] {
         stocksVolumeChange: isRowStockSell(row) ? -volume : isRowStockBuy(row) ? volume : 0,
         stockSymbol: String(row[XlsxColumn.TICKER]) || null,
         openPrice: price,
+        positionId: String(row[XlsxColumn.POSITION_ID] ?? "") || null,
         cashWithdrawalOrDeposit: [CASH_DEPOSIT as string, CASH_WITHDRAWAL, CASH_TRANSFER].includes(
           String(row[XlsxColumn.TYPE]),
         )
@@ -158,6 +159,7 @@ function parseSplits(splits?: Record<string, { date: number; numerator: number; 
   }
   return Object.values(splits).map((split) => ({
     effective_date: new Date(split.date * 1000).toISOString().slice(0, 10),
+    effective_time: new Date(split.date * 1000).toISOString(),
     split_factor: split.numerator / split.denominator,
   }));
 }
