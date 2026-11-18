@@ -1,19 +1,15 @@
 // @ts-expect-error no typings for this file
 import XLSX from "xlsx/xlsx.js";
-import { isSplitApplicable } from "@/lib/splits";
 import {
   CashEvent,
   ExchangeRates,
   PortfolioCurrency,
   PortfolioData,
   PortfolioEvents,
+  PortfolioEventsResponse,
   type PortfolioEvent,
-  type Split,
   StockMarketData,
-  TickerMarketData,
-  TickerQuote,
   XlsxColumn,
-  StockTicker,
 } from "../types";
 import { AbstractRedisClient } from "../redis";
 import {
@@ -30,7 +26,6 @@ import {
 import {
   convertToCurrency,
   getClosedPositionRowIds,
-  getPricesFromTickerQuote,
   parseStockVolumeAndPriceFromComment,
   XlsxHelper,
 } from "@/lib/xlsx-parser/utils";
@@ -39,8 +34,8 @@ import { formatDate } from "@/lib/utils";
 import { UserPortfolioRepository } from "@/database/UserPortfolioRepository";
 import { User } from "@clerk/nextjs/server";
 import { BenchmarkIndex } from "@/lib/benchmarks";
-import { YahooAPIHelper } from "@/lib/yahoo-api/YahooAPIHelper";
-import { ExchangeRatesHelper } from "@/lib/exchange-rates/ExchangeRatesHelper";
+import { applyReciprocalSplits, getStockMarketData } from "@/lib/market-data/marketData";
+import { getRatesForDate } from "@/lib/exchange-rates/rateWindows";
 import iocContainer from "@/iocContainer";
 
 if (!process.env.REDIS_URL) {
@@ -153,188 +148,7 @@ function getCashAndStocksEvents(workbook: any): PortfolioEvents {
   };
 }
 
-function parseSplits(splits?: Record<string, { date: number; numerator: number; denominator: number }>): Split[] {
-  if (!splits) {
-    return [];
-  }
-  return Object.values(splits).map((split) => ({
-    effective_date: new Date(split.date * 1000).toISOString().slice(0, 10),
-    effective_time: new Date(split.date * 1000).toISOString(),
-    split_factor: split.numerator / split.denominator,
-  }));
-}
-
-const applySplits = <PTickerQuote extends Partial<TickerQuote>>(
-  tickerQuote: PTickerQuote,
-  splits: Split[],
-  date: Date,
-): PTickerQuote => {
-  const result = { ...tickerQuote };
-  splits
-    ?.filter((split: Split) => isSplitApplicable(split, date))
-    .forEach((split) => {
-      if (split.split_factor) {
-        Object.keys(result).forEach((key) => {
-          (result[key as keyof typeof result] as number) *= split.split_factor;
-        });
-      }
-    });
-
-  return result;
-};
-
-const applyReciprocalSplits = <PTickerQuote extends Partial<TickerQuote>>(
-  tickerQuote: PTickerQuote,
-  splits: Split[],
-  date: Date,
-): PTickerQuote => {
-  return applySplits(
-    tickerQuote,
-    splits.map((split) => ({ ...split, split_factor: 1 / (split.split_factor || 1) })),
-    date,
-  );
-};
-
-function populatePriceMapForDate(date: Date, tickerQuote: TickerQuote, splits: Split[], prices: TickerMarketData) {
-  const dateKey = formatDate(date);
-  // yahoo API already returns converted values
-  prices.splitAdjustedTickerQuoteByDateString[dateKey] = tickerQuote;
-  prices.tickerQuoteByDateString[dateKey] = {
-    ...applySplits(getPricesFromTickerQuote(tickerQuote), splits, date),
-    volume: tickerQuote.volume,
-  };
-}
-
-/**
- * Fetches closing prices for a given stock symbol in the specified date range.
- * Now supports conversion to USD using daily exchange rates.
- */
-async function fetchStockClosePriceRange(symbol: string, startDate: Date): Promise<TickerMarketData | null> {
-  const endDate = new Date();
-  const data = await YahooAPIHelper.fetchHistoricalTickerMarketData(symbol, startDate, endDate);
-  if (!data) {
-    return null;
-  }
-  const result = data.chart?.result;
-  if (!result || result.length === 0) {
-    return null;
-  }
-
-  const quote = result[0].indicators?.quote?.[0];
-  if (!quote) {
-    return null;
-  }
-
-  const timestamp = result[0].timestamp;
-
-  if (!timestamp) {
-    return null;
-  }
-
-  const currency = result[0].meta?.currency ?? "USD";
-  const splits = parseSplits(result[0].events?.splits);
-  const regularMarketPrice = result[0].meta?.regularMarketPrice;
-  const longName = result[0].meta?.longName ?? symbol;
-  const instrumentType = result[0].meta?.instrumentType;
-
-  const pricesRecord: TickerMarketData = {
-    currency,
-    tickerQuoteByDateString: {},
-    splitAdjustedTickerQuoteByDateString: {},
-    regularMarketPrice: result[0].meta?.regularMarketPrice ?? 0,
-    longName,
-    instrumentType,
-    splits,
-  };
-
-  let previousTickerQuote: Partial<TickerQuote> = {};
-
-  for (let i = 0; i < timestamp.length; i++) {
-    const date = new Date(timestamp[i] * 1000);
-
-    if (date < startDate || date > endDate) {
-      continue;
-    }
-
-    const isLastTimestamp = i === timestamp.length - 1;
-
-    const tickerQuote: TickerQuote = {
-      open: quote.open[i],
-      close: quote.close[i],
-      high: quote.high[i],
-      low: quote.low[i],
-      volume: quote.volume[i],
-    };
-
-    if (isLastTimestamp && regularMarketPrice) {
-      tickerQuote.regularMarketPrice = regularMarketPrice;
-    }
-
-    Object.keys(tickerQuote).forEach((key) => {
-      const _key = key as keyof typeof tickerQuote;
-      if (tickerQuote[_key] === null || tickerQuote[_key] === undefined) {
-        if (_key === "close" && isLastTimestamp && regularMarketPrice) {
-          tickerQuote[_key] = regularMarketPrice;
-        } else if (quote.close[i] != null) {
-          tickerQuote[_key] = quote.close[i];
-        } else if (quote.high[i] != null) {
-          tickerQuote[_key] = quote.high[i];
-        } else if (previousTickerQuote[_key] != null) {
-          tickerQuote[_key] = previousTickerQuote[_key]!;
-        }
-      }
-    });
-
-    previousTickerQuote = { ...tickerQuote };
-
-    populatePriceMapForDate(date, tickerQuote, splits, pricesRecord);
-  }
-
-  return pricesRecord;
-}
-
-const getRawMarketData = async (
-  stocks: Set<string>,
-  startDate: Date,
-): Promise<{ ticker: string; marketData: TickerMarketData }[]> => {
-  const redis = iocContainer.get<AbstractRedisClient>(AbstractRedisClient);
-
-  return (
-    await Promise.all(
-      Array.from(stocks).map(async (ticker) => {
-        let marketData = await redis.getCachedMarketData(ticker, startDate);
-        if (marketData === null) {
-          marketData = await fetchStockClosePriceRange(ticker, startDate);
-          if (marketData) {
-            await redis.cacheMarketData(ticker, startDate, marketData);
-          } else {
-            console.warn(`No market data found for symbol: ${ticker}`);
-          }
-        }
-        return { ticker, marketData };
-      }),
-    )
-  ).filter(({ marketData }) => !!marketData) as { ticker: string; marketData: TickerMarketData }[];
-};
-
-/**
- * Returns prices in stock's original currency
- * @param stocks
- * @param startDate
- */
-async function getStockMarketData(stocks: Set<StockTicker>, startDate: Date): Promise<StockMarketData> {
-  const stockMarketData: StockMarketData = {};
-
-  const rawMarketData = await getRawMarketData(stocks, startDate);
-
-  rawMarketData.forEach(({ ticker, marketData }) => {
-    stockMarketData[ticker] = marketData;
-  });
-
-  return stockMarketData;
-}
-
-function getStockTickersFromEvents(events: PortfolioEvent[]): Set<string> {
+export function getStockTickersFromEvents(events: PortfolioEvent[]): Set<string> {
   return events.reduce((acc, next) => {
     if (
       [STOCK_OPEN_EVENT, STOCK_OPEN_POSITION].includes(
@@ -367,43 +181,6 @@ const getPortfolioEvents = async (
   return await UserPortfolioRepository.getPortfolioFromDB(user, selectedPortfolio);
 };
 
-const convertMarketDataToCurrency = (
-  stockMarketData: StockMarketData,
-  exchangeRates: ExchangeRates,
-  portfolioCurrency: PortfolioCurrency,
-) => {
-  for (const [symbol, priceRecord] of Object.entries(stockMarketData)) {
-    stockMarketData[symbol].regularMarketPrice = convertToCurrency(
-      priceRecord.regularMarketPrice,
-      exchangeRates[formatDate(new Date())] || {},
-      priceRecord.currency,
-      portfolioCurrency,
-    )!;
-    for (const [date, tickerQuote] of Object.entries(priceRecord.tickerQuoteByDateString)) {
-      Object.keys(getPricesFromTickerQuote(tickerQuote)).forEach((key) => {
-        const _key = key as keyof TickerQuote;
-        stockMarketData[symbol].tickerQuoteByDateString[date][_key] = convertToCurrency(
-          tickerQuote[_key],
-          exchangeRates[date] || {},
-          priceRecord.currency,
-          portfolioCurrency,
-        )!;
-      });
-    }
-    for (const [date, tickerQuote] of Object.entries(priceRecord.splitAdjustedTickerQuoteByDateString)) {
-      Object.keys(getPricesFromTickerQuote(tickerQuote)).forEach((key) => {
-        const _key = key as keyof TickerQuote;
-        stockMarketData[symbol].splitAdjustedTickerQuoteByDateString[date][_key] = convertToCurrency(
-          tickerQuote[_key],
-          exchangeRates[date] || {},
-          priceRecord.currency,
-          portfolioCurrency,
-        )!;
-      });
-    }
-  }
-};
-
 /**
  * Converts the raw (as-exported by XTB, instrument-currency, as-traded) event prices into the portfolio currency
  * and adjusts them for splits, so they're comparable with split-adjusted quotes. Volumes are left as traded:
@@ -430,7 +207,7 @@ const adjustEventPrices = (
       if (!event.openPrice) continue;
 
       event.openPrice =
-        convertToCurrency(event.openPrice, exchangeRates[date] || {}, marketData.currency, toCurrency) ??
+        convertToCurrency(event.openPrice, getRatesForDate(exchangeRates, date), marketData.currency, toCurrency) ??
         event.openPrice;
 
       event.openPrice = applyReciprocalSplits({ open: event.openPrice }, marketData.splits, new Date(event.date)).open;
@@ -438,7 +215,7 @@ const adjustEventPrices = (
 
     if (event.type === STOCK_CLOSE_EVENT) {
       event.closePrice =
-        convertToCurrency(event.closePrice, exchangeRates[date] || {}, marketData.currency, toCurrency) ??
+        convertToCurrency(event.closePrice, getRatesForDate(exchangeRates, date), marketData.currency, toCurrency) ??
         event.closePrice;
 
       event.closePrice = applyReciprocalSplits(
@@ -467,17 +244,19 @@ export async function uploadPortfolioData(
   await UserPortfolioRepository.savePortfolioToDB(finalEvents, user, selectedPortfolio);
 }
 
-export async function buildPortfolioData(
+/**
+ * Prepares the user's events for the client: prices converted to the portfolio currency and split-adjusted.
+ * Market data itself isn't included - the client fetches it from `/api/market-data` in a separate (bulk) request,
+ * since it doesn't depend on the user.
+ */
+export async function buildPortfolioEventsResponse(
   eventsInput: PortfolioEvents,
   portfolioCurrency: PortfolioCurrency,
-): Promise<PortfolioData | null> {
+): Promise<PortfolioEventsResponse | null> {
   const events = structuredClone(eventsInput) as PortfolioEvents;
 
   const { cashEvents, closedStocksOpenEvents, closedStocksCloseEvents } = events;
-
-  const allEvents = [...cashEvents, ...closedStocksOpenEvents, ...closedStocksCloseEvents].toSorted(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-  );
+  const allEvents = [...cashEvents, ...closedStocksOpenEvents, ...closedStocksCloseEvents];
 
   if (!allEvents.length) return null;
 
@@ -486,34 +265,24 @@ export async function buildPortfolioData(
     stockTickers.add(value);
   });
 
-  const startDate = new Date(2022, 0, 0);
-  const stockMarketData = await getStockMarketData(stockTickers, startDate);
+  // Also warms the market data and exchange rates caches before the client asks for each ticker
+  const { stockMarketData, exchangeRates } = await getStockMarketData(stockTickers, portfolioCurrency);
 
-  const currencies = new Set(
-    Object.values(stockMarketData)
-      .filter((priceData) => priceData)
-      .map(({ currency }) => currency)
-      .filter(Boolean),
-  );
-
-  const exchangeRatesHelper = new ExchangeRatesHelper();
-  const exchangeRates = await exchangeRatesHelper
-    .getExchangeRates(currencies, portfolioCurrency, startDate)
-    .catch(() => ({}) as ExchangeRates);
-
-  convertMarketDataToCurrency(stockMarketData, exchangeRates, portfolioCurrency);
   adjustEventPrices(events, exchangeRates, stockMarketData, portfolioCurrency);
 
   return {
     portfolioEvents: events,
-    stockMarketData,
+    tickers: Object.keys(stockMarketData).toSorted(),
   };
 }
 
-export async function getPortfolioEventsForUser(user: User, selectedPortfolio: PortfolioCurrency) {
+export async function getPortfolioEventsForUser(
+  user: User,
+  selectedPortfolio: PortfolioCurrency,
+): Promise<PortfolioEventsResponse | null> {
   const userEvents = await getPortfolioEvents(user, selectedPortfolio);
   if (userEvents == null) {
     return null;
   }
-  return buildPortfolioData(userEvents, selectedPortfolio);
+  return buildPortfolioEventsResponse(userEvents, selectedPortfolio);
 }

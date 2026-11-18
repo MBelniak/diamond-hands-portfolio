@@ -1,5 +1,4 @@
-import { PortfolioAnalysis, TickerQuote } from "@/lib/types";
-import { getDateRange } from "@/lib/xlsx-parser/utils";
+import { AssetsHistoricalData, TickerOhlcData, TickerQuote } from "@/lib/types";
 import { addYears } from "date-fns";
 import { formatDate } from "@/lib/utils";
 
@@ -11,45 +10,39 @@ export type ChartData = {
   volumeMarker?: number | null;
 };
 
-export const getChartData = (portfolioAnalysis: PortfolioAnalysis, asset: string): ChartData[] => {
-  const assetData = portfolioAnalysis.assetsAnalysis[asset];
-  const stockMarketData = portfolioAnalysis.stockMarketData[asset];
+/**
+ * Candles of the last 3 years with the user's buy/sell operations attached. `assetData` is missing for assets the
+ * user never traded (e.g. benchmark indices) - the chart then has no markers.
+ */
+export const getChartData = (
+  ohlc: TickerOhlcData,
+  assetData: AssetsHistoricalData[string] | undefined,
+): ChartData[] => {
+  const fromDate = formatDate(addYears(new Date(), -3));
 
-  if (!stockMarketData) {
-    return [];
-  }
+  return ohlc.dates.flatMap((dateStr, index) => {
+    if (dateStr < fromDate) {
+      return [];
+    }
 
-  return getDateRange(addYears(new Date(), -3), new Date())
-    .map((date) => {
-      const dateStr = formatDate(date);
+    const tickerQuote: TickerQuote = {
+      open: ohlc.open[index] ?? undefined,
+      high: ohlc.high[index] ?? undefined,
+      low: ohlc.low[index] ?? undefined,
+      close: ohlc.close[index] ?? undefined,
+    };
 
-      if (
-        !Object.keys(portfolioAnalysis.stockMarketData[asset].splitAdjustedTickerQuoteByDateString).includes(dateStr)
-      ) {
-        return null;
-      }
+    const openEvent = assetData?.openEvents.find((e) => e.date === dateStr);
+    const openPosition = openEvent ? undefined : assetData?.openPositions.find((e) => e.date === dateStr);
+    const openMarker = (openEvent ?? openPosition)?.stockPriceOnBuy;
+    let volumeMarker = (openEvent ?? openPosition)?.volume;
 
-      const tickerQuote = portfolioAnalysis.stockMarketData[asset].splitAdjustedTickerQuoteByDateString[dateStr] || {};
+    const closeEvent = assetData?.closeEvents.find((e) => e.date === dateStr);
+    const closeMarker = closeEvent?.stockPriceOnSell;
+    if (closeMarker) {
+      volumeMarker = closeEvent!.volume + (volumeMarker ?? 0);
+    }
 
-      const openEvent = assetData.openEvents.find((e) => e.date === dateStr);
-      let openMarker;
-      let volumeMarker;
-
-      if (openEvent) {
-        openMarker = openEvent ? openEvent.stockPriceOnBuy : undefined;
-        volumeMarker = openEvent ? openEvent.volume : undefined;
-      } else {
-        const openPosition = assetData.openPositions.find((e) => e.date === dateStr);
-        openMarker = openPosition ? openPosition.stockPriceOnBuy : undefined;
-        volumeMarker = openPosition ? openPosition.volume : undefined;
-      }
-
-      const closeEvent = assetData.closeEvents.find((e) => e.date === dateStr);
-      const closeMarker = closeEvent ? closeEvent.stockPriceOnSell : undefined;
-      if (closeMarker) {
-        volumeMarker = closeEvent!.volume + (volumeMarker ?? 0);
-      }
-      return { tickerQuote, date: dateStr, openMarker, closeMarker, volumeMarker };
-    })
-    .filter((data) => data != null);
+    return [{ tickerQuote, date: dateStr, openMarker, closeMarker, volumeMarker }];
+  });
 };

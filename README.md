@@ -84,6 +84,6 @@ Filterable, sortable history of buys, sells, deposits and withdrawals.
 | Data & state   | TanStack Query, TanStack Table, Zustand, IndexedDB (`idb`)                 |
 | Charts         | Recharts, TradingView Lightweight Charts                                   |
 | Backend & data | Next.js route handlers, Appwrite, Redis, Inversify                         |
-| External APIs  | Yahoo Finance (prices and splits), Currency Exchange API, logo.dev (logos) |
+| External APIs  | Yahoo Finance (prices and splits), Frankfurter (ECB exchange rates), logo.dev (logos) |
 | Auth & ops     | Clerk, Sentry, Vercel Analytics                                            |
 | Quality        | Vitest, ESLint, Prettier                                                   |
