@@ -23,6 +23,13 @@ export type ISODateTimeString = string;
 export type StockTicker = string;
 export type Currency = string;
 export type ExchangeRates = Record<ISODateString, Record<Currency, number>>;
+/** One currency pair's rates over one fetch window (see `getRateWindows`), as cached in Redis. */
+export type CachedExchangeRates = {
+  rates: ExchangeRates;
+  /** The window had ended when it was fetched, so the rates are final */
+  complete: boolean;
+  fetchedAt: ISODateTimeString;
+};
 
 export type BenchmarkData = {
   stock: Stock;
@@ -165,6 +172,43 @@ export type TickerMarketData = {
   longName: string;
   instrumentType?: string;
   splits: Split[];
+};
+
+/**
+ * Wire format of one ticker in `POST /api/market-data/{portfolioCurrency}`: columnar, close-only, split-adjusted
+ * prices converted to the portfolio currency.
+ * Expanded back into `TickerMarketData` on the client (see `expandTickerMarketData`).
+ */
+export type CompactTickerMarketData = {
+  ticker: StockTicker;
+  portfolioCurrency: PortfolioCurrency;
+  /** Currency the instrument is quoted in */
+  currency: Currency;
+  longName: string;
+  instrumentType?: string;
+  regularMarketPrice: number;
+  /** Regular market price attached to the last session, if any */
+  lastSessionRegularMarketPrice?: number;
+  splits: Split[];
+  dates: ISODateString[];
+  close: (number | null)[];
+};
+
+/** Wire format of `/api/market-data/{portfolioCurrency}/{ticker}/ohlc`: split-adjusted daily candles. */
+export type TickerOhlcData = {
+  ticker: StockTicker;
+  portfolioCurrency: PortfolioCurrency;
+  dates: ISODateString[];
+  open: (number | null)[];
+  high: (number | null)[];
+  low: (number | null)[];
+  close: (number | null)[];
+};
+
+/** Response of `/api/portfolio`: the user's events plus the tickers whose market data the analysis needs. */
+export type PortfolioEventsResponse = {
+  portfolioEvents: PortfolioEvents;
+  tickers: StockTicker[];
 };
 
 export type StockMarketData = Record<StockTicker, TickerMarketData>; // symbol -> {price: <date(YYYY-MM-DD), value>, currency, splitAdjustedPrice: <date(YYYY-MM-DD), value>, longName: string}

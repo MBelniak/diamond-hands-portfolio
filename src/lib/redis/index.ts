@@ -1,4 +1,4 @@
-import { ExchangeRates, PortfolioCurrency, TickerMarketData } from "@/lib/types";
+import { CachedExchangeRates, ISODateString, PortfolioCurrency, TickerMarketData } from "@/lib/types";
 import { format } from "date-fns";
 import { injectable } from "inversify";
 import { createClient, RedisClientType, SetOptions } from "redis";
@@ -8,8 +8,19 @@ export abstract class AbstractRedisClient {
   abstract getRedisClient(): RedisClientType;
   abstract getCachedMarketData(ticker: string, startDate: Date): Promise<TickerMarketData | null>;
   abstract cacheMarketData(ticker: string, startDate: Date, tickerMarketData: TickerMarketData): Promise<void>;
-  abstract getCachedExchangeRates(date: Date, baseCurrency: PortfolioCurrency): Promise<ExchangeRates | null>;
-  abstract cacheExchangeRates(date: Date, baseCurrency: PortfolioCurrency, exchangeRates: ExchangeRates): Promise<void>;
+  abstract getCachedExchangeRates(
+    baseCurrency: PortfolioCurrency,
+    quoteCurrency: string,
+    windowStart: ISODateString,
+  ): Promise<CachedExchangeRates | null>;
+  /** Without `ttlSeconds` the entry never expires. */
+  abstract cacheExchangeRates(
+    baseCurrency: PortfolioCurrency,
+    quoteCurrency: string,
+    windowStart: ISODateString,
+    exchangeRates: CachedExchangeRates,
+    ttlSeconds?: number,
+  ): Promise<void>;
 }
 
 @injectable()
@@ -55,21 +66,28 @@ export class RedisClient implements AbstractRedisClient {
     );
   }
 
-  async getCachedExchangeRates(date: Date, baseCurrency: PortfolioCurrency): Promise<ExchangeRates | null> {
+  async getCachedExchangeRates(
+    baseCurrency: PortfolioCurrency,
+    quoteCurrency: string,
+    windowStart: ISODateString,
+  ): Promise<CachedExchangeRates | null> {
     await this.initialize();
-    if (await this.redisClient.exists(this.getExchangeRatesRedisKey(date, baseCurrency))) {
-      return JSON.parse((await this.redisClient.get(this.getExchangeRatesRedisKey(date, baseCurrency))) as string);
-    } else {
-      return null;
-    }
+    const cached = await this.redisClient.get(this.getExchangeRatesRedisKey(baseCurrency, quoteCurrency, windowStart));
+    return cached ? JSON.parse(cached) : null;
   }
 
-  async cacheExchangeRates(date: Date, baseCurrency: PortfolioCurrency, exchangeRates: ExchangeRates): Promise<void> {
+  async cacheExchangeRates(
+    baseCurrency: PortfolioCurrency,
+    quoteCurrency: string,
+    windowStart: ISODateString,
+    exchangeRates: CachedExchangeRates,
+    ttlSeconds?: number,
+  ): Promise<void> {
     await this.initialize();
     await this.redisClient.set(
-      this.getExchangeRatesRedisKey(date, baseCurrency),
+      this.getExchangeRatesRedisKey(baseCurrency, quoteCurrency, windowStart),
       JSON.stringify(exchangeRates),
-      REDIS_EXPIRE_IN_HOUR,
+      ttlSeconds ? { expiration: { type: "EX", value: ttlSeconds } } : undefined,
     );
   }
 
@@ -77,8 +95,12 @@ export class RedisClient implements AbstractRedisClient {
     return `priceCache-${symbol}-${format(startDate, "yyyy-MM-dd")}`;
   }
 
-  private getExchangeRatesRedisKey(date: Date, baseCurrency: PortfolioCurrency): string {
-    return `exchangeRatesCache-${format(date, "yyyy-MM-dd")}-${baseCurrency}`;
+  private getExchangeRatesRedisKey(
+    baseCurrency: PortfolioCurrency,
+    quoteCurrency: string,
+    windowStart: ISODateString,
+  ): string {
+    return `exchangeRates-${baseCurrency}${quoteCurrency}-${windowStart}`;
   }
 }
 

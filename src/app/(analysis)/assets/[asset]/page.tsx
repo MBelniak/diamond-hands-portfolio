@@ -5,6 +5,7 @@ import { ASSET_CHART_CONTAINER_ID } from "@/app/(analysis)/assets/[asset]/useAss
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { usePortfolioAnalysis } from "@/app/_react-query/usePortfolioAnalysis";
+import { useTickerOhlc } from "@/app/_react-query/useTickerOhlc";
 import { DiamondLoader } from "@/components/ui/DiamondLoader";
 import { ChartData, getChartData } from "@/app/(analysis)/assets/[asset]/getChartData";
 import { Spinner } from "@/components/ui/spinner";
@@ -17,7 +18,9 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
   const { asset } = use(params);
   const { theme, chartType } = useStore();
   const assetSymbol = decodeURIComponent(asset);
-  const { data: portfolioAnalysis, error, isLoading } = usePortfolioAnalysis();
+  const { data: portfolioAnalysis, error, isLoading: isAnalysisLoading } = usePortfolioAnalysis();
+  const { data: ohlc, isLoading: isOhlcLoading } = useTickerOhlc(assetSymbol);
+  const isLoading = isAnalysisLoading || isOhlcLoading;
   const assetFullName = portfolioAnalysis?.stockMarketData[assetSymbol]?.longName ?? assetSymbol;
   const router = useRouter();
 
@@ -31,8 +34,8 @@ export default function AssetChartPage({ params }: { params: Promise<{ asset: st
   }, [error, isLoading, portfolioAnalysis, router]);
 
   const priceHistory: ChartData[] = useMemo(
-    () => (portfolioAnalysis ? getChartData(portfolioAnalysis, assetSymbol) : []),
-    [assetSymbol, portfolioAnalysis],
+    () => (ohlc ? getChartData(ohlc, portfolioAnalysis?.assetsAnalysis[assetSymbol]) : []),
+    [assetSymbol, ohlc, portfolioAnalysis],
   );
 
   useAssetChart(priceHistory, theme, chartType, showMarkers);
