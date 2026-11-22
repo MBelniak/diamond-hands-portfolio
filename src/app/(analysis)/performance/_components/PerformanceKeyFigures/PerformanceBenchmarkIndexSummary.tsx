@@ -10,26 +10,26 @@ import { BenchmarkIndexToName } from "@/lib/benchmarks";
 import Link from "next/link";
 import { getReturnOnTimeline } from "@/app/(analysis)/performance/_logic/getReturnOnTimeline";
 import { TimePeriod } from "@/app/(analysis)/performance/_types/TimePeriod";
-import { getCashFlowForBenchmarkComparison } from "@/lib/returnMetrics";
+import { getBenchmarkTimeline } from "@/lib/returnMetrics";
 
 export const PerformanceBenchmarkIndexSummary: React.FC<{
   portfolioAnalysis: PortfolioAnalysis;
 }> = ({ portfolioAnalysis }) => {
-  const { selectedReturnMetric, selectedBenchmark, selectedPortfolio } = useStore();
+  const { selectedReturnMetric, selectedBenchmark, selectedPortfolio, useWithdrawnCash } = useStore();
 
   const portfolioTimeline = portfolioAnalysis.portfolioTimeline;
   const last = portfolioTimeline.at(-1)!;
 
   const totalCapitalInvested = last.totalCapitalInvested;
-  const benchmarkProfitOrLoss = last.benchmarkData[selectedBenchmark].stockValue - totalCapitalInvested;
 
-  const benchmarkTimeline = portfolioAnalysis.portfolioTimeline.map((el) => ({
-    ...el,
-    value: el.benchmarkData[selectedBenchmark].stockValue,
-    oneDayProfit: el.benchmarkData[selectedBenchmark].oneDayProfit,
-  }));
-
-  const benchmarkCashFlow = getCashFlowForBenchmarkComparison(portfolioAnalysis.cashFlow);
+  const { timeline: benchmarkTimeline, cashFlow: benchmarkCashFlow } = getBenchmarkTimeline(
+    portfolioTimeline,
+    portfolioAnalysis.cashFlow,
+    selectedBenchmark,
+    useWithdrawnCash,
+  );
+  const benchmarkValue = benchmarkTimeline.at(-1)!.value;
+  const benchmarkProfitOrLoss = benchmarkValue - (useWithdrawnCash ? totalCapitalInvested : last.balance);
 
   const periods = [
     TimePeriod.All,
@@ -72,14 +72,18 @@ export const PerformanceBenchmarkIndexSummary: React.FC<{
             >
               {benchmarkName}
             </Link>
-            <InfoTooltip>If invested all deposited cash into {benchmarkName} index without withdrawals</InfoTooltip>
+            <InfoTooltip>
+              {useWithdrawnCash
+                ? `If invested all deposited cash into ${benchmarkName} index without withdrawals`
+                : `If invested all deposited cash into ${benchmarkName} index and withdrew the same amounts from it`}
+            </InfoTooltip>
           </>
         }
       />
       <CardContent className="flex flex-1 flex-col gap-6">
         <div className="flex flex-col gap-1.5">
           <StatValue size="md">
-            {formatMoney(last.benchmarkData[selectedBenchmark].stockValue, currencySymbol)}
+            {formatMoney(benchmarkValue, currencySymbol)}
           </StatValue>
           <p className="text-sm tabular-nums">
             <span className={getProfitLossClass(benchmarkProfitOrLoss)}>

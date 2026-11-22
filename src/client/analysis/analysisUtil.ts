@@ -17,7 +17,14 @@ const getEmptyBenchmarkData = () =>
   Object.fromEntries(
     Object.values(BenchmarkIndex).map((index) => [
       index,
-      { stock: { volume: 0 }, stockValue: 0, oneDayProfit: 0, dailyReturn: 0 },
+      {
+        stock: { volume: 0, stockVolumeSold: 0 },
+        stockValue: 0,
+        oneDayProfit: 0,
+        netStockValue: 0,
+        netOneDayProfit: 0,
+        dailyReturn: 0,
+      },
     ]),
   ) as Record<BenchmarkIndex, BenchmarkData>;
 

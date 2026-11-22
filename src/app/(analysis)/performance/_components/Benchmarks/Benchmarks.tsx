@@ -9,14 +9,14 @@ import { BenchmarkIndex, BenchmarkIndexToName } from "@/lib/benchmarks";
 import { TimePeriod } from "@/app/(analysis)/performance/_types/TimePeriod";
 import { useStore } from "@/lib/store";
 import { getReturnOnTimeline } from "@/app/(analysis)/performance/_logic/getReturnOnTimeline";
-import { getCashFlowForBenchmarkComparison } from "@/lib/returnMetrics";
+import { getBenchmarkTimeline } from "@/lib/returnMetrics";
 import { CashFlow } from "@/lib/types";
 import { BenchmarkRow } from "@/app/(analysis)/performance/_components/Benchmarks/Benchmark.types";
 import { benchmarkColumns } from "@/app/(analysis)/performance/_components/Benchmarks/Banchmarks.columns";
 
 export const Benchmarks: React.FC = () => {
   const { data: portfolioAnalysis } = usePortfolioAnalysis();
-  const { selectedReturnMetric } = useStore();
+  const { selectedReturnMetric, useWithdrawnCash } = useStore();
 
   const benchmarkData = useMemo(() => {
     if (!portfolioAnalysis?.portfolioTimeline || portfolioAnalysis.portfolioTimeline.length === 0) {
@@ -25,7 +25,6 @@ export const Benchmarks: React.FC = () => {
 
     const timeline = portfolioAnalysis.portfolioTimeline;
     const totalCapitalInvested = timeline.at(-1)!.totalCapitalInvested;
-    const benchmarkCashFlow = getCashFlowForBenchmarkComparison(portfolioAnalysis.cashFlow);
     const getReturns = (valueTimeline: Parameters<typeof getReturnOnTimeline>[0], cashFlow: CashFlow) =>
       getReturnOnTimeline(
         valueTimeline,
@@ -43,21 +42,17 @@ export const Benchmarks: React.FC = () => {
           portfolioAnalysis.cashFlow,
         ),
       },
-      ...Object.values(BenchmarkIndex).map((index) => ({
-        benchmark: BenchmarkIndexToName[index],
-        ...getReturns(
-          timeline.map((el) => ({
-            ...el,
-            value: el.benchmarkData[index].stockValue,
-            oneDayProfit: el.benchmarkData[index].oneDayProfit,
-          })),
-          benchmarkCashFlow,
-        ),
-      })),
+      ...Object.values(BenchmarkIndex).map((index) => {
+        const benchmark = getBenchmarkTimeline(timeline, portfolioAnalysis.cashFlow, index, useWithdrawnCash);
+        return {
+          benchmark: BenchmarkIndexToName[index],
+          ...getReturns(benchmark.timeline, benchmark.cashFlow),
+        };
+      }),
     ];
 
     return rows;
-  }, [portfolioAnalysis, selectedReturnMetric]);
+  }, [portfolioAnalysis, selectedReturnMetric, useWithdrawnCash]);
 
   const table = useReactTable({
     data: benchmarkData,

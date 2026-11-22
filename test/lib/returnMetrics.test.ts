@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { calculateTWR, getProfitOrLossForPeriod } from "@/lib/returnMetrics";
-import type { TWRValueTimeline, ValueTimeline, CashFlow } from "@/lib/types";
+import { calculateTWR, getBenchmarkTimeline, getProfitOrLossForPeriod } from "@/lib/returnMetrics";
+import { BenchmarkIndex } from "@/lib/benchmarks";
+import type { TWRValueTimeline, ValueTimeline, CashFlow, PortfolioValue } from "@/lib/types";
 
 describe("calculateTWR", () => {
   it("returns 0 for an empty timeline", () => {
@@ -93,5 +94,29 @@ describe("getProfitOrLossForPeriod", () => {
 
     const result = getProfitOrLossForPeriod(cashFlow, timeline, start, end);
     expect(result).toBe(500);
+  });
+});
+
+describe("getBenchmarkTimeline", () => {
+  const index = Object.values(BenchmarkIndex)[0];
+  const benchmark = { stockValue: 1000, oneDayProfit: 10, netStockValue: 600, netOneDayProfit: 6 };
+  const timeline = [
+    { date: "2024-01-02", benchmarkData: { [index]: benchmark } as unknown as PortfolioValue["benchmarkData"] },
+  ];
+  const cashFlow: CashFlow = [
+    { date: "2024-01-01", amount: 1000 },
+    { date: "2024-01-02", amount: -400 },
+  ];
+
+  it("keeps every deposit invested when withdrawn cash is included", () => {
+    const result = getBenchmarkTimeline(timeline, cashFlow, index, true);
+    expect(result.timeline[0]).toMatchObject({ value: 1000, oneDayProfit: 10 });
+    expect(result.cashFlow).toEqual([{ date: "2024-01-01", amount: 1000 }]);
+  });
+
+  it("takes withdrawals out of the benchmark otherwise", () => {
+    const result = getBenchmarkTimeline(timeline, cashFlow, index, false);
+    expect(result.timeline[0]).toMatchObject({ value: 600, oneDayProfit: 6 });
+    expect(result.cashFlow).toEqual(cashFlow);
   });
 });

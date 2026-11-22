@@ -130,7 +130,9 @@ export function PerformanceChart() {
                       isAnimationActive={false}
                       type="monotone"
                       dataKey={
-                        line.key === "benchmarkData" ? `benchmarkData.${selectedBenchmark}.stockValue` : line.key
+                        line.key === "benchmarkData"
+                          ? `benchmarkData.${selectedBenchmark}.${useWithdrawnCash ? "stockValue" : "netStockValue"}`
+                          : line.key
                       }
                       stroke={line.color}
                       strokeWidth={1.75}

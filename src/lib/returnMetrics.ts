@@ -1,4 +1,5 @@
-import { CashFlow, TWRValueTimeline, ValueTimeline } from "@/lib/types";
+import { BenchmarkData, CashFlow, TWRValueTimeline, ValueTimeline } from "@/lib/types";
+import { BenchmarkIndex } from "@/lib/benchmarks";
 import { formatDate } from "@/lib/utils";
 import { xirr } from "node-irr";
 import { addDays, isAfter, isBefore, isSameDay, startOfDay } from "date-fns";
@@ -32,6 +33,27 @@ const getCashFlowForPeriod = (
 export const getCashFlowForBenchmarkComparison = (cashFlow: CashFlow) => {
   return cashFlow.filter((entry) => entry.amount >= 0);
 };
+
+/**
+ * Benchmark value timeline with its matching cash flow. With withdrawn cash included the benchmark keeps every
+ * deposit invested; otherwise withdrawals are taken out of it too, like from the portfolio.
+ */
+export const getBenchmarkTimeline = <T extends { benchmarkData: Record<BenchmarkIndex, BenchmarkData> }>(
+  timeline: T[],
+  cashFlow: CashFlow,
+  index: BenchmarkIndex,
+  useWithdrawnCash: boolean,
+) => ({
+  timeline: timeline.map((el) => {
+    const benchmark = el.benchmarkData[index];
+    return {
+      ...el,
+      value: useWithdrawnCash ? benchmark.stockValue : benchmark.netStockValue,
+      oneDayProfit: useWithdrawnCash ? benchmark.oneDayProfit : benchmark.netOneDayProfit,
+    };
+  }),
+  cashFlow: useWithdrawnCash ? getCashFlowForBenchmarkComparison(cashFlow) : cashFlow,
+});
 
 export const getProfitOrLossForPeriod = (
   cashFlow: CashFlow,

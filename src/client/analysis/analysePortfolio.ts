@@ -147,12 +147,11 @@ function updateBenchmarkDataForCashEvents(
     return;
   }
 
-  const depositBalance = dayEvents
-    .filter(
-      (e): e is PortfolioEvent & { type: typeof CASH_EVENT } =>
-        e.type === CASH_EVENT && !!e.cashWithdrawalOrDeposit && e.cashWithdrawalOrDeposit > 0,
-    )
-    .reduce((acc, e) => acc + e.cashWithdrawalOrDeposit!, 0);
+  const cashMoves = dayEvents
+    .filter((e) => e.type === CASH_EVENT && !!e.cashWithdrawalOrDeposit)
+    .map((e) => (e as PortfolioEvent & { type: typeof CASH_EVENT }).cashWithdrawalOrDeposit!);
+  const depositBalance = cashMoves.filter((amount) => amount > 0).reduce((acc, amount) => acc + amount, 0);
+  const withdrawalBalance = -cashMoves.filter((amount) => amount < 0).reduce((acc, amount) => acc + amount, 0);
 
   Object.values(BenchmarkIndex).forEach((indexTicker) => {
     const benchmarkStockPrice = stockMarketData.get(indexTicker)?.tickerQuoteByDateString[dateKey] || null;
@@ -161,7 +160,13 @@ function updateBenchmarkDataForCashEvents(
       return;
     }
 
-    currentBenchmarkData[indexTicker as BenchmarkIndex].stock.volume += depositBalance / benchmarkStockPrice.close;
+    const stock = currentBenchmarkData[indexTicker as BenchmarkIndex].stock;
+    stock.volume += depositBalance / benchmarkStockPrice.close;
+    // Can't sell more units than were bought
+    stock.stockVolumeSold = Math.min(
+      stock.volume,
+      (stock.stockVolumeSold ?? 0) + withdrawalBalance / benchmarkStockPrice.close,
+    );
   });
 }
 
@@ -173,18 +178,22 @@ function getBenchmarkDataForDate(
 ): Record<BenchmarkIndex, BenchmarkData> {
   return Object.fromEntries(
     Object.values(BenchmarkIndex).map((index) => {
-      const volume =
-        currentBenchmarkStockData?.[index].stock.volume ?? (previousState?.benchmarkData[index].stock.volume || 0);
+      const stock = currentBenchmarkStockData?.[index].stock ?? previousState?.benchmarkData[index].stock;
+      const volume = stock?.volume || 0;
+      const stockVolumeSold = stock?.stockVolumeSold || 0;
       const benchmarkStock = { [index]: { volume } };
       const todaysValue = getStocksValueCached(benchmarkStock, date, stockMarketData);
       const previousValue = getStocksValueCached(benchmarkStock, addDays(date, -1), stockMarketData);
+      const netShare = volume > 0 ? 1 - stockVolumeSold / volume : 0;
 
       return [
         index,
         {
-          stock: { volume },
+          stock: { volume, stockVolumeSold },
           stockValue: todaysValue,
           oneDayProfit: todaysValue - previousValue,
+          netStockValue: todaysValue * netShare,
+          netOneDayProfit: (todaysValue - previousValue) * netShare,
           dailyReturn: previousValue === 0 ? 0 : todaysValue / previousValue - 1,
         },
       ];

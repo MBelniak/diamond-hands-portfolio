@@ -32,9 +32,14 @@ export type CachedExchangeRates = {
 };
 
 export type BenchmarkData = {
+  /** `volume` counts units bought with every deposit; `stockVolumeSold` the units sold to mirror withdrawals */
   stock: Stock;
+  /** Value if every deposit was invested and nothing withdrawn */
   stockValue: number;
   oneDayProfit: number;
+  /** Value if withdrawals were also taken out of the benchmark */
+  netStockValue: number;
+  netOneDayProfit: number;
   dailyReturn: number;
 };
 
