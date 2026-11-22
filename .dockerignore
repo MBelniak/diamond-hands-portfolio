@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.env*
+.idea
+!.env.public
+Dockerfile
+docker-compose.yml
+test
+coverage
+*.md
+docs

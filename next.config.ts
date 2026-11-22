@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "img.logo.dev" }],
   },
+  output: 'standalone'
 };
 
 export default withSentryConfig(nextConfig, {
