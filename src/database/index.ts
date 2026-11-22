@@ -23,11 +23,7 @@ export class DatabaseClient implements AbstractDatabaseClient {
       return value;
     };
 
-    client
-      .setEndpoint(env("APPWRITE_ENDPOINT"))
-      .setProject(env("APPWRITE_PROJECT_ID"))
-      .setKey(env("APPWRITE_API_KEY"))
-      .setSelfSigned(true);
+    client.setEndpoint(env("APPWRITE_ENDPOINT")).setProject(env("APPWRITE_PROJECT_ID")).setKey(env("APPWRITE_API_KEY"));
 
     this.tablesDB = new TablesDB(client);
     this.storage = new Storage(client);

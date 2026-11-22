@@ -38,12 +38,6 @@ import { applyReciprocalSplits, getStockMarketData } from "@/lib/market-data/mar
 import { getRatesForDate } from "@/lib/exchange-rates/rateWindows";
 import iocContainer from "@/iocContainer";
 
-if (!process.env.REDIS_URL) {
-  throw new Error(
-    "Please set the REDIS_URL environment variable in the .env file. Example: REDIS_URL=redis://localhost:6379",
-  );
-}
-
 const isRowStockSell = (row: Record<string, string | number>) =>
   ["Stock sell", "Commission"].includes(String(row[XlsxColumn.TYPE]));
 const isRowStockBuy = (row: Record<string, string | number>) => String(row[XlsxColumn.TYPE]) === "Stock purchase";

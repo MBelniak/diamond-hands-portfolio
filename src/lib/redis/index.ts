@@ -29,6 +29,11 @@ export class RedisClient implements AbstractRedisClient {
   private connectPromise: Promise<unknown> | null = null;
 
   constructor() {
+    if (!process.env.REDIS_URL) {
+      throw new Error(
+        "Please set the REDIS_URL environment variable in the .env file. Example: REDIS_URL=redis://localhost:6379",
+      );
+    }
     this.redisClient = createClient({ url: process.env.REDIS_URL });
     this.redisClient.on("error", (err) => console.error("Redis client error:", err));
   }
